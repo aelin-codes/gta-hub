@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { Heart, Play, ExternalLink, Clock } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 
 interface Timestamp {
   label: string
@@ -29,6 +30,7 @@ interface VideoCardProps {
   isPremium: boolean
   onToggleFavorite: () => void
   onOpenVideo: (seconds?: number) => void // Trigger open video / interstitial
+  priority?: boolean
 }
 
 export default function VideoCard({
@@ -36,7 +38,8 @@ export default function VideoCard({
   isFavorited,
   isPremium,
   onToggleFavorite,
-  onOpenVideo
+  onOpenVideo,
+  priority = false
 }: VideoCardProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [activeTimestamp, setActiveTimestamp] = useState<number | null>(null)
@@ -120,11 +123,14 @@ export default function VideoCard({
         ) : (
           <>
             {/* Lazy Preview */}
-            <img
-              src={video.thumbnail_url}
+            <Image
+              src={video.thumbnail_url || 'https://img.youtube.com/vi/mock/maxresdefault.jpg'}
               alt={video.title}
+              width={480}
+              height={270}
+              priority={priority}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-              loading="lazy"
+              loading={priority ? undefined : "lazy"}
             />
             {/* Dark overlay */}
             <div className="absolute inset-0 bg-black/30 group-hover:bg-black/15 transition-colors duration-300" />

@@ -69,7 +69,10 @@ export async function POST(req: Request) {
           status: 'active',
           auto_renew: true,
           current_period_end: currentPeriodEnd,
-          last_charged_at: new Date().toISOString()
+          last_charged_at: new Date().toISOString(),
+          processor: 'stripe',
+          billing_country: session.metadata?.billing_country || 'US',
+          billing_currency: session.metadata?.billing_currency || 'USD'
         }, { onConflict: 'stripe_subscription_id' })
 
       if (subErr) {

@@ -235,3 +235,14 @@ CREATE POLICY "Allow admin manage takedown requests"
 CREATE POLICY "Allow admin select/insert audit logs"
   ON admin_audit_logs FOR ALL
   USING (is_admin());
+
+-- Database Alterations for Processor Geo-Routing
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS processor TEXT CHECK (processor IN ('stripe', 'razorpay'));
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS billing_country TEXT;
+ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS billing_currency TEXT;
+
+-- Database Performance Indexes
+CREATE INDEX IF NOT EXISTS idx_videos_published_at ON videos(published_at DESC);
+CREATE INDEX IF NOT EXISTS idx_video_categories_ids ON video_categories(video_id, category_id);
+CREATE INDEX IF NOT EXISTS idx_videos_fts ON videos USING GIN(to_tsvector('english', title || ' ' || COALESCE(description, '')));
+

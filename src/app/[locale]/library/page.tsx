@@ -404,7 +404,7 @@ export default function LibraryPage({ params: { locale } }: { params: { locale: 
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {videos.map((vid: any) => (
+                {videos.map((vid: any, idx: number) => (
                   <VideoCard
                     key={vid.id}
                     video={{
@@ -423,6 +423,7 @@ export default function LibraryPage({ params: { locale } }: { params: { locale: 
                     isPremium={isPremium}
                     onToggleFavorite={() => handleToggleFavorite(vid.external_id, vid.id)}
                     onOpenVideo={(seconds) => handleOpenVideo(vid.id, seconds)}
+                    priority={idx < 2}
                   />
                 ))}
               </div>

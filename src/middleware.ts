@@ -10,10 +10,18 @@ const intlMiddleware = createMiddleware({
 })
 
 export async function middleware(request: NextRequest) {
+  // Detect country via Vercel Edge parameters/headers (default to US)
+  const country = request.geo?.country || request.headers.get('x-vercel-ip-country') || 'US'
+
   // First run next-intl middleware to handle path routing for locales
   const response = intlMiddleware(request)
 
   let supabaseResponse = response || NextResponse.next()
+
+  // Set the NEXT_COUNTRY cookie if it doesn't exist yet (allows manual client overrides to persist)
+  if (!request.cookies.has('NEXT_COUNTRY')) {
+    supabaseResponse.cookies.set('NEXT_COUNTRY', country, { path: '/', sameSite: 'lax' })
+  }
 
   // Ensure Supabase keys are set before trying to initialize client
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {

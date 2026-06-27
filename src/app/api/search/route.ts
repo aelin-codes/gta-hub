@@ -1,16 +1,26 @@
 import { NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/utils/supabase/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { unstable_cache } from 'next/cache'
+
+const getCachedVideos = unstable_cache(
+  async () => {
+    const adminClient = createAdminClient()
+    const { data } = await adminClient
+      .from('videos')
+      .select('*, video_timestamps(*)')
+      .eq('excluded', false)
+    return data || []
+  },
+  ['all-videos-list'],
+  { revalidate: 60 }
+)
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url)
     const query = searchParams.get('q') || ''
     const mode = searchParams.get('mode') || 'keyword' // 'keyword' | 'semantic'
-
-    if (!query.trim()) {
-      return NextResponse.json({ videos: [] })
-    }
 
     // Initialize regular client to identify the current session
     const supabase = createClient()
@@ -42,7 +52,9 @@ export async function GET(req: Request) {
 
     let results: any[] = []
 
-    if (activeMode === 'semantic') {
+    if (!query.trim()) {
+      results = await getCachedVideos()
+    } else if (activeMode === 'semantic') {
       const geminiKey = process.env.GEMINI_API_KEY
       if (geminiKey) {
         try {

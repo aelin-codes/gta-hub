@@ -1,6 +1,9 @@
 import { Inter, Bebas_Neue } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
+
+export const revalidate = 60;
+import { CookieConsentBanner, ThirdPartyScripts } from '@/components/CookieConsent'
 import { locales } from '@/i18n'
 import Link from 'next/link'
 import '@/app/globals.css'
@@ -42,6 +45,7 @@ export default async function LocaleLayout({
     <html lang={locale} className={`${inter.variable} ${bebasNeue.variable}`}>
       <body className="font-sans bg-midnight-teal text-off-white flex flex-col min-h-screen selection:bg-neon-flamingo selection:text-white">
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <ThirdPartyScripts />
           
           {/* Header Navigation */}
           <header className="sticky top-0 z-50 bg-midnight-teal/85 backdrop-blur-md border-b border-deep-teal">
@@ -125,6 +129,9 @@ export default async function LocaleLayout({
                 <Link href={`/${locale}/terms`} className="hover:text-sunset-orange transition">
                   Terms of Service
                 </Link>
+                <Link href={`/${locale}/refunds`} className="hover:text-sunset-orange transition">
+                  Refund Policy
+                </Link>
               </div>
             </div>
 
@@ -134,7 +141,7 @@ export default async function LocaleLayout({
               All trademarks belong to their respective owners. All videos remain the property of their original creators and are embedded via official platform players.
             </div>
           </footer>
-
+          <CookieConsentBanner />
         </NextIntlClientProvider>
       </body>
     </html>

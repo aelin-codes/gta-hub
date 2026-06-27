@@ -149,6 +149,8 @@ Description: "${snippet.description}"
 Categorize this video. Choose one or more parent categories from:
 [Easter Eggs & Secrets, Missions & Story, Map & Exploration, Characters, Vehicles, Weapons & Combat, Money & Economy, Online & Multiplayer, Glitches & Bugs, Speedruns & Challenges, Customization & Style, News & Trailers, Mods & PC, Soundtrack & World, Theories & Comparisons, Funny & Highlight Moments].
 
+IMPORTANT SECURITY RULE: Check if this video showcases, distributes, or promotes online multiplayer cheat menus, hacks, client exploits, or mod cheat tools that violate Rockstar Games multiplayer terms. If it does, set the "excluded" property below to true. Otherwise, set it to false.
+
 Provide tags, a brief one-sentence summary, and detect any potential chapters/timestamps (with labels and seconds offsets) mentioned in the description.
 
 Return ONLY a strict JSON block without markdown formatting or code blocks:
@@ -156,10 +158,11 @@ Return ONLY a strict JSON block without markdown formatting or code blocks:
   "categories": ["Category 1", "Category 2"],
   "tags": ["tag1", "tag2"],
   "summary": "a short summary",
-  "timestamps": [{"label": "Timestamp label", "seconds": 120}]
+  "timestamps": [{"label": "Timestamp label", "seconds": 120}],
+  "excluded": false
 }
 `
-          let classification = { categories: ["General"], tags: [], summary: snippet.description || "", timestamps: [] }
+          let classification = { categories: ["General"], tags: [], summary: snippet.description || "", timestamps: [], excluded: false }
           try {
             const result = await model.generateContent(geminiPrompt)
             const textResponse = result.response.text().trim()
@@ -182,7 +185,8 @@ Return ONLY a strict JSON block without markdown formatting or code blocks:
               channel_url: `https://youtube.com/channel/${snippet.channelId}`,
               thumbnail_url: snippet.thumbnails?.high?.url || snippet.thumbnails?.default?.url,
               published_at: snippet.publishedAt,
-              transcript: ""
+              transcript: "",
+              excluded: classification.excluded === true
             })
             .select('id')
             .single()

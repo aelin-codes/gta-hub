@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Calendar, Play, ShieldAlert, Award, Clock } from 'lucide-react'
 import Link from 'next/link'
@@ -21,6 +21,8 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
   // Target date: October 27, 2026
   const targetDate = new Date('2026-10-27T00:00:00')
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
+  const [heroInView, setHeroInView] = useState(false)
+  const heroContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const calculateTimeLeft = () => {
@@ -43,15 +45,46 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
     return () => clearInterval(timer)
   }, [])
 
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setHeroInView(true)
+          observer.disconnect()
+        }
+      },
+      { rootMargin: '200px' }
+    )
+    if (heroContainerRef.current) {
+      observer.observe(heroContainerRef.current)
+    }
+    return () => observer.disconnect()
+  }, [])
+
   return (
     <div className="flex flex-col bg-midnight-teal min-h-screen">
       
-      {/* 1. 3D Parallax Skyline Hero */}
-      <SkylineHero />
+      {/* 1. 3D Parallax Skyline Hero (Lazy Loaded) */}
+      <div ref={heroContainerRef} className="min-h-[95vh] w-full bg-gradient-to-b from-[#0F2E33] to-[#0B1E23]">
+        {heroInView ? (
+          <SkylineHero />
+        ) : (
+          <div className="relative h-[95vh] w-full flex items-center justify-center">
+            <div className="text-off-white/40 font-mono text-xs uppercase tracking-widest animate-pulse">
+              Initializing 3D Skyline...
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* 2. Main Page Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full space-y-24">
         
+        {/* Unofficial Portal Legal Disclaimer (Section 9 / Legal shit.txt) */}
+        <div className="bg-sunset-orange/15 border border-sunset-orange/30 rounded-2xl p-4 text-xs text-center text-sunset-orange font-semibold">
+          GTA VI HUB IS AN UNOFFICIAL FAN PORTAL. IT IS NOT AFFILIATED WITH, SPONSORED BY, OR ENDORSED BY ROCKSTAR GAMES OR TAKE-TWO INTERACTIVE.
+        </div>
+
         {/* Countdown Timer Component */}
         <section className="relative overflow-hidden bg-deep-teal/40 rounded-3xl p-8 md:p-12 border border-deep-teal/80 shadow-xl text-center">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_var(--tw-gradient-stops))] from-neon-flamingo/5 via-transparent to-transparent" />

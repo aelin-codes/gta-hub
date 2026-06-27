@@ -95,26 +95,33 @@ export default function DashboardPage({ params: { locale } }: { params: { locale
     const newAutoRenew = !subscription.auto_renew
     const newStatus = newAutoRenew ? 'active' : 'cancelled'
 
-    // Update in database (simulates Razorpay/Stripe API callback cancellation)
-    const { error } = await supabase
-      .from('subscriptions')
-      .update({ 
-        auto_renew: newAutoRenew,
-        status: newStatus
+    try {
+      const res = await fetch('/api/subscriptions/cancel', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          cancelAtPeriodEnd: !newAutoRenew
+        })
       })
-      .eq('id', subscription.id)
 
-    if (!error) {
-      setSubscription({
-        ...subscription,
-        auto_renew: newAutoRenew,
-        status: newStatus
-      })
-    } else {
-      console.error("Error toggling auto-renew", error)
+      const data = await res.json()
+      if (res.ok) {
+        setSubscription({
+          ...subscription,
+          auto_renew: newAutoRenew,
+          status: newStatus
+        })
+      } else {
+        alert(data.error || "Failed to update cancellation settings.")
+      }
+    } catch (err) {
+      console.error(err)
       alert("Failed to update auto-renewal preferences.")
+    } finally {
+      setUpdatingAutoRenew(false)
     }
-    setUpdatingAutoRenew(false)
   }
 
   const handleUnfavorite = async (videoId: string) => {

@@ -69,7 +69,10 @@ export async function POST(req: Request) {
           status: 'active',
           auto_renew: true,
           current_period_end: currentPeriodEnd,
-          last_charged_at: new Date().toISOString()
+          last_charged_at: new Date().toISOString(),
+          processor: 'razorpay',
+          billing_country: subObj.notes?.billing_country || 'IN',
+          billing_currency: subObj.notes?.billing_currency || 'INR'
         }, { onConflict: 'razorpay_subscription_id' })
 
       if (subErr) {
