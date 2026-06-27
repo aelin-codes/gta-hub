@@ -162,7 +162,7 @@ Return ONLY a strict JSON block without markdown formatting or code blocks:
   "excluded": false
 }
 `
-          let classification = { categories: ["General"], tags: [], summary: snippet.description || "", timestamps: [], excluded: false }
+          let classification: { categories: string[], tags: string[], summary: string, timestamps: {label: string, seconds: number}[], excluded: boolean } = { categories: ["General"], tags: [], summary: snippet.description || "", timestamps: [], excluded: false }
           try {
             const result = await model.generateContent(geminiPrompt)
             const textResponse = result.response.text().trim()

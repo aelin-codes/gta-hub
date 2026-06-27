@@ -22,8 +22,9 @@ export async function GET(req: Request) {
     const query = searchParams.get('q') || ''
     const mode = searchParams.get('mode') || 'keyword' // 'keyword' | 'semantic'
 
-    // Initialize regular client to identify the current session
+    // Single adminClient for all DB reads in this request
     const supabase = createClient()
+    const adminClient = createAdminClient()
     const { data: { user } } = await supabase.auth.getUser()
 
     let isPremium = false
@@ -31,24 +32,17 @@ export async function GET(req: Request) {
 
     if (user) {
       userId = user.id
-      // RE-CHECK ENTITLEMENT SERVER-SIDE on the DB directly (Section 12 security hard rule)
-      const adminClient = createAdminClient()
+      // RE-CHECK ENTITLEMENT SERVER-SIDE (Section 12 security hard rule)
       const { data: dbUser } = await adminClient
         .from('users')
         .select('is_premium')
         .eq('id', user.id)
         .single()
-      
-      if (dbUser) {
-        isPremium = dbUser.is_premium
-      }
+      if (dbUser) isPremium = dbUser.is_premium
     }
 
-    // Force keyword mode if user is not premium but requests semantic search (security constraint)
+    // Force keyword mode if user is not premium (security constraint)
     const activeMode = (mode === 'semantic' && isPremium) ? 'semantic' : 'keyword'
-
-    // We will query using the adminClient to ensure RLS doesn't block reading when querying embeddings
-    const adminClient = createAdminClient()
 
     let results: any[] = []
 

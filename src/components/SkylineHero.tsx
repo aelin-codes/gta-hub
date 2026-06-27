@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import * as THREE from 'three'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Stars } from '@react-three/drei'
 import gsap from 'gsap'
@@ -56,7 +57,7 @@ function Buildings({ count = 35, zIndex = -10, color = "#0F2E33", speedMultiplie
 
 // Floating neon grid for the retro Vice City sun-belt aesthetic
 function NeonGrid({ color = '#FF3D81' }) {
-  const gridRef = useRef<THREE.LineSegments>(null)
+  const gridRef = useRef<THREE.GridHelper>(null)
 
   useFrame((state) => {
     if (gridRef.current) {

@@ -49,7 +49,7 @@ export async function POST(req: Request) {
 
       // Fetch actual subscription details from Stripe to get period end
       const subscription = await stripe.subscriptions.retrieve(stripeSubId)
-      const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString()
+      const currentPeriodEnd = new Date((subscription as any).current_period_end * 1000).toISOString()
 
       // Update user details
       await supabase
@@ -84,11 +84,11 @@ export async function POST(req: Request) {
     // 2. invoice.payment_succeeded (Charged / renewed)
     else if (event.type === 'invoice.payment_succeeded') {
       const invoice = event.data.object as Stripe.Invoice
-      const stripeSubId = invoice.subscription as string
+      const stripeSubId = (invoice as any).subscription as string
 
       if (stripeSubId) {
         const subscription = await stripe.subscriptions.retrieve(stripeSubId)
-        const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString()
+        const currentPeriodEnd = new Date((subscription as any).current_period_end * 1000).toISOString()
 
         const { data: localSub } = await supabase
           .from('subscriptions')
@@ -119,7 +119,7 @@ export async function POST(req: Request) {
     // 3. invoice.payment_failed (Grace period / dunning logic)
     else if (event.type === 'invoice.payment_failed') {
       const invoice = event.data.object as Stripe.Invoice
-      const stripeSubId = invoice.subscription as string
+      const stripeSubId = (invoice as any).subscription as string
 
       if (stripeSubId) {
         const { data: localSub } = await supabase
@@ -159,7 +159,7 @@ export async function POST(req: Request) {
       const stripeSubId = stripeSub.id
       const status = stripeSub.status
       const cancelAtPeriodEnd = stripeSub.cancel_at_period_end
-      const currentPeriodEnd = new Date(stripeSub.current_period_end * 1000)
+      const currentPeriodEnd = new Date((stripeSub as any).current_period_end * 1000)
 
       const { data: localSub } = await supabase
         .from('subscriptions')
