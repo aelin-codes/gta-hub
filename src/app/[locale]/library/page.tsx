@@ -90,36 +90,23 @@ export default function LibraryPage({ params: { locale } }: { params: { locale: 
     setLoading(true)
     try {
       const q = qOverride !== undefined ? qOverride : searchQuery
-      // Call our search endpoint
-      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}&mode=${searchMode}`)
+      const params = new URLSearchParams({ q, mode: searchMode })
+      if (selectedCategory) params.set('category', selectedCategory)
+      if (selectedPlatform) params.set('platform', selectedPlatform)
+
+      const res = await fetch(`/api/search?${params}`)
       const data = await res.json()
-      
+
       let filtered = data.videos || []
 
-      // Client-side categorization & platform filtering if needed
-      if (selectedCategory) {
-        // Link to categories filter
-        // In database structure we have video_categories, but in this search we mock/join the search.
-        // For standard local development filter matching:
-        filtered = filtered.filter((v: any) => {
-          if (!v.categories && !v.tags) return true // Show all if categories missing
-          // Fallback matching
-          return true
-        })
-      }
-
-      if (selectedPlatform) {
-        filtered = filtered.filter((v: any) => v.platform === selectedPlatform)
-      }
-
-      // Sort
+      // Sort client-side (search API returns unsorted)
       if (sortBy === 'newest') {
         filtered.sort((a: any, b: any) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime())
       }
 
       setVideos(filtered)
     } catch (err) {
-      console.error("Failed to fetch videos", err)
+      console.error('Failed to fetch videos', err)
     } finally {
       setLoading(false)
     }

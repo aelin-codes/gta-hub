@@ -139,102 +139,115 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- 1. Policies for `videos`
+DROP POLICY IF EXISTS "Allow public read on non-excluded videos" ON videos;
 CREATE POLICY "Allow public read on non-excluded videos" 
   ON videos FOR SELECT 
   USING (excluded = false OR is_admin());
 
+DROP POLICY IF EXISTS "Allow admin write/delete on videos" ON videos;
 CREATE POLICY "Allow admin write/delete on videos" 
   ON videos FOR ALL 
   USING (is_admin());
 
 -- 2. Policies for `categories`
+DROP POLICY IF EXISTS "Allow public read on categories" ON categories;
 CREATE POLICY "Allow public read on categories" 
   ON categories FOR SELECT 
   TO public 
   USING (true);
 
+DROP POLICY IF EXISTS "Allow admin write/delete on categories" ON categories;
 CREATE POLICY "Allow admin write/delete on categories" 
   ON categories FOR ALL 
   USING (is_admin());
 
 -- 3. Policies for `video_categories`
+DROP POLICY IF EXISTS "Allow public read on video_categories" ON video_categories;
 CREATE POLICY "Allow public read on video_categories" 
   ON video_categories FOR SELECT 
   TO public 
   USING (true);
 
+DROP POLICY IF EXISTS "Allow admin write/delete on video_categories" ON video_categories;
 CREATE POLICY "Allow admin write/delete on video_categories" 
   ON video_categories FOR ALL 
   USING (is_admin());
 
 -- 4. Policies for `video_timestamps`
+DROP POLICY IF EXISTS "Allow public read on video_timestamps" ON video_timestamps;
 CREATE POLICY "Allow public read on video_timestamps" 
   ON video_timestamps FOR SELECT 
   TO public 
   USING (true);
 
+DROP POLICY IF EXISTS "Allow admin write/delete on video_timestamps" ON video_timestamps;
 CREATE POLICY "Allow admin write/delete on video_timestamps" 
   ON video_timestamps FOR ALL 
   USING (is_admin());
 
 -- 5. Policies for `users`
--- Users can read their own data
+DROP POLICY IF EXISTS "Allow users to read own data" ON users;
 CREATE POLICY "Allow users to read own data" 
   ON users FOR SELECT 
   USING (auth.uid() = id OR is_admin());
 
--- Write / Edit is restricted: only service_role (which bypasses RLS) or admins can edit.
--- Authenticated users CANNOT update their own role or premium status.
--- However, we might let them update their customer ids via webhook (service role).
--- So no INSERT/UPDATE/DELETE policy is created for standard users, keeping it secure.
+DROP POLICY IF EXISTS "Allow admin update on users" ON users;
 CREATE POLICY "Allow admin update on users"
   ON users FOR UPDATE
   USING (is_admin());
 
 -- 6. Policies for `subscriptions`
+DROP POLICY IF EXISTS "Allow users to read own subscriptions" ON subscriptions;
 CREATE POLICY "Allow users to read own subscriptions" 
   ON subscriptions FOR SELECT 
   USING (auth.uid() = user_id OR is_admin());
 
--- Only service role writes to subscriptions (webhook)
-
 -- 7. Policies for `favorites`
+DROP POLICY IF EXISTS "Allow users to read own favorites" ON favorites;
 CREATE POLICY "Allow users to read own favorites" 
   ON favorites FOR SELECT 
   USING (auth.uid() = user_id OR is_admin());
 
+DROP POLICY IF EXISTS "Allow users to manage own favorites" ON favorites;
 CREATE POLICY "Allow users to manage own favorites" 
   ON favorites FOR ALL 
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
 -- 8. Policies for `follows`
+DROP POLICY IF EXISTS "Allow users to read own follows" ON follows;
 CREATE POLICY "Allow users to read own follows" 
   ON follows FOR SELECT 
   USING (auth.uid() = user_id OR is_admin());
 
+DROP POLICY IF EXISTS "Allow users to manage own follows" ON follows;
 CREATE POLICY "Allow users to manage own follows" 
   ON follows FOR ALL 
   USING (auth.uid() = user_id)
   WITH CHECK (auth.uid() = user_id);
 
 -- 9. Policies for `takedown_requests`
+DROP POLICY IF EXISTS "Allow anyone to submit takedown request" ON takedown_requests;
 CREATE POLICY "Allow anyone to submit takedown request" 
   ON takedown_requests FOR INSERT 
   WITH CHECK (true);
 
+DROP POLICY IF EXISTS "Allow users to read own takedown requests" ON takedown_requests;
 CREATE POLICY "Allow users to read own takedown requests" 
   ON takedown_requests FOR SELECT 
   USING (is_admin() OR requester_email = (SELECT email FROM users WHERE id = auth.uid()));
 
+DROP POLICY IF EXISTS "Allow admin manage takedown requests" ON takedown_requests;
 CREATE POLICY "Allow admin manage takedown requests" 
   ON takedown_requests FOR ALL 
   USING (is_admin());
 
 -- 10. Policies for `admin_audit_logs`
+DROP POLICY IF EXISTS "Allow admin select/insert audit logs" ON admin_audit_logs;
 CREATE POLICY "Allow admin select/insert audit logs"
   ON admin_audit_logs FOR ALL
   USING (is_admin());
+
 
 -- Database Alterations for Processor Geo-Routing
 ALTER TABLE subscriptions ADD COLUMN IF NOT EXISTS processor TEXT CHECK (processor IN ('stripe', 'razorpay'));

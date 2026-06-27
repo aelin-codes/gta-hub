@@ -21,6 +21,8 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url)
     const query = searchParams.get('q') || ''
     const mode = searchParams.get('mode') || 'keyword' // 'keyword' | 'semantic'
+    const category = searchParams.get('category') || ''
+    const platform = searchParams.get('platform') || ''
 
     // Single adminClient for all DB reads in this request
     const supabase = createClient()
@@ -112,6 +114,31 @@ export async function GET(req: Request) {
         console.error('Keyword search error:', error)
       }
       results = data || []
+    }
+
+    // Apply platform filter
+    if (platform) {
+      results = results.filter((v: any) => v.platform === platform)
+    }
+
+    // Apply category filter — match against video_categories join if present, else tags array
+    if (category) {
+      const { data: catVideos } = await adminClient
+        .from('video_categories')
+        .select('video_id, categories!inner(name)')
+        .eq('categories.name', category)
+      const catVideoIds = new Set((catVideos || []).map((r: any) => r.video_id))
+      if (catVideoIds.size > 0) {
+        results = results.filter((v: any) => catVideoIds.has(v.id))
+      } else {
+        // Fallback: match category name against tags or title text
+        const lc = category.toLowerCase()
+        results = results.filter((v: any) =>
+          (v.tags && v.tags.some((t: string) => t.toLowerCase().includes(lc))) ||
+          v.title?.toLowerCase().includes(lc) ||
+          v.description?.toLowerCase().includes(lc)
+        )
+      }
     }
 
     return NextResponse.json({
