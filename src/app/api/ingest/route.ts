@@ -139,38 +139,37 @@ export async function GET(req: Request) {
             continue
           }
 
-          // Use Gemini for classification
-          const geminiPrompt = `
-You are classifying a GTA 6 video for a fan indexing site.
-Analyze this video metadata:
-Title: "${snippet.title}"
-Description: "${snippet.description}"
+          // Use Gemini multimodal — pass YouTube URL so Gemini watches the video directly
+          const classifyPrompt = `You are tagging a GTA 6 fan video for an indexing site. Watch this video and classify it.
 
-Categorize this video. Choose one or more parent categories from:
-[Easter Eggs & Secrets, Missions & Story, Map & Exploration, Characters, Vehicles, Weapons & Combat, Money & Economy, Online & Multiplayer, Glitches & Bugs, Speedruns & Challenges, Customization & Style, News & Trailers, Mods & PC, Soundtrack & World, Theories & Comparisons, Funny & Highlight Moments].
+Choose one or more categories from:
+[Easter Eggs & Secrets, Missions & Story, Map & Exploration, Characters, Vehicles, Weapons & Combat, Money & Economy, Online & Multiplayer, Glitches & Bugs, Speedruns & Challenges, Customization & Style, News & Trailers, Mods & PC, Soundtrack & World, Theories & Comparisons, Funny & Highlight Moments]
 
-IMPORTANT SECURITY RULE: Check if this video showcases, distributes, or promotes online multiplayer cheat menus, hacks, client exploits, or mod cheat tools that violate Rockstar Games multiplayer terms. If it does, set the "excluded" property below to true. Otherwise, set it to false.
+SECURITY: If the video promotes multiplayer cheat menus, hacks, or mod exploit tools violating Rockstar TOS, set excluded=true.
 
-Provide tags, a brief one-sentence summary, and detect any potential chapters/timestamps (with labels and seconds offsets) mentioned in the description.
+Return ONLY valid JSON (no markdown):
+{"categories":["Cat1"],"tags":["tag1","tag2"],"summary":"one sentence","timestamps":[{"label":"Section name","seconds":30}],"excluded":false}`
 
-Return ONLY a strict JSON block without markdown formatting or code blocks:
-{
-  "categories": ["Category 1", "Category 2"],
-  "tags": ["tag1", "tag2"],
-  "summary": "a short summary",
-  "timestamps": [{"label": "Timestamp label", "seconds": 120}],
-  "excluded": false
-}
-`
-          let classification: { categories: string[], tags: string[], summary: string, timestamps: {label: string, seconds: number}[], excluded: boolean } = { categories: ["General"], tags: [], summary: snippet.description || "", timestamps: [], excluded: false }
+          let classification: { categories: string[], tags: string[], summary: string, timestamps: {label: string, seconds: number}[], excluded: boolean } = { categories: ['General'], tags: [], summary: snippet.description || '', timestamps: [], excluded: false }
           try {
-            const result = await model.generateContent(geminiPrompt)
-            const textResponse = result.response.text().trim()
-            // Clean markdown indicators if any
-            const cleanedText = textResponse.replace(/```json/g, '').replace(/```/g, '').trim()
-            classification = JSON.parse(cleanedText)
+            const result = await model.generateContent([
+              { fileData: { mimeType: 'video/*', fileUri: `https://www.youtube.com/watch?v=${videoId}` } },
+              { text: classifyPrompt }
+            ])
+            const cleaned = result.response.text().trim().replace(/```json|```/g, '').trim()
+            classification = JSON.parse(cleaned)
           } catch (geminiErr) {
-            console.error(`Gemini classification failed for ${videoId}:`, geminiErr)
+            console.warn(`Gemini video analysis failed for ${videoId}, falling back to text:`, geminiErr)
+            // Text-only fallback using title + description
+            try {
+              const fallbackResult = await model.generateContent(
+                `${classifyPrompt}\n\nTitle: "${snippet.title}"\nDescription: "${snippet.description}"`
+              )
+              const cleaned = fallbackResult.response.text().trim().replace(/```json|```/g, '').trim()
+              classification = JSON.parse(cleaned)
+            } catch (fallbackErr) {
+              console.error(`Gemini text fallback also failed for ${videoId}:`, fallbackErr)
+            }
           }
 
           // Insert video
