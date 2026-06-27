@@ -46,9 +46,14 @@ export async function GET(req: Request) {
     // Force keyword mode if user is not premium (security constraint)
     const activeMode = (mode === 'semantic' && isPremium) ? 'semantic' : 'keyword'
 
+    // Merge category into effective query — simplest correct approach
+    // e.g. category="Easter Eggs & Secrets" + query="submarine" → "submarine easter eggs secrets"
+    const keywords = category ? category.replace(/&/g, '').replace(/[^a-zA-Z0-9 ]/g, '') : ''
+    const effectiveQuery = [query.trim(), keywords.trim()].filter(Boolean).join(' ')
+
     let results: any[] = []
 
-    if (!query.trim()) {
+    if (!effectiveQuery) {
       results = await getCachedVideos()
     } else if (activeMode === 'semantic') {
       const geminiKey = process.env.GEMINI_API_KEY
@@ -58,7 +63,7 @@ export async function GET(req: Request) {
           // Generate query embedding
           // We can use text-embedding-004 model
           const model = genAI.getGenerativeModel({ model: "text-embedding-004" })
-          const embedRes = await model.embedContent(query)
+          const embedRes = await model.embedContent(effectiveQuery)
           const embedding = embedRes.embedding.values
 
           // Search using pgvector cosine similarity via rpc (stored procedure)
@@ -88,7 +93,7 @@ export async function GET(req: Request) {
           const { data } = await adminClient
             .from('videos')
             .select('*')
-            .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+            .or(`title.ilike.%${effectiveQuery}%,description.ilike.%${effectiveQuery}%`)
             .eq('excluded', false)
           results = data || []
         }
@@ -98,7 +103,7 @@ export async function GET(req: Request) {
         const { data } = await adminClient
           .from('videos')
           .select('*')
-          .or(`title.ilike.%${query}%,description.ilike.%${query}%,transcript.ilike.%${query}%`)
+          .or(`title.ilike.%${effectiveQuery}%,description.ilike.%${effectiveQuery}%,transcript.ilike.%${effectiveQuery}%`)
           .eq('excluded', false)
         results = data || []
       }
@@ -116,30 +121,8 @@ export async function GET(req: Request) {
       results = data || []
     }
 
-    // Apply platform filter
-    if (platform) {
-      results = results.filter((v: any) => v.platform === platform)
-    }
-
-    // Apply category filter — match against video_categories join if present, else tags array
-    if (category) {
-      const { data: catVideos } = await adminClient
-        .from('video_categories')
-        .select('video_id, categories!inner(name)')
-        .eq('categories.name', category)
-      const catVideoIds = new Set((catVideos || []).map((r: any) => r.video_id))
-      if (catVideoIds.size > 0) {
-        results = results.filter((v: any) => catVideoIds.has(v.id))
-      } else {
-        // Fallback: match category name against tags or title text
-        const lc = category.toLowerCase()
-        results = results.filter((v: any) =>
-          (v.tags && v.tags.some((t: string) => t.toLowerCase().includes(lc))) ||
-          v.title?.toLowerCase().includes(lc) ||
-          v.description?.toLowerCase().includes(lc)
-        )
-      }
-    }
+    // Platform filter — simple column match
+    if (platform) results = results.filter((v: any) => v.platform === platform)
 
     return NextResponse.json({
       mode: activeMode,
