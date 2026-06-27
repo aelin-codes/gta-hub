@@ -108,16 +108,13 @@ export async function GET(req: Request) {
         results = data || []
       }
     } else {
-      // Standard keyword search
+      // Standard keyword search — use effectiveQuery (includes category keywords)
       const { data, error } = await adminClient
         .from('videos')
-        .select('*')
-        .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
+        .select('*, video_timestamps(*)')
+        .or(`title.ilike.%${effectiveQuery}%,description.ilike.%${effectiveQuery}%`)
         .eq('excluded', false)
-      
-      if (error) {
-        console.error('Keyword search error:', error)
-      }
+      if (error) console.error('Keyword search error:', error)
       results = data || []
     }
 
