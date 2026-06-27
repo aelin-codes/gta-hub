@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from 'next-intl'
 export const revalidate = 60;
 import { CookieConsentBanner, ThirdPartyScripts } from '@/components/CookieConsent'
 import { locales } from '@/i18n'
+import NavBar from '@/components/NavBar'
 import Link from 'next/link'
 import '@/app/globals.css'
 
@@ -62,26 +63,7 @@ export default async function LocaleLayout({
               </Link>
 
               {/* Navigation Items */}
-              <nav className="hidden md:flex items-center space-x-8 text-sm uppercase tracking-wider font-semibold">
-                <Link href={`/${locale}`} className="hover:text-neon-flamingo transition duration-200">
-                  Home
-                </Link>
-                <Link href={`/${locale}/library`} className="hover:text-neon-flamingo transition duration-200">
-                  Library
-                </Link>
-                <Link href={`/${locale}/wiki`} className="hover:text-neon-flamingo transition duration-200">
-                  Wiki / Map
-                </Link>
-                <Link href={`/${locale}/pricing`} className="hover:text-neon-flamingo transition duration-200">
-                  Pricing
-                </Link>
-                <Link href={`/${locale}/dashboard`} className="hover:text-neon-flamingo transition duration-200">
-                  Dashboard
-                </Link>
-                <Link href={`/${locale}/admin`} className="hover:text-neon-flamingo transition duration-200 text-palm-teal">
-                  Admin
-                </Link>
-              </nav>
+              <NavBar locale={locale} />
 
               {/* Action Buttons */}
               <div className="flex items-center space-x-4">
