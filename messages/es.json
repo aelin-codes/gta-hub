@@ -1,0 +1,31 @@
+{
+  "Home": {
+    "title": "GTA 6 Hub",
+    "subtitle": "El portal de fans definitivo para explorar Leonida, descubrir secretos y buscar jugabilidad.",
+    "cta_library": "Explorar Biblioteca de Videos",
+    "cta_premium": "Hacerse Premium",
+    "countdown_title": "Cuenta regresiva para Leonida",
+    "disclaimer": "GTA 6 Hub es un sitio no oficial para fans..."
+  },
+  "Library": {
+    "title": "Biblioteca de Videos",
+    "search_placeholder": "Buscar huevos de pascua, misiones, ubicaciones de mapas...",
+    "search_semantic_placeholder": "Pregunta lo que sea: '¿Dónde está el avión oculto en el pantano?'",
+    "filter_category": "Categorías",
+    "filter_creator": "Creadores",
+    "filter_platform": "Plataformas",
+    "sort_by": "Ordenar Por",
+    "sort_newest": "Más Recientes",
+    "sort_relevance": "Relevancia",
+    "sort_discussed": "Más Discutidos",
+    "no_videos": "No se encontraron videos con los filtros seleccionados."
+  },
+  "Navigation": {
+    "home": "Inicio",
+    "library": "Biblioteca",
+    "wiki": "Wiki / Mapa",
+    "pricing": "Precios",
+    "dashboard": "Cuenta",
+    "admin": "Admin"
+  }
+}

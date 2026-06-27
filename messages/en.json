@@ -1,0 +1,31 @@
+{
+  "Home": {
+    "title": "GTA 6 Hub",
+    "subtitle": "The ultimate fan portal for Leonida exploration, secrets, and gameplay search.",
+    "cta_library": "Explore Video Library",
+    "cta_premium": "Go Premium",
+    "countdown_title": "Countdown to Leonida",
+    "disclaimer": "GTA 6 Hub is an unofficial fan site..."
+  },
+  "Library": {
+    "title": "Video Library",
+    "search_placeholder": "Search for easter eggs, missions, map locations...",
+    "search_semantic_placeholder": "Ask anything: 'Where is the hidden plane in the swamp?'",
+    "filter_category": "Categories",
+    "filter_creator": "Creators",
+    "filter_platform": "Platforms",
+    "sort_by": "Sort By",
+    "sort_newest": "Newest",
+    "sort_relevance": "Relevance",
+    "sort_discussed": "Most Discussed",
+    "no_videos": "No videos found matching your filters."
+  },
+  "Navigation": {
+    "home": "Home",
+    "library": "Library",
+    "wiki": "Wiki / Map",
+    "pricing": "Pricing",
+    "dashboard": "Account",
+    "admin": "Admin"
+  }
+}

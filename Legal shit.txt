@@ -1,0 +1,40 @@
+Glad it's coming together. Here's the realistic list of things that actually get sites like this taken down or land their owners in legal trouble — roughly in order of how often they actually happen, not how scary they sound:
+
+**Platform takedown risk (most likely thing to actually happen)**
+- YouTube and Twitch can revoke your API access if you drift from their terms — re-read the **YouTube API Services Terms of Service** and the "Required Minimum Functionality" doc periodically, since they update these. The big ones: never cache video data longer than their policy allows, never strip branding/controls from the embedded player, and keep creator attribution visible exactly as built.
+- Respond to takedown requests fast and actually act on them — a slow or ignored takedown form is what turns a polite request into a legal one.
+- **Register a DMCA agent** with the U.S. Copyright Office (cheap, one-time, online). It's what gives you the actual "safe harbor" legal protection for hosting/embedding others' content — without it, you're relying on goodwill instead of law.
+
+**Take-Two specifically — this one's worth knowing**
+Take-Two has a real history of suing creators of GTA Online cheat tools and mod menus, not just casually threatening them. Your spec already excludes "cheating/online-exploit content" from the Mods category — keep that enforced strictly in moderation, because this is the one category of content on a GTA fan site that has actually triggered lawsuits before, not just takedown notices.
+
+**Trademark/IP**
+- Keep the "not affiliated with Rockstar/Take-Two" disclaimer visible on the homepage and pricing page too, not just buried in the footer — visibility matters if this is ever questioned.
+- Don't use Rockstar's logo or official branding anywhere that could look like an official site.
+
+**Payments — this is the one with real money/legal consequences if skipped**
+- **Auto-renewal disclosure laws** (FTC's "click-to-cancel" rule in the US, EU Consumer Rights Directive, similar rules elsewhere) require the price and renewal terms to be clearly shown *before* signup, and cancellation to be at least as easy as signing up. Your auto-renew toggle covers the mechanism — make sure the pricing page text covers the disclosure.
+- **GST in India**: once your revenue crosses the registration threshold, you'll need to register and start issuing proper GST invoices. Worth checking with a CA on the current threshold, since the rules and rates have changed before and I'd rather you confirm with someone who can see your actual numbers than rely on a remembered figure.
+- **Cross-border tax (VAT/GST elsewhere)**: if you get subscribers in the EU/UK, there are tax obligations on digital subscriptions sold to consumers there. Stripe Tax (if you're using the Stripe fallback rail) automates a lot of this — turn it on rather than tracking it manually.
+- Publish a clear **refund/cancellation policy** — Razorpay and Stripe both expect one, and several countries legally require it.
+- You need actual **Terms of Service** and **Privacy Policy** pages — not optional once you're collecting emails and payments.
+
+**Data privacy**
+- If you get EU visitors: GDPR applies (consent for non-essential cookies/ads tracking, a way for users to request data deletion).
+- India's DPDP Act applies to Indian users' personal data.
+- A cookie-consent banner is the practical fix for most of this if you're running AdSense + any analytics.
+
+**Ads**
+- Stick to Google's actual AdSense policies on ad density and the Vignette interstitial format as specced — a custom popup that drifts from their format is the fastest way to get an AdSense account suspended.
+- If a meaningful share of your traffic turns out to be minors (realistic for a GTA fan site, even though the game is rated M), check Google's child-directed treatment self-certification in AdSense — it changes what ad targeting is allowed.
+
+**Ongoing security hygiene**
+- Run `npm audit` (or equivalent) regularly and patch dependencies — most real breaches are an old library, not a clever hacker.
+- Rotate your API keys periodically, especially if anyone besides you ever had access to them.
+- Actually check that your backup job is running and that you could restore from it — untested backups are not backups.
+- Watch for chargeback/fraud patterns in Razorpay/Stripe dashboards (sudden bursts of failed payments from new cards is usually card testing fraud, not real customers).
+
+**Worth considering, not urgent**
+- Operating this under a registered business entity rather than personally can matter for liability separation — worth a conversation with a CA/lawyer once revenue is real, not before.
+
+I'm not a lawyer or accountant, and several of the above (GST thresholds, DMCA registration specifics, cross-border tax rules) are exactly the kind of thing that depends on your specific numbers and jurisdiction — treat this as the list of *what to ask a professional about*, not a substitute for asking one.
