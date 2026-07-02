@@ -13,19 +13,26 @@ const STRIPE_CURRENCIES = {
   GBP: { symbol: '£', rate: 7.80 }
 }
 
+interface UserInfo {
+  id: string
+  email?: string
+}
+
 export default function PricingPage({ params: { locale } }: { params: { locale: string } }) {
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<UserInfo | null>(null)
   const [country, setCountry] = useState('US')
   const [selectedCurrency, setSelectedCurrency] = useState<'USD' | 'EUR' | 'GBP'>('USD')
   const [showOverride, setShowOverride] = useState(false)
   const [loading, setLoading] = useState(false)
-  const supabase = createClient()
 
 
   useEffect(() => {
+    const supabaseClient = createClient()
     async function getUser() {
-      const { data: { session } } = await supabase.auth.getSession()
-      setUser(session?.user || null)
+      const { data: { session } } = await supabaseClient.auth.getSession()
+      if (session?.user) {
+        setUser({ id: session.user.id, email: session.user.email })
+      }
     }
     getUser()
 

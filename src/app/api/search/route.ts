@@ -4,6 +4,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { unstable_cache } from 'next/cache'
 import { PAYMENTS_ENABLED } from '@/config'
 
+export const dynamic = 'force-dynamic'
+
 const getCachedVideos = unstable_cache(
   async () => {
     const adminClient = createAdminClient()

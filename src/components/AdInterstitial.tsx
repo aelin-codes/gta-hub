@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { X, PlayCircle, ShieldCheck } from 'lucide-react'
+import { PlayCircle, ShieldCheck } from 'lucide-react'
 
 interface AdInterstitialProps {
   isOpen: boolean

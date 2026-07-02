@@ -28,14 +28,15 @@ export default function AdBanner({
     }
 
     try {
+      const win = window as Window & { adsbygoogle?: unknown[] }
       // Check if adsbygoogle script is loaded on the page
-      if (typeof window !== 'undefined' && (window as any).adsbygoogle) {
-        ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({})
+      if (typeof window !== 'undefined' && win.adsbygoogle) {
+        win.adsbygoogle.push({})
       } else {
         // If not loaded, check after a short delay
         const timer = setTimeout(() => {
-          if (typeof window !== 'undefined' && (window as any).adsbygoogle) {
-            ((window as any).adsbygoogle = (window as any).adsbygoogle || []).push({})
+          if (typeof window !== 'undefined' && win.adsbygoogle) {
+            win.adsbygoogle.push({})
           } else {
             setAdFailed(true)
           }

@@ -1,12 +1,35 @@
 'use client'
 
-import { useEffect, useState, Fragment } from 'react'
+import { useEffect, useState, Fragment, useCallback } from 'react'
 import { Search, Sparkles, RefreshCw, X, SlidersHorizontal, UserCheck } from 'lucide-react'
 import VideoCard from '@/components/VideoCard'
 import AdInterstitial from '@/components/AdInterstitial'
 import { createClient } from '@/utils/supabase/client'
 import { PAYMENTS_ENABLED } from '@/config'
 import AdBanner from '@/components/AdBanner'
+
+interface Timestamp {
+  label: string
+  seconds: number
+}
+
+interface Video {
+  id: string
+  platform: 'youtube' | 'twitch'
+  external_id: string
+  title: string
+  description: string
+  channel_name: string
+  channel_url: string
+  thumbnail_url: string
+  published_at: string
+  video_timestamps?: Timestamp[]
+}
+
+interface DbUser {
+  id: string
+  email?: string
+}
 
 // Categories from Section 5
 const CATEGORIES = [
@@ -28,8 +51,8 @@ const CATEGORIES = [
   "Funny & Highlight Moments"
 ]
 
-export default function LibraryPage({ params: { locale } }: { params: { locale: string } }) {
-  const [videos, setVideos] = useState<any[]>([])
+export default function LibraryPage({ params: { locale: _locale } }: { params: { locale: string } }) {
+  const [videos, setVideos] = useState<Video[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchMode, setSearchMode] = useState<'keyword' | 'semantic'>('keyword')
@@ -38,7 +61,7 @@ export default function LibraryPage({ params: { locale } }: { params: { locale: 
   const [sortBy, setSortBy] = useState('newest')
   
   // Auth and Subscription State
-  const [user, setUser] = useState<any>(null)
+  const [user, setUser] = useState<DbUser | null>(null)
   const [isPremium, setIsPremium] = useState(false)
   const [favorites, setFavorites] = useState<string[]>([]) // Array of video_ids
 
@@ -53,12 +76,13 @@ export default function LibraryPage({ params: { locale } }: { params: { locale: 
 
   // Load User, Favorites, and initial Videos
   useEffect(() => {
+    const supabaseClient = createClient()
     async function loadSession() {
-      const { data: { session } } = await supabase.auth.getSession()
+      const { data: { session } } = await supabaseClient.auth.getSession()
       if (session?.user) {
-        setUser(session.user)
+        setUser({ id: session.user.id, email: session.user.email })
         // Fetch user premium status and role from db
-        const { data: profile } = await supabase
+        const { data: profile } = await supabaseClient
           .from('users')
           .select('is_premium')
           .eq('id', session.user.id)
@@ -72,20 +96,19 @@ export default function LibraryPage({ params: { locale } }: { params: { locale: 
         }
 
         // Fetch favorites
-        const { data: favs } = await supabase
+        const { data: favs } = await supabaseClient
           .from('favorites')
           .select('video_id')
           .eq('user_id', session.user.id)
         
         if (favs) {
-          setFavorites(favs.map((f: any) => f.video_id))
+          setFavorites((favs as { video_id: string }[]).map((f) => f.video_id))
         }
       }
     }
     loadSession()
     // When payments are off, default to premium for non-logged-in users too
     if (!PAYMENTS_ENABLED) setIsPremium(true)
-    fetchVideos()
   }, [])
 
   // Refetch videos when sorting, filtering, or searching changes
@@ -93,7 +116,7 @@ export default function LibraryPage({ params: { locale } }: { params: { locale: 
     fetchVideos()
   }, [selectedCategory, selectedPlatform, sortBy])
 
-  const fetchVideos = async (qOverride?: string) => {
+  const fetchVideos = useCallback(async (qOverride?: string) => {
     setLoading(true)
     try {
       const q = qOverride !== undefined ? qOverride : searchQuery
@@ -104,11 +127,11 @@ export default function LibraryPage({ params: { locale } }: { params: { locale: 
       const res = await fetch(`/api/search?${params}`)
       const data = await res.json()
 
-      let filtered = data.videos || []
+      const filtered = (data.videos || []) as Video[]
 
       // Sort client-side (search API returns unsorted)
       if (sortBy === 'newest') {
-        filtered.sort((a: any, b: any) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime())
+        filtered.sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime())
       }
 
       setVideos(filtered)
@@ -117,7 +140,7 @@ export default function LibraryPage({ params: { locale } }: { params: { locale: 
     } finally {
       setLoading(false)
     }
-  }
+  }, [searchQuery, searchMode, selectedCategory, selectedPlatform, sortBy])
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -397,7 +420,7 @@ export default function LibraryPage({ params: { locale } }: { params: { locale: 
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {videos.map((vid: any, idx: number) => {
+                {videos.map((vid: Video, idx: number) => {
                   const showAd = idx > 0 && idx % 4 === 0
                   return (
                     <Fragment key={vid.id}>

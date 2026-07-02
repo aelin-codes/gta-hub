@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/utils/supabase/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
+export const dynamic = 'force-dynamic'
+
 // Config lists
 const SEARCH_QUERIES = ["GTA 6 secrets", "GTA 6 gameplay"]
 const CREATOR_ALLOWLIST = ["GTA Series Videos", "LegacyKillaHD", "MrBossFTW", "TGG", "Broughy1322"]

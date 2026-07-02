@@ -1,8 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { motion } from 'framer-motion'
-import { Calendar, Play, ShieldAlert, Award, Clock } from 'lucide-react'
+import { Play, ShieldAlert, Award, Clock } from 'lucide-react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 
@@ -19,9 +18,10 @@ const SkylineHero = dynamic(() => import('@/components/SkylineHero'), {
 
 import AdBanner from '@/components/AdBanner'
 
+// Target date: October 27, 2026 (outside component as static constant to prevent effect deps issues)
+const targetDate = new Date('2026-10-27T00:00:00')
+
 export default function HomePage({ params: { locale } }: { params: { locale: string } }) {
-  // Target date: October 27, 2026
-  const targetDate = new Date('2026-10-27T00:00:00')
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   const [heroInView, setHeroInView] = useState(false)
   const heroContainerRef = useRef<HTMLDivElement>(null)
@@ -171,7 +171,7 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
             </div>
             <h3 className="text-xl font-bold uppercase tracking-wider text-off-white mb-3">AI Tagging & Sorting</h3>
             <p className="text-xs text-off-white/60 leading-relaxed">
-              We parse and analyze community guides with Gemini, sorting everything into clean categories so you don't scroll through hundreds of duplicates.
+              We parse and analyze community guides with Gemini, sorting everything into clean categories so you don&apos;t scroll through hundreds of duplicates.
             </p>
           </div>
 

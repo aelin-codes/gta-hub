@@ -3,9 +3,33 @@
 import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { Heart, Play, Clock, ArrowLeft, ExternalLink, Calendar, RefreshCw } from 'lucide-react'
+import Image from 'next/image'
 import { createClient } from '@/utils/supabase/client'
 import AdBanner from '@/components/AdBanner'
 import { PAYMENTS_ENABLED } from '@/config'
+
+interface Timestamp {
+  label: string
+  seconds: number
+}
+
+interface Video {
+  id: string
+  platform: 'youtube' | 'twitch'
+  external_id: string
+  title: string
+  description: string
+  channel_name: string
+  channel_url: string
+  thumbnail_url: string
+  published_at: string
+  video_timestamps?: Timestamp[]
+}
+
+interface UserProfile {
+  id: string
+  email?: string
+}
 
 export default function VideoDetailPage() {
   const params = useParams()
@@ -13,35 +37,24 @@ export default function VideoDetailPage() {
   const locale = (params?.locale as string) || 'en'
   const id = params?.id as string
 
-  const [video, setVideo] = useState<any>(null)
+  const [video, setVideo] = useState<Video | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isPremium, setIsPremium] = useState(false)
   const [isFavorited, setIsFavorited] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [activeTimestamp, setActiveTimestamp] = useState<number | null>(null)
-  const [user, setUser] = useState<any>(null)
-
-  const supabase = createClient()
+  const [user, setUser] = useState<UserProfile | null>(null)
 
   useEffect(() => {
+    const supabase = createClient()
+
     async function loadVideoAndSession() {
       setLoading(true)
       try {
         // Fetch session
         const { data: { session } } = await supabase.auth.getSession()
-        let premiumUser = !PAYMENTS_ENABLED // If payments are off, everyone gets premium features
         
         if (session?.user) {
-          setUser(session.user)
-          const { data: profile } = await supabase
-            .from('users')
-            .select('is_premium')
-            .eq('id', session.user.id)
-            .single()
-          
-          if (profile) {
-            premiumUser = PAYMENTS_ENABLED ? profile.is_premium : true
-          }
+          setUser({ id: session.user.id, email: session.user.email })
 
           // Check if favorited
           const { data: fav } = await supabase
@@ -53,7 +66,6 @@ export default function VideoDetailPage() {
           
           setIsFavorited(!!fav)
         }
-        setIsPremium(premiumUser)
 
         // Fetch video details
         const { data: vid, error } = await supabase
@@ -65,7 +77,7 @@ export default function VideoDetailPage() {
         if (error || !vid) {
           console.error('Error fetching video:', error)
         } else {
-          setVideo(vid)
+          setVideo(vid as Video)
         }
       } catch (err) {
         console.error(err)
@@ -84,6 +96,8 @@ export default function VideoDetailPage() {
       alert('Please log in to save favorites.')
       return
     }
+
+    const supabase = createClient()
 
     if (isFavorited) {
       const { error } = await supabase
@@ -179,11 +193,16 @@ export default function VideoDetailPage() {
                 />
               ) : (
                 <div className="relative w-full h-full group flex items-center justify-center">
-                  <img
-                    src={video.thumbnail_url || `https://img.youtube.com/vi/${video.external_id}/maxresdefault.jpg`}
-                    alt={video.title}
-                    className="w-full h-full object-cover"
-                  />
+                  <div className="relative w-full h-full aspect-video">
+                    <Image
+                      src={video.thumbnail_url || `https://img.youtube.com/vi/${video.external_id}/maxresdefault.jpg`}
+                      alt={video.title}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 66vw"
+                      priority
+                      className="object-cover"
+                    />
+                  </div>
                   <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition duration-300" />
                   
                   <button
@@ -239,7 +258,7 @@ export default function VideoDetailPage() {
                     <span>Deep-Link Secret Timestamps</span>
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {video.video_timestamps.map((ts: any, idx: number) => (
+                    {video.video_timestamps.map((ts: Timestamp, idx: number) => (
                       <button
                         key={idx}
                         onClick={() => handlePlayClick(ts.seconds)}
@@ -258,14 +277,14 @@ export default function VideoDetailPage() {
 
           </div>
 
-          {/* Sidebar Section: Ad placements (One below the video/sidebar) */}
+          {/* Sidebar Section: Ad placements */}
           <aside className="space-y-6">
             <div className="bg-deep-teal/40 border border-deep-teal/80 rounded-2xl p-6 space-y-4">
               <h3 className="text-xs uppercase font-mono tracking-widest text-off-white/40">
                 Sponsored Content
               </h3>
               
-              {/* Ad placement on the video detail page sidebar (never overlaps the content, fixed height) */}
+              {/* Ad placement on the video detail page sidebar */}
               <AdBanner slot="video-detail-sidebar" format="rectangle" style={{ minHeight: '250px' }} />
             </div>
 
