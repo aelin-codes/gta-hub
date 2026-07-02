@@ -55,6 +55,7 @@ export default function LibraryPage({ params: _params }: { params: { locale: str
   const [videos, setVideos] = useState<Video[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
   const [searchMode, setSearchMode] = useState<'keyword' | 'semantic'>('keyword')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null)
@@ -64,6 +65,7 @@ export default function LibraryPage({ params: _params }: { params: { locale: str
   const [user, setUser] = useState<DbUser | null>(null)
   const [isPremium, setIsPremium] = useState(false)
   const [favorites, setFavorites] = useState<string[]>([]) // Array of video_ids
+  const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({})
 
   // Ad State (Section 7)
   const [videoOpensThisSession, setVideoOpensThisSession] = useState(0)
@@ -106,20 +108,52 @@ export default function LibraryPage({ params: _params }: { params: { locale: str
         }
       }
     }
+
+    async function loadCategoryCounts() {
+      const { data, error } = await supabaseClient
+        .from('video_categories')
+        .select('category_id, categories(name)')
+      
+      if (error) {
+        console.error('Error fetching category counts:', error)
+        return
+      }
+
+      if (data) {
+        const counts: Record<string, number> = {}
+        data.forEach((row: any) => {
+          const catName = row.categories?.name
+          if (catName) {
+            counts[catName] = (counts[catName] || 0) + 1
+          }
+        })
+        setCategoryCounts(counts)
+      }
+    }
+
     loadSession()
+    loadCategoryCounts()
     // When payments are off, default to premium for non-logged-in users too
     if (!PAYMENTS_ENABLED) setIsPremium(true)
   }, [])
 
+  // Debounce the searchQuery to prevent triggering a query per keystroke (Phase 4.3)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
   // Refetch videos when sorting, filtering, or searching changes
   useEffect(() => {
     fetchVideos()
-  }, [selectedCategory, selectedPlatform, sortBy])
+  }, [selectedCategory, selectedPlatform, sortBy, debouncedSearchQuery, fetchVideos])
 
   const fetchVideos = useCallback(async (qOverride?: string) => {
     setLoading(true)
     try {
-      const q = qOverride !== undefined ? qOverride : searchQuery
+      const q = qOverride !== undefined ? qOverride : debouncedSearchQuery
       const params = new URLSearchParams({ q, mode: searchMode })
       if (selectedCategory) params.set('category', selectedCategory)
       if (selectedPlatform) params.set('platform', selectedPlatform)
@@ -140,11 +174,11 @@ export default function LibraryPage({ params: _params }: { params: { locale: str
     } finally {
       setLoading(false)
     }
-  }, [searchQuery, searchMode, selectedCategory, selectedPlatform, sortBy])
+  }, [debouncedSearchQuery, searchMode, selectedCategory, selectedPlatform, sortBy])
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    fetchVideos()
+    setDebouncedSearchQuery(searchQuery)
   }
 
   const handleToggleFavorite = async (videoId: string, videoUUID: string) => {
@@ -385,7 +419,10 @@ export default function LibraryPage({ params: _params }: { params: { locale: str
                         : 'hover:bg-midnight-teal/40 text-off-white/75 hover:text-off-white'
                     }`}
                   >
-                    {cat}
+                    <span className="flex justify-between items-center w-full">
+                      <span>{cat}</span>
+                      <span className="opacity-50 text-[10px] font-mono">({categoryCounts[cat] || 0})</span>
+                    </span>
                   </button>
                 ))}
               </div>
@@ -409,9 +446,9 @@ export default function LibraryPage({ params: _params }: { params: { locale: str
                 <button
                   onClick={() => {
                     setSearchQuery('')
+                    setDebouncedSearchQuery('')
                     setSelectedCategory(null)
                     setSelectedPlatform(null)
-                    fetchVideos('')
                   }}
                   className="mt-2 px-4 py-2 text-xs bg-deep-teal text-off-white hover:text-palm-teal font-bold uppercase rounded border border-deep-teal transition"
                 >

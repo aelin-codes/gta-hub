@@ -4,6 +4,9 @@ import { useEffect, useState, useRef } from 'react'
 import { Play, ShieldAlert, Award, Clock } from 'lucide-react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import { useRouter } from 'next/navigation'
+import VideoCard from '@/components/VideoCard'
+import { createClient } from '@/utils/supabase/client'
 
 const SkylineHero = dynamic(() => import('@/components/SkylineHero'), {
   ssr: false,
@@ -21,9 +24,29 @@ import AdBanner from '@/components/AdBanner'
 // Target date: October 27, 2026 (outside component as static constant to prevent effect deps issues)
 const targetDate = new Date('2026-10-27T00:00:00')
 
+interface Timestamp {
+  label: string
+  seconds: number
+}
+
+interface Video {
+  id: string
+  platform: 'youtube' | 'twitch'
+  external_id: string
+  title: string
+  description: string
+  channel_name: string
+  channel_url: string
+  thumbnail_url: string
+  published_at: string
+  video_timestamps?: Timestamp[]
+}
+
 export default function HomePage({ params: { locale } }: { params: { locale: string } }) {
+  const router = useRouter()
   const [timeLeft, setTimeLeft] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   const [heroInView, setHeroInView] = useState(false)
+  const [recentVideos, setRecentVideos] = useState<Video[]>([])
   const heroContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -61,6 +84,39 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
       observer.observe(heroContainerRef.current)
     }
     return () => observer.disconnect()
+  }, [])
+
+  useEffect(() => {
+    const supabaseClient = createClient()
+    
+    async function loadRecentVideos() {
+      const getVideos = async (days: number) => {
+        const dateStr = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+        const { data } = await supabaseClient
+          .from('videos')
+          .select('*, video_timestamps(*)')
+          .gte('published_at', dateStr)
+          .eq('excluded', false)
+          .order('published_at', { ascending: false })
+        return data || []
+      }
+
+      try {
+        let recent = await getVideos(7)
+        if (recent.length < 4) {
+          recent = await getVideos(14)
+        }
+        if (recent.length >= 4) {
+          setRecentVideos(recent as Video[])
+        } else {
+          setRecentVideos([]) // hide section
+        }
+      } catch (err) {
+        console.error('Failed to load recent videos:', err)
+      }
+    }
+
+    loadRecentVideos()
   }, [])
 
   return (
@@ -110,6 +166,52 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
             ))}
           </div>
         </section>
+
+        {/* 2.5 New This Week Section (Phase 4.2) */}
+        {recentVideos.length > 0 && (
+          <section className="space-y-6">
+            <div className="flex items-center justify-between border-b border-deep-teal pb-4">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-display uppercase tracking-widest text-off-white">
+                  NEW THIS WEEK
+                </h2>
+                <p className="text-xs text-off-white/60">
+                  Latest guides, leaks, and gameplay analyses added in the last 7 to 14 days.
+                </p>
+              </div>
+              <Link
+                href={`/${locale}/library`}
+                className="text-xs uppercase font-bold text-sunset-orange hover:text-neon-flamingo transition hover:underline"
+              >
+                View Library
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {recentVideos.map((vid: Video) => (
+                <VideoCard
+                  key={vid.id}
+                  video={{
+                    id: vid.id,
+                    platform: vid.platform,
+                    external_id: vid.external_id,
+                    title: vid.title,
+                    description: vid.description,
+                    channel_name: vid.channel_name,
+                    channel_url: vid.channel_url,
+                    thumbnail_url: vid.thumbnail_url || `https://img.youtube.com/vi/${vid.external_id}/maxresdefault.jpg`,
+                    published_at: vid.published_at,
+                    video_timestamps: vid.video_timestamps || []
+                  }}
+                  isFavorited={false}
+                  isPremium={true}
+                  onToggleFavorite={() => {}}
+                  onOpenVideo={() => router.push(`/${locale}/library/${vid.id}`)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* 3. Trailer & Details Section */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">

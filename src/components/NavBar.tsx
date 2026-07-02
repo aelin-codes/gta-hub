@@ -32,6 +32,9 @@ export default function NavBar({ locale }: { locale: string }) {
       <Link href={`/${locale}/wiki`} className="hover:text-neon-flamingo transition duration-200">
         Wiki / Map
       </Link>
+      <Link href={`/${locale}/articles`} className="hover:text-neon-flamingo transition duration-200">
+        Articles
+      </Link>
       {PAYMENTS_ENABLED && (
         <Link href={`/${locale}/pricing`} className="hover:text-neon-flamingo transition duration-200">
           Pricing
