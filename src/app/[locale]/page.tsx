@@ -17,6 +17,8 @@ const SkylineHero = dynamic(() => import('@/components/SkylineHero'), {
   )
 })
 
+import AdBanner from '@/components/AdBanner'
+
 export default function HomePage({ params: { locale } }: { params: { locale: string } }) {
   // Target date: October 27, 2026
   const targetDate = new Date('2026-10-27T00:00:00')
@@ -147,6 +149,9 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
             />
           </div>
         </section>
+
+        {/* Homepage Ad Banner */}
+        <AdBanner slot="homepage-feed" className="max-w-4xl" />
 
         {/* 4. Trending Features */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-8">

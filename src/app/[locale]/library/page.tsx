@@ -1,11 +1,12 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Fragment } from 'react'
 import { Search, Sparkles, RefreshCw, X, SlidersHorizontal, UserCheck } from 'lucide-react'
 import VideoCard from '@/components/VideoCard'
 import AdInterstitial from '@/components/AdInterstitial'
 import { createClient } from '@/utils/supabase/client'
 import { PAYMENTS_ENABLED } from '@/config'
+import AdBanner from '@/components/AdBanner'
 
 // Categories from Section 5
 const CATEGORIES = [
@@ -396,28 +397,38 @@ export default function LibraryPage({ params: { locale } }: { params: { locale: 
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {videos.map((vid: any, idx: number) => (
-                  <VideoCard
-                    key={vid.id}
-                    video={{
-                      id: vid.id,
-                      platform: vid.platform,
-                      external_id: vid.external_id,
-                      title: vid.title,
-                      description: vid.description,
-                      channel_name: vid.channel_name,
-                      channel_url: vid.channel_url,
-                      thumbnail_url: vid.thumbnail_url || `https://img.youtube.com/vi/${vid.external_id}/maxresdefault.jpg`,
-                      published_at: vid.published_at,
-                      video_timestamps: vid.video_timestamps || []
-                    }}
-                    isFavorited={favorites.includes(vid.id)}
-                    isPremium={isPremium}
-                    onToggleFavorite={() => handleToggleFavorite(vid.external_id, vid.id)}
-                    onOpenVideo={(seconds) => handleOpenVideo(vid.id, seconds)}
-                    priority={idx < 2}
-                  />
-                ))}
+                {videos.map((vid: any, idx: number) => {
+                  const showAd = idx > 0 && idx % 4 === 0
+                  return (
+                    <Fragment key={vid.id}>
+                      {showAd && (
+                        <AdBanner 
+                          slot={`library-grid-slot-${idx}`} 
+                          className="col-span-1 md:col-span-2" 
+                        />
+                      )}
+                      <VideoCard
+                        video={{
+                          id: vid.id,
+                          platform: vid.platform,
+                          external_id: vid.external_id,
+                          title: vid.title,
+                          description: vid.description,
+                          channel_name: vid.channel_name,
+                          channel_url: vid.channel_url,
+                          thumbnail_url: vid.thumbnail_url || `https://img.youtube.com/vi/${vid.external_id}/maxresdefault.jpg`,
+                          published_at: vid.published_at,
+                          video_timestamps: vid.video_timestamps || []
+                        }}
+                        isFavorited={favorites.includes(vid.id)}
+                        isPremium={isPremium}
+                        onToggleFavorite={() => handleToggleFavorite(vid.external_id, vid.id)}
+                        onOpenVideo={(seconds) => handleOpenVideo(vid.id, seconds)}
+                        priority={idx < 2}
+                      />
+                    </Fragment>
+                  )
+                })}
               </div>
             )}
           </section>

@@ -5,6 +5,7 @@ import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion'
 import { Heart, Play, ExternalLink, Clock } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useParams } from 'next/navigation'
 
 interface Timestamp {
   label: string
@@ -45,6 +46,9 @@ export default function VideoCard({
   const [activeTimestamp, setActiveTimestamp] = useState<number | null>(null)
   const [reducedMotion, setReducedMotion] = useState(false)
   const cardRef = useRef<HTMLDivElement>(null)
+
+  const params = useParams()
+  const locale = (params?.locale as string) || 'en'
 
   // Motion values for 3D card tilt
   const x = useMotionValue(0)
@@ -175,7 +179,9 @@ export default function VideoCard({
 
           {/* Title */}
           <h3 className="text-md font-bold text-off-white leading-snug line-clamp-2 group-hover:text-sunset-orange transition-colors duration-200">
-            {video.title}
+            <Link href={`/${locale}/library/${video.id}`}>
+              {video.title}
+            </Link>
           </h3>
 
           {/* Summary / Description */}
