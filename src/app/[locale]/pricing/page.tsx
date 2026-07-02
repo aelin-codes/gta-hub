@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { Check, Sparkles, AlertCircle, X, MapPin } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
+import { PAYMENTS_ENABLED } from '@/config'
 
 // Presentment currencies for non-Indian Stripe transactions (Section 10)
 const STRIPE_CURRENCIES = {
@@ -19,6 +20,7 @@ export default function PricingPage({ params: { locale } }: { params: { locale: 
   const [showOverride, setShowOverride] = useState(false)
   const [loading, setLoading] = useState(false)
   const supabase = createClient()
+
 
   useEffect(() => {
     async function getUser() {
@@ -85,6 +87,34 @@ export default function PricingPage({ params: { locale } }: { params: { locale: 
     } finally {
       setLoading(false)
     }
+  }
+
+  // PAYMENTS_ENABLED is a build-time constant — safe to use in JSX conditional (not a hook)
+  if (!PAYMENTS_ENABLED) {
+    return (
+      <div className="bg-midnight-teal min-h-screen flex items-center justify-center py-16 px-4">
+        <div className="max-w-md w-full text-center space-y-8">
+          <div className="bg-deep-teal/20 border border-deep-teal/60 rounded-3xl p-12 space-y-6">
+            <div className="w-16 h-16 mx-auto rounded-full bg-palm-teal/10 flex items-center justify-center">
+              <Sparkles className="w-8 h-8 text-palm-teal" />
+            </div>
+            <h1 className="text-4xl font-display uppercase tracking-widest text-off-white">
+              Coming Soon
+            </h1>
+            <p className="text-sm text-off-white/60 leading-relaxed">
+              GTA 6 Hub is currently in open access &mdash; all features are free for everyone while we build out the platform.
+              Subscription plans will be available once the site launches fully.
+            </p>
+            <Link
+              href={`/${locale}/library`}
+              className="inline-block px-8 py-3 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:opacity-90 transition shadow-lg"
+            >
+              Browse the Library
+            </Link>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

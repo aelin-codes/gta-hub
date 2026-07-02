@@ -1,10 +1,11 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Search, Sparkles, Filter, RefreshCw, X, SlidersHorizontal, UserCheck } from 'lucide-react'
+import { Search, Sparkles, RefreshCw, X, SlidersHorizontal, UserCheck } from 'lucide-react'
 import VideoCard from '@/components/VideoCard'
 import AdInterstitial from '@/components/AdInterstitial'
 import { createClient } from '@/utils/supabase/client'
+import { PAYMENTS_ENABLED } from '@/config'
 
 // Categories from Section 5
 const CATEGORIES = [
@@ -63,7 +64,10 @@ export default function LibraryPage({ params: { locale } }: { params: { locale: 
           .single()
         
         if (profile) {
-          setIsPremium(profile.is_premium)
+          // If payments are disabled, everyone gets premium features
+          setIsPremium(PAYMENTS_ENABLED ? profile.is_premium : true)
+        } else if (!PAYMENTS_ENABLED) {
+          setIsPremium(true)
         }
 
         // Fetch favorites
@@ -78,6 +82,8 @@ export default function LibraryPage({ params: { locale } }: { params: { locale: 
       }
     }
     loadSession()
+    // When payments are off, default to premium for non-logged-in users too
+    if (!PAYMENTS_ENABLED) setIsPremium(true)
     fetchVideos()
   }, [])
 
@@ -202,8 +208,8 @@ export default function LibraryPage({ params: { locale } }: { params: { locale: 
             </p>
           </div>
 
-          {/* Premium Status Banner */}
-          {user && (
+          {/* Premium Status Banner — only show plan badge when payments are enabled */}
+          {user && PAYMENTS_ENABLED && (
             <div className="flex items-center space-x-2 bg-deep-teal/80 border border-palm-teal/30 px-4 py-2 rounded-xl text-xs">
               <UserCheck className="w-4 h-4 text-palm-teal" />
               <span>Logged in as: <strong className="text-off-white">{user.email}</strong></span>
@@ -260,11 +266,11 @@ export default function LibraryPage({ params: { locale } }: { params: { locale: 
               Keyword Match
             </button>
 
-            {/* Semantic Search Option (Premium Highlight) */}
+            {/* Semantic Search — always available when payments off */}
             <button
               type="button"
               onClick={() => {
-                if (!isPremium) {
+                if (PAYMENTS_ENABLED && !isPremium) {
                   alert("AI Natural Language Semantic Search is a Premium Feature. Upgrade on the Pricing page to unlock it!")
                 } else {
                   setSearchMode('semantic')
@@ -278,7 +284,6 @@ export default function LibraryPage({ params: { locale } }: { params: { locale: 
             >
               <Sparkles className="w-3.5 h-3.5" />
               <span>AI Semantic Search</span>
-              {!isPremium && <span className="bg-neon-flamingo/20 text-neon-flamingo text-[8px] px-1.5 py-0.5 rounded">Pro</span>}
             </button>
           </div>
         </form>

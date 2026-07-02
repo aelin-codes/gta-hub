@@ -8,6 +8,7 @@ import { locales } from '@/i18n'
 import NavBar from '@/components/NavBar'
 import Link from 'next/link'
 import '@/app/globals.css'
+import { PAYMENTS_ENABLED } from '@/config'
 
 const inter = Inter({
   subsets: ['latin'],
@@ -67,12 +68,14 @@ export default async function LocaleLayout({
 
               {/* Action Buttons */}
               <div className="flex items-center space-x-4">
-                <Link 
-                  href={`/${locale}/pricing`} 
-                  className="hidden sm:inline-flex items-center px-4 py-2 text-xs font-bold uppercase tracking-widest border border-neon-flamingo text-neon-flamingo hover:bg-neon-flamingo hover:text-white transition duration-300 rounded shadow-[0_0_10px_rgba(255,61,129,0.2)]"
-                >
-                  Go Premium
-                </Link>
+                {PAYMENTS_ENABLED && (
+                  <Link 
+                    href={`/${locale}/pricing`} 
+                    className="hidden sm:inline-flex items-center px-4 py-2 text-xs font-bold uppercase tracking-widest border border-neon-flamingo text-neon-flamingo hover:bg-neon-flamingo hover:text-white transition duration-300 rounded shadow-[0_0_10px_rgba(255,61,129,0.2)]"
+                  >
+                    Go Premium
+                  </Link>
+                )}
                 <Link 
                   href={`/${locale}/login`} 
                   className="px-4 py-2 text-xs font-bold uppercase tracking-widest bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white hover:opacity-90 transition duration-300 rounded shadow-[0_4px_15px_rgba(255,61,129,0.4)]"

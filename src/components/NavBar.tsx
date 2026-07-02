@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { createClient } from '@/utils/supabase/client'
+import { PAYMENTS_ENABLED } from '@/config'
 
 export default function NavBar({ locale }: { locale: string }) {
   const [isAdmin, setIsAdmin] = useState(false)
@@ -31,9 +32,11 @@ export default function NavBar({ locale }: { locale: string }) {
       <Link href={`/${locale}/wiki`} className="hover:text-neon-flamingo transition duration-200">
         Wiki / Map
       </Link>
-      <Link href={`/${locale}/pricing`} className="hover:text-neon-flamingo transition duration-200">
-        Pricing
-      </Link>
+      {PAYMENTS_ENABLED && (
+        <Link href={`/${locale}/pricing`} className="hover:text-neon-flamingo transition duration-200">
+          Pricing
+        </Link>
+      )}
       <Link href={`/${locale}/dashboard`} className="hover:text-neon-flamingo transition duration-200">
         Dashboard
       </Link>

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Heart, User, ShieldCheck, Calendar, BellOff, Trash2, ShieldAlert } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
+import { PAYMENTS_ENABLED } from '@/config'
 
 export default function DashboardPage({ params: { locale } }: { params: { locale: string } }) {
   const [user, setUser] = useState<any>(null)
@@ -199,33 +200,37 @@ export default function DashboardPage({ params: { locale } }: { params: { locale
             </div>
           </div>
 
-          {/* Premium Panel */}
-          <div className="w-full md:w-auto p-4 rounded-2xl bg-midnight-teal border border-deep-teal/60 flex items-center justify-between gap-6 shrink-0">
-            <div>
-              <span className="text-[10px] uppercase font-mono tracking-widest text-off-white/40 block">Plan Status</span>
-              <span className="text-sm font-bold text-off-white mt-1 block">
-                {hasPremium ? 'Leonida Pro (Ad-Free)' : 'Basic Free Tier'}
-              </span>
+            {/* Plan Panel */}
+            <div className="w-full md:w-auto p-4 rounded-2xl bg-midnight-teal border border-deep-teal/60 flex items-center justify-between gap-6 shrink-0">
+              <div>
+                <span className="text-[10px] uppercase font-mono tracking-widest text-off-white/40 block">Plan Status</span>
+                <span className="text-sm font-bold text-off-white mt-1 block">
+                  {!PAYMENTS_ENABLED ? 'All Features Unlocked' : hasPremium ? 'Leonida Pro (Ad-Free)' : 'Basic Free Tier'}
+                </span>
+              </div>
+              
+              {!PAYMENTS_ENABLED ? (
+                <span className="bg-palm-teal/20 text-palm-teal text-[10px] font-bold uppercase px-3 py-1.5 rounded-xl border border-palm-teal/30">
+                  Free Access
+                </span>
+              ) : hasPremium ? (
+                <span className="bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-xl shadow-md flex items-center space-x-1">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Premium Active</span>
+                </span>
+              ) : (
+                <Link
+                  href={`/${locale}/pricing`}
+                  className="px-4 py-2 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-xs font-bold uppercase rounded-lg hover:opacity-90 transition text-center"
+                >
+                  Upgrade Plan
+                </Link>
+              )}
             </div>
-            
-            {hasPremium ? (
-              <span className="bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-xl shadow-md flex items-center space-x-1">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Premium Active</span>
-              </span>
-            ) : (
-              <Link
-                href={`/${locale}/pricing`}
-                className="px-4 py-2 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-xs font-bold uppercase rounded-lg hover:opacity-90 transition text-center"
-              >
-                Upgrade Plan
-              </Link>
-            )}
-          </div>
         </div>
 
-        {/* Subscription Control Widget (Section 7) */}
-        {hasPremium && subscription && (
+        {/* Subscription Control Widget (Section 7) — only shown when payments are enabled */}
+        {PAYMENTS_ENABLED && hasPremium && subscription && (
           <div className="bg-deep-teal/30 border border-deep-teal/60 rounded-3xl p-6 sm:p-8 space-y-6">
             <div className="flex items-center justify-between border-b border-midnight-teal/40 pb-4">
               <span className="text-sm uppercase font-mono tracking-widest text-off-white/40 flex items-center space-x-2">

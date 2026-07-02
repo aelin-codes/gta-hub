@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/utils/supabase/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { unstable_cache } from 'next/cache'
+import { PAYMENTS_ENABLED } from '@/config'
 
 const getCachedVideos = unstable_cache(
   async () => {
@@ -44,7 +45,8 @@ export async function GET(req: Request) {
     }
 
     // Force keyword mode if user is not premium (security constraint)
-    const activeMode = (mode === 'semantic' && isPremium) ? 'semantic' : 'keyword'
+    // Bypass when payments are disabled — everyone gets all features
+    const activeMode = (!PAYMENTS_ENABLED || (mode === 'semantic' && isPremium)) ? (mode === 'semantic' ? 'semantic' : 'keyword') : 'keyword'
 
     // --- Category filter via junction table (Mode B fix) ---
     // The videos table has NO category column. Categories live in video_categories.
