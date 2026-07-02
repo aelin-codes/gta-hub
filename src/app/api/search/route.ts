@@ -46,15 +46,52 @@ export async function GET(req: Request) {
     // Force keyword mode if user is not premium (security constraint)
     const activeMode = (mode === 'semantic' && isPremium) ? 'semantic' : 'keyword'
 
-    // Merge category into effective query — simplest correct approach
-    // e.g. category="Easter Eggs & Secrets" + query="submarine" → "submarine easter eggs secrets"
-    const keywords = category ? category.replace(/&/g, '').replace(/[^a-zA-Z0-9 ]/g, '') : ''
-    const effectiveQuery = [query.trim(), keywords.trim()].filter(Boolean).join(' ')
+    // --- Category filter via junction table (Mode B fix) ---
+    // The videos table has NO category column. Categories live in video_categories.
+    // We resolve: category name → category.id → video_categories.video_id → videos.
+    let categoryVideoIds: string[] | null = null
+    if (category) {
+      const { data: catRow, error: catErr } = await adminClient
+        .from('categories')
+        .select('id')
+        .eq('name', category)
+        .single()
+
+      if (catErr || !catRow) {
+        console.warn(`Category "${category}" not found in DB:`, catErr)
+        // Return empty — the category is valid UI-side but not seeded in DB
+        return NextResponse.json({ mode: activeMode, requestedMode: mode, isPremium, videos: [] })
+      }
+
+      const { data: junctionRows, error: junctionErr } = await adminClient
+        .from('video_categories')
+        .select('video_id')
+        .eq('category_id', catRow.id)
+
+      if (junctionErr) console.error('video_categories join error:', junctionErr)
+      categoryVideoIds = (junctionRows || []).map((r: any) => r.video_id)
+
+      // No videos tagged with this category
+      if ((categoryVideoIds as string[]).length === 0) {
+        return NextResponse.json({ mode: activeMode, requestedMode: mode, isPremium, videos: [] })
+      }
+    }
 
     let results: any[] = []
 
-    if (!effectiveQuery) {
-      results = await getCachedVideos()
+    if (!query) {
+      if (categoryVideoIds) {
+        // Category selected, no text query — fetch the specific videos by ID
+        const { data, error } = await adminClient
+          .from('videos')
+          .select('*, video_timestamps(*)')
+          .in('id', categoryVideoIds)
+          .eq('excluded', false)
+        if (error) console.error('Category video fetch error:', error)
+        results = data || []
+      } else {
+        results = await getCachedVideos()
+      }
     } else if (activeMode === 'semantic') {
       const geminiKey = process.env.GEMINI_API_KEY
       if (geminiKey) {
@@ -63,7 +100,7 @@ export async function GET(req: Request) {
           // Generate query embedding
           // We can use text-embedding-004 model
           const model = genAI.getGenerativeModel({ model: "text-embedding-004" })
-          const embedRes = await model.embedContent(effectiveQuery)
+          const embedRes = await model.embedContent(query)
           const embedding = embedRes.embedding.values
 
           // Search using pgvector cosine similarity via rpc (stored procedure)
@@ -93,7 +130,7 @@ export async function GET(req: Request) {
           const { data } = await adminClient
             .from('videos')
             .select('*')
-            .or(`title.ilike.%${effectiveQuery}%,description.ilike.%${effectiveQuery}%`)
+            .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
             .eq('excluded', false)
           results = data || []
         }
@@ -103,17 +140,29 @@ export async function GET(req: Request) {
         const { data } = await adminClient
           .from('videos')
           .select('*')
-          .or(`title.ilike.%${effectiveQuery}%,description.ilike.%${effectiveQuery}%,transcript.ilike.%${effectiveQuery}%`)
+          .or(`title.ilike.%${query}%,description.ilike.%${query}%,transcript.ilike.%${query}%`)
           .eq('excluded', false)
         results = data || []
       }
+
+      // Narrow semantic results by category if one was selected
+      if (categoryVideoIds) {
+        results = results.filter((v: any) => categoryVideoIds!.includes(v.id))
+      }
     } else {
-      // Standard keyword search — use effectiveQuery (includes category keywords)
-      const { data, error } = await adminClient
+      // Standard keyword search
+      let qb = adminClient
         .from('videos')
         .select('*, video_timestamps(*)')
-        .or(`title.ilike.%${effectiveQuery}%,description.ilike.%${effectiveQuery}%`)
+        .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
         .eq('excluded', false)
+
+      // Narrow to category-matched videos when both filters are active
+      if (categoryVideoIds) {
+        qb = qb.in('id', categoryVideoIds)
+      }
+
+      const { data, error } = await qb
       if (error) console.error('Keyword search error:', error)
       results = data || []
     }
