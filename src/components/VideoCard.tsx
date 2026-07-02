@@ -32,6 +32,8 @@ interface VideoCardProps {
   onToggleFavorite: () => void
   onOpenVideo: (seconds?: number) => void // Trigger open video / interstitial
   priority?: boolean
+  activePlayId?: string | null
+  activeTimestamp?: number
 }
 
 export default function VideoCard({
@@ -40,7 +42,9 @@ export default function VideoCard({
   isPremium,
   onToggleFavorite,
   onOpenVideo,
-  priority = false
+  priority = false,
+  activePlayId = null,
+  activeTimestamp: activeTimestampProp
 }: VideoCardProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [activeTimestamp, setActiveTimestamp] = useState<number | null>(null)
@@ -49,6 +53,15 @@ export default function VideoCard({
 
   const params = useParams()
   const locale = (params?.locale as string) || 'en'
+
+  useEffect(() => {
+    if (activePlayId === video.id) {
+      setIsPlaying(true)
+      if (activeTimestampProp !== undefined) {
+        setActiveTimestamp(activeTimestampProp)
+      }
+    }
+  }, [activePlayId, video.id, activeTimestampProp])
 
   // Motion values for 3D card tilt
   const x = useMotionValue(0)

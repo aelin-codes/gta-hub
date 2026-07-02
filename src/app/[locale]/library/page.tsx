@@ -51,7 +51,7 @@ const CATEGORIES = [
   "Funny & Highlight Moments"
 ]
 
-export default function LibraryPage({ params: { locale: _locale } }: { params: { locale: string } }) {
+export default function LibraryPage({ params: _params }: { params: { locale: string } }) {
   const [videos, setVideos] = useState<Video[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -448,6 +448,8 @@ export default function LibraryPage({ params: { locale: _locale } }: { params: {
                         onToggleFavorite={() => handleToggleFavorite(vid.external_id, vid.id)}
                         onOpenVideo={(seconds) => handleOpenVideo(vid.id, seconds)}
                         priority={idx < 2}
+                        activePlayId={activePlayId}
+                        activeTimestamp={activeTimestamp}
                       />
                     </Fragment>
                   )

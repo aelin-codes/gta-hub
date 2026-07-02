@@ -6,7 +6,6 @@ import { Heart, Play, Clock, ArrowLeft, ExternalLink, Calendar, RefreshCw } from
 import Image from 'next/image'
 import { createClient } from '@/utils/supabase/client'
 import AdBanner from '@/components/AdBanner'
-import { PAYMENTS_ENABLED } from '@/config'
 
 interface Timestamp {
   label: string
