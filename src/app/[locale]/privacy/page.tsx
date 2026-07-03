@@ -1,4 +1,13 @@
 import { ShieldAlert } from 'lucide-react'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Privacy Policy | GTA 6 Hub',
+  description: 'Read the privacy policy for GTA 6 Hub, including cookie consent details, information collection, and third-party script integrations.',
+  alternates: {
+    canonical: 'https://gta6hub.com/en/privacy',
+  },
+}
 
 export default function PrivacyPage() {
   return (

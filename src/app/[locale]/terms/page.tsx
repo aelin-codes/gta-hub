@@ -1,4 +1,13 @@
 import { ShieldAlert } from 'lucide-react'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Terms of Service | GTA 6 Hub',
+  description: 'Review the Terms of Service for GTA 6 Hub, our fan site disclaimer, subscription terms, and user guidelines.',
+  alternates: {
+    canonical: 'https://gta6hub.com/en/terms',
+  },
+}
 
 export default function TermsPage() {
   return (

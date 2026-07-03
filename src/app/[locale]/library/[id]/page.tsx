@@ -1,10 +1,9 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
-import { Heart, Play, Clock, ArrowLeft, ExternalLink, Calendar, RefreshCw } from 'lucide-react'
-import Image from 'next/image'
-import { createClient } from '@/utils/supabase/client'
+import { Metadata } from 'next'
+import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
+import { createAdminClient } from '@/utils/supabase/server'
+import VideoDetailClient from './VideoDetailClient'
 
 interface Timestamp {
   label: string
@@ -24,272 +23,120 @@ interface Video {
   video_timestamps?: Timestamp[]
 }
 
-interface UserProfile {
-  id: string
-  email?: string
+async function getVideo(id: string): Promise<Video | null> {
+  try {
+    const adminClient = createAdminClient()
+    const { data: video } = await adminClient
+      .from('videos')
+      .select('*, video_timestamps(*)')
+      .eq('id', id)
+      .eq('excluded', false)
+      .single()
+
+    return video as Video | null
+  } catch (err) {
+    console.error('Error loading video on server:', err)
+    return null
+  }
 }
 
-export default function VideoDetailPage() {
-  const params = useParams()
-  const router = useRouter()
-  const locale = (params?.locale as string) || 'en'
-  const id = params?.id as string
+export async function generateMetadata({
+  params: { locale, id }
+}: {
+  params: { locale: string; id: string }
+}): Promise<Metadata> {
+  const video = await getVideo(id)
+  if (!video) {
+    return {
+      title: 'Video Not Found | GTA 6 Hub',
+      description: 'The requested GTA 6 walkthrough or guide could not be found.',
+    }
+  }
 
-  const [video, setVideo] = useState<Video | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [isFavorited, setIsFavorited] = useState(false)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [activeTimestamp, setActiveTimestamp] = useState<number | null>(null)
-  const [user, setUser] = useState<UserProfile | null>(null)
+  const title = `${video.title} | GTA 6 Guide`
+  const description = video.description
+    ? video.description.slice(0, 155) + '...'
+    : `Watch this GTA 6 walkthrough: ${video.title} by ${video.channel_name}.`
 
-  useEffect(() => {
-    const supabase = createClient()
+  const canonicalUrl = `https://gta6hub.com/${locale}/library/${id}`
+  const ogImage = video.thumbnail_url || `https://img.youtube.com/vi/${video.external_id}/maxresdefault.jpg`
 
-    async function loadVideoAndSession() {
-      setLoading(true)
-      try {
-        // Fetch session
-        const { data: { session } } = await supabase.auth.getSession()
-        
-        if (session?.user) {
-          setUser({ id: session.user.id, email: session.user.email })
-
-          // Check if favorited
-          const { data: fav } = await supabase
-            .from('favorites')
-            .select('*')
-            .eq('user_id', session.user.id)
-            .eq('video_id', id)
-            .maybeSingle()
-          
-          setIsFavorited(!!fav)
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      type: 'video.other',
+      images: [
+        {
+          url: ogImage,
+          alt: video.title,
         }
-
-        // Fetch video details
-        const { data: vid, error } = await supabase
-          .from('videos')
-          .select('*, video_timestamps(*)')
-          .eq('id', id)
-          .single()
-
-        if (error || !vid) {
-          console.error('Error fetching video:', error)
-        } else {
-          setVideo(vid as Video)
-        }
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (id) {
-      loadVideoAndSession()
-    }
-  }, [id])
-
-  const handleToggleFavorite = async () => {
-    if (!user) {
-      alert('Please log in to save favorites.')
-      return
-    }
-
-    const supabase = createClient()
-
-    if (isFavorited) {
-      const { error } = await supabase
-        .from('favorites')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('video_id', id)
-
-      if (!error) setIsFavorited(false)
-    } else {
-      const { error } = await supabase
-        .from('favorites')
-        .insert({ user_id: user.id, video_id: id })
-
-      if (!error) setIsFavorited(true)
+      ],
+      siteName: 'GTA 6 Hub',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [ogImage],
     }
   }
+}
 
-  const handlePlayClick = (seconds?: number) => {
-    setIsPlaying(true)
-    if (seconds !== undefined) {
-      setActiveTimestamp(seconds)
-    }
-  }
-
-  if (loading) {
-    return (
-      <div className="bg-midnight-teal min-h-screen flex flex-col items-center justify-center text-off-white/60 space-y-4">
-        <RefreshCw className="w-8 h-8 animate-spin text-palm-teal" />
-        <span className="text-sm font-mono uppercase tracking-wider">Loading video details...</span>
-      </div>
-    )
-  }
+export default async function VideoDetailPage({
+  params: { locale, id }
+}: {
+  params: { locale: string; id: string }
+}) {
+  const video = await getVideo(id)
 
   if (!video) {
     return (
       <div className="bg-midnight-teal min-h-screen flex flex-col items-center justify-center p-8 text-center">
         <h2 className="text-2xl font-display text-off-white mb-4">Video Not Found</h2>
-        <button
-          onClick={() => router.push(`/${locale}/library`)}
-          className="flex items-center space-x-2 px-6 py-3 bg-deep-teal text-off-white hover:text-palm-teal rounded-xl border border-deep-teal transition"
+        <Link
+          href={`/${locale}/library`}
+          className="flex items-center space-x-2 px-6 py-3 bg-deep-teal text-off-white hover:text-palm-teal rounded-xl border border-deep-teal transition font-bold uppercase tracking-wider text-xs"
         >
           <ArrowLeft className="w-4 h-4" />
           <span>Back to Library</span>
-        </button>
+        </Link>
       </div>
     )
   }
 
-  const embedUrl = video.platform === 'youtube'
-    ? `https://www.youtube.com/embed/${video.external_id}?autoplay=1&start=${activeTimestamp || 0}`
-    : `https://player.twitch.tv/?video=${video.external_id}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}&autoplay=true&time=${activeTimestamp ? `${activeTimestamp}s` : '0s'}`
+  // Schema.org VideoObject JSON-LD
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'VideoObject',
+    name: video.title,
+    description: video.description || `GTA 6 Guide: ${video.title}`,
+    thumbnailUrl: [
+      video.thumbnail_url || `https://img.youtube.com/vi/${video.external_id}/maxresdefault.jpg`
+    ],
+    uploadDate: video.published_at,
+    embedUrl: video.platform === 'youtube'
+      ? `https://www.youtube.com/embed/${video.external_id}`
+      : `https://player.twitch.tv/?video=${video.external_id}`,
+    interactionStatistic: {
+      '@type': 'InteractionCounter',
+      interactionType: { '@type': 'WatchAction' }
+    }
+  }
 
   return (
-    <div className="bg-midnight-teal min-h-screen py-10 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-7xl mx-auto space-y-8">
-        
-        {/* Navigation / Header */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => router.push(`/${locale}/library`)}
-            className="flex items-center space-x-2 px-4 py-2 bg-deep-teal/40 hover:bg-palm-teal/20 text-off-white hover:text-palm-teal rounded-xl border border-deep-teal/60 transition text-xs font-bold uppercase tracking-wider"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Library</span>
-          </button>
-
-          <button
-            onClick={handleToggleFavorite}
-            className="flex items-center space-x-2 px-4 py-2 bg-deep-teal/40 hover:bg-neon-flamingo/10 text-off-white hover:text-neon-flamingo rounded-xl border border-deep-teal/60 transition text-xs font-bold uppercase tracking-wider"
-          >
-            <Heart className={`w-4 h-4 ${isFavorited ? 'text-neon-flamingo fill-current' : 'text-off-white/80'}`} />
-            <span>{isFavorited ? 'Saved to Favorites' : 'Add to Favorites'}</span>
-          </button>
-        </div>
-
-        {/* Two Column Layout: Video Player + Details & Ad Placement */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-          
-          {/* Main Video Section */}
-          <div className="lg:col-span-2 space-y-6">
-            
-            {/* Embedded Player */}
-            <div className="relative aspect-video w-full bg-black rounded-2xl overflow-hidden shadow-2xl border border-deep-teal/60">
-              {isPlaying ? (
-                <iframe
-                  src={embedUrl}
-                  title={video.title}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  className="w-full h-full"
-                />
-              ) : (
-                <div className="relative w-full h-full group flex items-center justify-center">
-                  <div className="relative w-full h-full aspect-video">
-                    <Image
-                      src={video.thumbnail_url || `https://img.youtube.com/vi/${video.external_id}/maxresdefault.jpg`}
-                      alt={video.title}
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 66vw"
-                      priority
-                      className="object-cover"
-                    />
-                  </div>
-                  <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition duration-300" />
-                  
-                  <button
-                    onClick={() => handlePlayClick()}
-                    className="absolute z-10 p-5 bg-neon-flamingo hover:bg-sunset-orange text-white rounded-full transition-all duration-300 hover:scale-110 shadow-lg"
-                  >
-                    <Play className="w-8 h-8 fill-current translate-x-0.5" />
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {/* Video Meta info */}
-            <div className="bg-deep-teal/20 border border-deep-teal/60 rounded-3xl p-6 md:p-8 space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-midnight-teal/40 pb-6">
-                <div>
-                  <h1 className="text-xl sm:text-2xl font-bold text-off-white leading-snug">
-                    {video.title}
-                  </h1>
-                  <div className="flex items-center space-x-4 text-xs font-mono uppercase tracking-wider text-palm-teal mt-3">
-                    <a
-                      href={video.channel_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:underline flex items-center space-x-1 hover:text-sunset-orange"
-                    >
-                      <span>{video.channel_name}</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                    <span className="flex items-center space-x-1">
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>{new Date(video.published_at).toLocaleDateString()}</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Description */}
-              <div className="space-y-3">
-                <h3 className="text-xs uppercase font-mono tracking-widest text-off-white/40">
-                  Video Description & Context
-                </h3>
-                <p className="text-sm text-off-white/75 leading-relaxed whitespace-pre-wrap">
-                  {video.description}
-                </p>
-              </div>
-
-              {/* Deep Link Timestamps */}
-              {video.video_timestamps && video.video_timestamps.length > 0 && (
-                <div className="pt-6 border-t border-midnight-teal/30">
-                  <h3 className="text-xs uppercase font-mono tracking-widest text-off-white/40 mb-4 flex items-center space-x-2">
-                    <Clock className="w-4 h-4 text-palm-teal" />
-                    <span>Deep-Link Secret Timestamps</span>
-                  </h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {video.video_timestamps.map((ts: Timestamp, idx: number) => (
-                      <button
-                        key={idx}
-                        onClick={() => handlePlayClick(ts.seconds)}
-                        className="flex items-center justify-between px-4 py-3 bg-midnight-teal hover:bg-palm-teal/20 text-off-white hover:text-palm-teal rounded-xl border border-deep-teal/80 hover:border-palm-teal/40 transition text-left text-xs"
-                      >
-                        <span className="font-semibold truncate max-w-[180px]">{ts.label}</span>
-                        <span className="font-mono bg-deep-teal/40 px-2 py-0.5 rounded text-off-white/60">
-                          {Math.floor(ts.seconds / 60)}:{(ts.seconds % 60).toString().padStart(2, '0')}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-
-          </div>
-
-          {/* Sidebar Section */}
-          <aside className="space-y-6">
-            <div className="bg-deep-teal/40 border border-deep-teal/80 rounded-2xl p-6 space-y-4">
-              <h3 className="text-xs uppercase font-mono tracking-widest text-off-white/40">
-                Information
-              </h3>
-              <p className="text-xs text-off-white/60 leading-relaxed">
-                All video content is parsed, aggregated, and embedded from official video platforms. Support the creators by visiting their channels directly.
-              </p>
-            </div>
-          </aside>
-
-        </div>
-
-      </div>
-    </div>
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <VideoDetailClient video={video} locale={locale} />
+    </>
   )
 }

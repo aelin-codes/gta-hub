@@ -1,4 +1,13 @@
 import { ShieldAlert } from 'lucide-react'
+import { Metadata } from 'next'
+
+export const metadata: Metadata = {
+  title: 'Refund & Cancellation Policy | GTA 6 Hub',
+  description: 'Review the refund, billing cancellation, and subscription terms for the GTA 6 Hub platform.',
+  alternates: {
+    canonical: 'https://gta6hub.com/en/refunds',
+  },
+}
 
 export default function RefundsPage() {
   return (

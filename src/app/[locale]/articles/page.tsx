@@ -1,15 +1,44 @@
-'use client'
-
+import { Metadata } from 'next'
 import Link from 'next/link'
-import { useParams } from 'next/navigation'
 import Image from 'next/image'
 import { Calendar, User, ArrowRight, BookOpen } from 'lucide-react'
 import { ARTICLES, Article } from '@/data/articles'
 
-export default function ArticlesPage() {
-  const params = useParams()
-  const locale = (params?.locale as string) || 'en'
+export async function generateMetadata({
+  params: { locale }
+}: {
+  params: { locale: string }
+}): Promise<Metadata> {
+  const title = 'News & Articles | GTA 6 Hub'
+  const description = 'Read the latest GTA 6 fan theories, map analysis, character backstories, and news from our community.'
+  const canonicalUrl = `https://gta6hub.com/${locale}/articles`
 
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title,
+      description,
+      url: canonicalUrl,
+      type: 'website',
+      siteName: 'GTA 6 Hub',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+    }
+  }
+}
+
+export default async function ArticlesPage({
+  params: { locale }
+}: {
+  params: { locale: string }
+}) {
   return (
     <div className="bg-midnight-teal min-h-screen py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-12">
