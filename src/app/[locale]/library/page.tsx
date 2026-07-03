@@ -1,12 +1,11 @@
 'use client'
 
-import { useEffect, useState, Fragment, useCallback } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { Search, Sparkles, RefreshCw, X, SlidersHorizontal, UserCheck } from 'lucide-react'
 import VideoCard from '@/components/VideoCard'
 import AdInterstitial from '@/components/AdInterstitial'
 import { createClient } from '@/utils/supabase/client'
 import { PAYMENTS_ENABLED } from '@/config'
-import AdBanner from '@/components/AdBanner'
 
 interface Timestamp {
   label: string
@@ -137,23 +136,11 @@ export default function LibraryPage({ params: _params }: { params: { locale: str
     if (!PAYMENTS_ENABLED) setIsPremium(true)
   }, [])
 
-  // Debounce the searchQuery to prevent triggering a query per keystroke (Phase 4.3)
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearchQuery(searchQuery)
-    }, 300)
-    return () => clearTimeout(timer)
-  }, [searchQuery])
-
-  // Refetch videos when sorting, filtering, or searching changes
-  useEffect(() => {
-    fetchVideos()
-  }, [selectedCategory, selectedPlatform, sortBy, debouncedSearchQuery, fetchVideos])
-
-  const fetchVideos = useCallback(async (qOverride?: string) => {
+  // fetchVideos must be declared BEFORE useEffects that reference it to avoid ReferenceError
+  const fetchVideos = useCallback(async () => {
     setLoading(true)
     try {
-      const q = qOverride !== undefined ? qOverride : debouncedSearchQuery
+      const q = debouncedSearchQuery
       const params = new URLSearchParams({ q, mode: searchMode })
       if (selectedCategory) params.set('category', selectedCategory)
       if (selectedPlatform) params.set('platform', selectedPlatform)
@@ -175,6 +162,19 @@ export default function LibraryPage({ params: _params }: { params: { locale: str
       setLoading(false)
     }
   }, [debouncedSearchQuery, searchMode, selectedCategory, selectedPlatform, sortBy])
+
+  // Debounce the searchQuery to prevent triggering a query per keystroke (Phase 4.3)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+
+  // Refetch videos when sorting, filtering, or searching changes
+  useEffect(() => {
+    fetchVideos()
+  }, [selectedCategory, selectedPlatform, sortBy, debouncedSearchQuery, fetchVideos])
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -457,40 +457,30 @@ export default function LibraryPage({ params: _params }: { params: { locale: str
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {videos.map((vid: Video, idx: number) => {
-                  const showAd = idx > 0 && idx % 4 === 0
-                  return (
-                    <Fragment key={vid.id}>
-                      {showAd && (
-                        <AdBanner 
-                          slot={`library-grid-slot-${idx}`} 
-                          className="col-span-1 md:col-span-2" 
-                        />
-                      )}
-                      <VideoCard
-                        video={{
-                          id: vid.id,
-                          platform: vid.platform,
-                          external_id: vid.external_id,
-                          title: vid.title,
-                          description: vid.description,
-                          channel_name: vid.channel_name,
-                          channel_url: vid.channel_url,
-                          thumbnail_url: vid.thumbnail_url || `https://img.youtube.com/vi/${vid.external_id}/maxresdefault.jpg`,
-                          published_at: vid.published_at,
-                          video_timestamps: vid.video_timestamps || []
-                        }}
-                        isFavorited={favorites.includes(vid.id)}
-                        isPremium={isPremium}
-                        onToggleFavorite={() => handleToggleFavorite(vid.external_id, vid.id)}
-                        onOpenVideo={(seconds) => handleOpenVideo(vid.id, seconds)}
-                        priority={idx < 2}
-                        activePlayId={activePlayId}
-                        activeTimestamp={activeTimestamp}
-                      />
-                    </Fragment>
-                  )
-                })}
+                {videos.map((vid: Video, idx: number) => (
+                  <VideoCard
+                    key={vid.id}
+                    video={{
+                      id: vid.id,
+                      platform: vid.platform,
+                      external_id: vid.external_id,
+                      title: vid.title,
+                      description: vid.description,
+                      channel_name: vid.channel_name,
+                      channel_url: vid.channel_url,
+                      thumbnail_url: vid.thumbnail_url || `https://img.youtube.com/vi/${vid.external_id}/maxresdefault.jpg`,
+                      published_at: vid.published_at,
+                      video_timestamps: vid.video_timestamps || []
+                    }}
+                    isFavorited={favorites.includes(vid.id)}
+                    isPremium={isPremium}
+                    onToggleFavorite={() => handleToggleFavorite(vid.external_id, vid.id)}
+                    onOpenVideo={(seconds) => handleOpenVideo(vid.id, seconds)}
+                    priority={idx < 2}
+                     activePlayId={activePlayId}
+                    activeTimestamp={activeTimestamp}
+                  />
+                ))}
               </div>
             )}
           </section>

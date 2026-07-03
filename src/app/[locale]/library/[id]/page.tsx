@@ -5,7 +5,6 @@ import { useParams, useRouter } from 'next/navigation'
 import { Heart, Play, Clock, ArrowLeft, ExternalLink, Calendar, RefreshCw } from 'lucide-react'
 import Image from 'next/image'
 import { createClient } from '@/utils/supabase/client'
-import AdBanner from '@/components/AdBanner'
 
 interface Timestamp {
   label: string
@@ -276,17 +275,8 @@ export default function VideoDetailPage() {
 
           </div>
 
-          {/* Sidebar Section: Ad placements */}
+          {/* Sidebar Section */}
           <aside className="space-y-6">
-            <div className="bg-deep-teal/40 border border-deep-teal/80 rounded-2xl p-6 space-y-4">
-              <h3 className="text-xs uppercase font-mono tracking-widest text-off-white/40">
-                Sponsored Content
-              </h3>
-              
-              {/* Ad placement on the video detail page sidebar */}
-              <AdBanner slot="video-detail-sidebar" format="rectangle" style={{ minHeight: '250px' }} />
-            </div>
-
             <div className="bg-deep-teal/40 border border-deep-teal/80 rounded-2xl p-6 space-y-4">
               <h3 className="text-xs uppercase font-mono tracking-widest text-off-white/40">
                 Information

@@ -19,7 +19,6 @@ const SkylineHero = dynamic(() => import('@/components/SkylineHero'), {
   )
 })
 
-import AdBanner from '@/components/AdBanner'
 
 // Target date: October 27, 2026 (outside component as static constant to prevent effect deps issues)
 const targetDate = new Date('2026-10-27T00:00:00')
@@ -121,6 +120,28 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
 
   return (
     <div className="flex flex-col bg-midnight-teal min-h-screen">
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'GTA 6 Hub',
+            alternateName: 'GTA VI Hub',
+            url: 'https://gta6hub.com',
+            description: 'The premier unofficial fan portal for GTA 6. Browse categorized walkthroughs, Easter eggs, leaks, and guides.',
+            potentialAction: {
+              '@type': 'SearchAction',
+              target: {
+                '@type': 'EntryPoint',
+                urlTemplate: 'https://gta6hub.com/en/library?q={search_term_string}',
+              },
+              'query-input': 'required name=search_term_string',
+            },
+          }),
+        }}
+      />
       
       {/* 1. 3D Parallax Skyline Hero (Lazy Loaded) */}
       <div ref={heroContainerRef} className="min-h-[95vh] w-full bg-gradient-to-b from-[#0F2E33] to-[#0B1E23]">
@@ -251,9 +272,6 @@ export default function HomePage({ params: { locale } }: { params: { locale: str
             />
           </div>
         </section>
-
-        {/* Homepage Ad Banner */}
-        <AdBanner slot="homepage-feed" className="max-w-4xl" />
 
         {/* 4. Trending Features */}
         <section className="grid grid-cols-1 md:grid-cols-3 gap-8">

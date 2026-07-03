@@ -22,8 +22,48 @@ const bebasNeue = Bebas_Neue({
 })
 
 export const metadata = {
-  title: 'GTA 6 Hub — Fan Site & Video Archive',
-  description: 'The premium unofficial guide to GTA 6 secrets, walkthroughs, map POIs, and video walkthroughs.',
+  metadataBase: new URL('https://gta6hub.com'),
+  title: {
+    default: 'GTA 6 Hub — Fan Site & Video Archive',
+    template: '%s | GTA 6 Hub',
+  },
+  description: 'The #1 unofficial fan portal for GTA 6. Browse categorized walkthroughs, Easter eggs, leaks, and guides from the GTA community. Updated daily.',
+  keywords: ['GTA 6', 'GTA VI', 'Grand Theft Auto 6', 'GTA 6 guides', 'GTA 6 walkthroughs', 'Vice City', 'Leonida', 'GTA 6 leaks', 'GTA fan site'],
+  authors: [{ name: 'GTA 6 Hub Community' }],
+  creator: 'GTA 6 Hub',
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://gta6hub.com',
+    siteName: 'GTA 6 Hub',
+    title: 'GTA 6 Hub — Fan Site & Video Archive',
+    description: 'Browse categorized GTA 6 walkthroughs, Easter eggs, leaks, and community guides. Updated daily.',
+    images: [
+      {
+        url: '/og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'GTA 6 Hub — The Premier Unofficial Fan Portal',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'GTA 6 Hub — Fan Site & Video Archive',
+    description: 'Browse categorized GTA 6 walkthroughs, Easter eggs, leaks, and community guides.',
+    images: ['/og-image.png'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
+  },
 }
 
 export default async function LocaleLayout({

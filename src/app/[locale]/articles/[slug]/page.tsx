@@ -5,7 +5,6 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Calendar, User, ArrowLeft, BookOpen } from 'lucide-react'
 import { ARTICLES } from '@/data/articles'
-import AdBanner from '@/components/AdBanner'
 
 export default function ArticleDetailPage() {
   const params = useParams()
@@ -94,14 +93,16 @@ export default function ArticleDetailPage() {
 
           </article>
 
-          {/* Sidebar / Ads Panel */}
+          {/* Sidebar */}
           <aside className="space-y-6">
-            <div className="bg-deep-teal/40 border border-deep-teal/80 rounded-2xl p-6 space-y-4">
-              <div className="flex items-center space-x-2 text-xs uppercase font-mono tracking-widest text-off-white/40">
-                <BookOpen className="w-4 h-4 text-palm-teal" />
-                <span>Sponsored</span>
+            <div className="bg-deep-teal/40 border border-deep-teal/80 rounded-2xl p-6 space-y-3">
+              <div className="flex items-center space-x-2 text-xs uppercase font-mono tracking-widest text-palm-teal">
+                <BookOpen className="w-4 h-4" />
+                <span>About this article</span>
               </div>
-              <AdBanner slot="article-sidebar" format="rectangle" style={{ minHeight: '250px' }} />
+              <p className="text-xs text-off-white/60 leading-relaxed">
+                Fan-written editorial content. All GTA 6 information is based on publicly available trailers, leaks, and community analysis.
+              </p>
             </div>
 
             <div className="bg-deep-teal/40 border border-deep-teal/80 rounded-2xl p-6 text-xs text-off-white/50 leading-relaxed">
