@@ -90,32 +90,32 @@ export const MOCK_ADMIN_USER = {
 export class MockQueryBuilder {
   constructor(private tableName: string) {}
 
-  select(_?: string) { return this }
-  eq(_c: string, _v: any) { return this }
-  neq(_c: string, _v: any) { return this }
-  or(_v: string) { return this }
-  order(_c: string, _o?: any) { return this }
-  limit(_n: number) { return this }
-  textSearch(_c: string, _q: string, _o?: any) { return this }
+  select(c?: string) { void c; return this }
+  eq(c: string, v: unknown) { void c; void v; return this }
+  neq(c: string, v: unknown) { void c; void v; return this }
+  or(v: string) { void v; return this }
+  order(c: string, o?: unknown) { void c; void o; return this }
+  limit(n: number) { void n; return this }
+  textSearch(c: string, q: string, o?: unknown) { void c; void q; void o; return this }
 
   async single() {
     const data = this.getData()
     return { data: Array.isArray(data) ? data[0] : data, error: null }
   }
 
-  async insert(payload: any) {
+  async insert(payload: unknown) {
     return { data: Array.isArray(payload) ? payload[0] : payload, error: null }
   }
 
-  async update(payload: any) { return { data: payload, error: null } }
-  async upsert(payload: any, _?: any) { return { data: payload, error: null } }
+  async update(payload: unknown) { return { data: payload, error: null } }
+  async upsert(payload: unknown, onConflict?: unknown) { void onConflict; return { data: payload, error: null } }
   async delete() { return { error: null } }
 
-  async then(resolve: (v: any) => void) {
+  async then(resolve: (v: { data: unknown; error: null }) => void) {
     resolve({ data: this.getData(), error: null })
   }
 
-  private getData(): any {
+  private getData(): unknown {
     if (this.tableName === 'videos') return MOCK_VIDEOS
     if (this.tableName === 'categories') return MOCK_CATEGORIES
     if (this.tableName === 'users') return MOCK_ADMIN_USER

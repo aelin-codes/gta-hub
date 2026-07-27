@@ -6,6 +6,7 @@ export const revalidate = 60;
 import { CookieConsentBanner, ThirdPartyScripts } from '@/components/CookieConsent'
 import { locales } from '@/i18n'
 import NavBar from '@/components/NavBar'
+import Header from '@/components/Header'
 import Link from 'next/link'
 import '@/app/globals.css'
 import { PAYMENTS_ENABLED } from '@/config'
@@ -90,7 +91,7 @@ export default async function LocaleLayout({
           <ThirdPartyScripts />
           
           {/* Header Navigation */}
-          <header className="sticky top-0 z-50 bg-midnight-teal/85 backdrop-blur-md border-b border-deep-teal">
+          <Header>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
               
               {/* Logo */}
@@ -125,7 +126,7 @@ export default async function LocaleLayout({
               </div>
 
             </div>
-          </header>
+          </Header>
 
           {/* Main Content */}
           <main className="flex-grow flex flex-col">

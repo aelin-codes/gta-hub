@@ -6,7 +6,6 @@ export const dynamic = 'force-dynamic'
 
 // Config lists
 const SEARCH_QUERIES = ["GTA 6 secrets", "GTA 6 gameplay"]
-const CREATOR_ALLOWLIST = ["GTA Series Videos", "LegacyKillaHD", "MrBossFTW", "TGG", "Broughy1322"]
 
 // Curated list of mock video data to ingest if API keys are missing/simulated
 const MOCK_VIDEOS = [
@@ -94,7 +93,7 @@ export async function GET(req: Request) {
     const supabase = createAdminClient()
     
     // Keep-alive health check to prevent Supabase auto-pausing
-    const { data: pingData, error: pingError } = await supabase
+    const { error: pingError } = await supabase
       .from('categories')
       .select('count', { count: 'exact', head: true })
     
@@ -312,8 +311,9 @@ Return ONLY valid JSON (no markdown):
       skipped: skippedCount,
       keepAlive: pingError ? 'error' : 'success'
     })
-  } catch (err: any) {
+  } catch (err) {
     console.error('Ingestion cron error:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

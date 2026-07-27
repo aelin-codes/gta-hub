@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { PlayCircle, ShieldCheck } from 'lucide-react'
+import { PlayCircle, ShieldCheck, X } from 'lucide-react'
 
 interface AdInterstitialProps {
   isOpen: boolean
@@ -45,16 +45,26 @@ export default function AdInterstitial({
       {/* Ad Card Container */}
       <div className="relative max-w-lg w-full bg-deep-teal border border-neon-flamingo/30 rounded-2xl p-6 shadow-2xl flex flex-col items-center text-center">
         
-        {/* Ad Badge */}
+        {/* Ad Label (Clearly labeled 'Advertisement' at the top of the modal) */}
         <div className="absolute top-4 left-4 bg-midnight-teal px-3 py-1 rounded text-[10px] font-mono text-off-white/40 uppercase tracking-widest border border-deep-teal">
-          Sponsored Ad
+          Advertisement
         </div>
 
-        {/* Premium Upgrade Prompt */}
-        <div className="absolute top-4 right-4 flex items-center space-x-1 text-xs font-semibold text-palm-teal bg-palm-teal/10 px-3 py-1 rounded-full border border-palm-teal/20">
-          <ShieldCheck className="w-3.5 h-3.5" />
-          <span>Ad-Free with Premium</span>
-        </div>
+        {/* Top-Right Close Button (×) or Premium Upgrade Prompt */}
+        {canSkip ? (
+          <button
+            onClick={onClose}
+            aria-label="Close Advertisement"
+            className="absolute top-4 right-4 p-1 rounded-lg text-off-white/60 hover:text-white hover:bg-white/10 transition focus:outline-none focus:ring-2 focus:ring-neon-flamingo"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        ) : (
+          <div className="absolute top-4 right-4 flex items-center space-x-1 text-xs font-semibold text-palm-teal bg-palm-teal/10 px-3 py-1 rounded-full border border-palm-teal/20">
+            <ShieldCheck className="w-3.5 h-3.5" />
+            <span>Ad-Free with Premium</span>
+          </div>
+        )}
 
         {/* Main Ad Content / Banner Mockup */}
         <div className="w-full mt-10 p-8 rounded-xl bg-midnight-teal border border-deep-teal flex flex-col items-center justify-center min-h-[220px]">
@@ -95,7 +105,7 @@ export default function AdInterstitial({
           )}
 
           <p className="text-[10px] text-off-white/40 mt-3 leading-relaxed">
-            Frequency-capped: Interstitials appear once every 3 video views to keep the fan community ad experience fair.
+            Frequency-capped: Interstitials appear once every 5 video views to keep the fan community ad experience fair.
           </p>
         </div>
 

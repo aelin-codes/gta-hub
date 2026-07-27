@@ -12,7 +12,9 @@ const mockServerClient = {
       return { data: { session: { user: MOCK_ADMIN_USER } }, error: null }
     }
   },
-  rpc(_fn: string, _args: any) {
+  rpc(fn: string, args: unknown) {
+    void fn;
+    void args;
     return Promise.resolve({ data: MOCK_VIDEOS, error: null })
   }
 }
@@ -22,7 +24,7 @@ export function createClient() {
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !anonKey) {
     console.log('Supabase credentials missing — using mock server client')
-    return mockServerClient as any
+    return mockServerClient as unknown as ReturnType<typeof createServerClient>
   }
   const cookieStore = cookies()
   return createServerClient(url, anonKey, {
@@ -44,7 +46,7 @@ export function createAdminClient() {
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
   if (!url || !serviceKey) {
     console.log('Supabase service key missing — using mock admin client')
-    return mockServerClient as any
+    return mockServerClient as unknown as ReturnType<typeof createServerClient>
   }
   return createServerClient(url, serviceKey, {
     cookies: { getAll() { return [] }, setAll() {} }

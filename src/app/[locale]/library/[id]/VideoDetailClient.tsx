@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Heart, Play, Clock, ArrowLeft, ExternalLink, Calendar } from 'lucide-react'
 import Image from 'next/image'
 import { createClient } from '@/utils/supabase/client'
+import AdBanner from '@/components/AdBanner'
 
 interface Timestamp {
   label: string
@@ -35,6 +36,7 @@ export default function VideoDetailClient({ video, locale }: { video: Video; loc
   const [isPlaying, setIsPlaying] = useState(false)
   const [activeTimestamp, setActiveTimestamp] = useState<number | null>(null)
   const [user, setUser] = useState<UserProfile | null>(null)
+  const [isPremium, setIsPremium] = useState(false)
 
   useEffect(() => {
     const supabase = createClient()
@@ -54,6 +56,17 @@ export default function VideoDetailClient({ video, locale }: { video: Video; loc
             .maybeSingle()
           
           setIsFavorited(!!fav)
+
+          // Fetch is_premium status
+          const { data: profile } = await supabase
+            .from('users')
+            .select('is_premium')
+            .eq('id', session.user.id)
+            .maybeSingle()
+          
+          if (profile) {
+            setIsPremium(!!profile.is_premium)
+          }
         }
       } catch (err) {
         console.error('Error fetching favorite status:', err)
@@ -235,6 +248,15 @@ export default function VideoDetailClient({ video, locale }: { video: Video; loc
                 All video content is parsed, aggregated, and embedded from official video platforms. Support the creators by visiting their channels directly.
               </p>
             </div>
+
+            {!isPremium && (
+              <div className="space-y-2">
+                <h3 className="text-xs uppercase font-mono tracking-widest text-off-white/40">
+                  Sponsored Advertisement
+                </h3>
+                <AdBanner slot="sidebar-detail" format="rectangle" />
+              </div>
+            )}
           </aside>
 
         </div>

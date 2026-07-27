@@ -57,9 +57,10 @@ export default function TakedownClientPage() {
       }
 
       setSuccess(true)
-    } catch (err: any) {
+    } catch (err) {
       console.error(err)
-      setErrorMsg(err.message || 'An error occurred while submitting your request. Please try again.')
+      const msg = err instanceof Error ? err.message : 'An error occurred while submitting your request. Please try again.'
+      setErrorMsg(msg)
     } finally {
       setSubmitting(false)
     }

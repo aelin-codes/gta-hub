@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { MOCK_VIDEOS, MOCK_CATEGORIES, MOCK_ADMIN_USER, MockQueryBuilder } from './mock'
+import { MOCK_VIDEOS, MOCK_ADMIN_USER, MockQueryBuilder } from './mock'
 
 const mockClient = {
   from(tableName: string) {
@@ -7,20 +7,18 @@ const mockClient = {
 
     // Client-side: persist videos and subscriptions in localStorage for offline demo
     if (typeof window !== 'undefined') {
-      const original = builder as any
-      const _insert = original.insert.bind(original)
-      original.insert = async (payload: any) => {
+      const original = builder as MockQueryBuilder & Record<string, unknown>
+      original.insert = async (payload: unknown) => {
         const current = JSON.parse(localStorage.getItem(`gta_${tableName}`) || '[]')
         const items = (Array.isArray(payload) ? payload : [payload]).map(
-          (item: any) => ({ id: Math.random().toString(), created_at: new Date().toISOString(), ...item })
+          (item: Record<string, unknown>) => ({ id: Math.random().toString(), created_at: new Date().toISOString(), ...item })
         )
         localStorage.setItem(`gta_${tableName}`, JSON.stringify([...current, ...items]))
         return { data: items[0], error: null }
       }
       if (tableName === 'videos') {
-        const _getData = original.getData?.bind?.(original)
         // Prefer localStorage videos over hardcoded mocks when available
-        original.then = async (resolve: any) => {
+        original.then = async (resolve: (v: { data: unknown; error: null }) => void) => {
           const stored = JSON.parse(localStorage.getItem('gta_videos') || '[]')
           resolve({ data: stored.length > 0 ? stored : MOCK_VIDEOS, error: null })
         }
@@ -66,7 +64,9 @@ const mockClient = {
       return { error: null }
     }
   },
-  rpc(_fn: string, _args: any) {
+  rpc(fn: string, args: unknown) {
+    void fn;
+    void args;
     return Promise.resolve({ data: MOCK_VIDEOS, error: null })
   }
 }
@@ -76,7 +76,7 @@ export function createClient() {
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
   if (!url || !anonKey) {
     console.log('Supabase credentials missing — using mock client')
-    return mockClient as any
+    return mockClient as unknown as ReturnType<typeof createBrowserClient>
   }
   return createBrowserClient(url, anonKey)
 }

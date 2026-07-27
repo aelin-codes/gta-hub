@@ -4,14 +4,50 @@ import { useEffect, useState } from 'react'
 import { Heart, User, ShieldCheck, Calendar, BellOff, Trash2, ShieldAlert } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
+import Image from 'next/image'
 import { PAYMENTS_ENABLED } from '@/config'
+import { User as AuthUser } from '@supabase/supabase-js'
+
+interface UserProfile {
+  id: string
+  email: string
+  role: 'user' | 'admin' | 'superuser'
+  is_premium: boolean
+}
+
+interface UserSubscription {
+  id: string
+  user_id: string
+  status: 'active' | 'cancelled' | 'past_due' | 'completed' | 'unpaid'
+  auto_renew: boolean
+  current_period_end: string
+  last_charged_at?: string
+  processor: 'stripe' | 'razorpay'
+  razorpay_subscription_id?: string
+  stripe_subscription_id?: string
+}
+
+interface FavoriteVideo {
+  id: string
+  title: string
+  channel_name: string
+  thumbnail_url: string
+  external_id: string
+}
+
+interface UserFollow {
+  user_id: string
+  target_type: 'creator' | 'category'
+  target_id: string
+  created_at: string
+}
 
 export default function DashboardClientPage({ locale }: { locale: string }) {
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
-  const [subscription, setSubscription] = useState<any>(null)
-  const [favorites, setFavorites] = useState<any[]>([])
-  const [follows, setFollows] = useState<any[]>([])
+  const [user, setUser] = useState<AuthUser | null>(null)
+  const [profile, setProfile] = useState<UserProfile | null>(null)
+  const [subscription, setSubscription] = useState<UserSubscription | null>(null)
+  const [favorites, setFavorites] = useState<FavoriteVideo[]>([])
+  const [follows, setFollows] = useState<UserFollow[]>([])
   const [loading, setLoading] = useState(true)
   const [updatingAutoRenew, setUpdatingAutoRenew] = useState(false)
 
@@ -69,7 +105,10 @@ export default function DashboardClientPage({ locale }: { locale: string }) {
         .eq('user_id', session.user.id)
 
       if (favs) {
-        setFavorites(favs.map((f: any) => f.videos).filter(Boolean))
+        const mapped = favs
+          .map((f: { videos: unknown }) => f.videos as unknown as FavoriteVideo)
+          .filter(Boolean)
+        setFavorites(mapped)
       }
 
       // 4. Fetch follows
@@ -86,7 +125,7 @@ export default function DashboardClientPage({ locale }: { locale: string }) {
     }
 
     loadDashboardData()
-  }, [])
+  }, [supabase])
 
   // Auto-renewal toggle handler (Section 7)
   const handleToggleAutoRenew = async () => {
@@ -303,10 +342,12 @@ export default function DashboardClientPage({ locale }: { locale: string }) {
                 {favorites.map(video => (
                   <div key={video.id} className="flex items-center justify-between bg-midnight-teal/40 p-3 rounded-xl border border-deep-teal/40">
                     <div className="flex items-center space-x-3 min-w-0">
-                      <img 
+                      <Image 
                         src={video.thumbnail_url || `https://img.youtube.com/vi/${video.external_id}/default.jpg`} 
                         alt="" 
-                        className="w-16 aspect-video object-cover rounded-lg shrink-0"
+                        width={64}
+                        height={36}
+                        className="object-cover rounded-lg shrink-0"
                       />
                       <div className="min-w-0">
                         <h4 className="text-xs font-bold text-off-white truncate hover:underline">

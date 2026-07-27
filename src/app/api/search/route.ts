@@ -33,10 +33,8 @@ export async function GET(req: Request) {
     const { data: { user } } = await supabase.auth.getUser()
 
     let isPremium = false
-    let userId = null
 
     if (user) {
-      userId = user.id
       // RE-CHECK ENTITLEMENT SERVER-SIDE (Section 12 security hard rule)
       const { data: dbUser } = await adminClient
         .from('users')
@@ -73,7 +71,7 @@ export async function GET(req: Request) {
         .eq('category_id', catRow.id)
 
       if (junctionErr) console.error('video_categories join error:', junctionErr)
-      categoryVideoIds = (junctionRows || []).map((r: any) => r.video_id)
+      categoryVideoIds = (junctionRows || []).map((r: { video_id: string }) => r.video_id)
 
       // No videos tagged with this category
       if ((categoryVideoIds as string[]).length === 0) {
@@ -81,7 +79,7 @@ export async function GET(req: Request) {
       }
     }
 
-    let results: any[] = []
+    let results: unknown[] = []
 
     if (!query) {
       if (categoryVideoIds) {
@@ -151,7 +149,7 @@ export async function GET(req: Request) {
 
       // Narrow semantic results by category if one was selected
       if (categoryVideoIds) {
-        results = results.filter((v: any) => categoryVideoIds!.includes(v.id))
+        results = results.filter((v: unknown) => categoryVideoIds!.includes((v as { id: string }).id))
       }
     } else {
       // Standard keyword search
@@ -171,8 +169,7 @@ export async function GET(req: Request) {
       results = data || []
     }
 
-    // Platform filter — simple column match
-    if (platform) results = results.filter((v: any) => v.platform === platform)
+    if (platform) results = results.filter((v: unknown) => (v as { platform: string }).platform === platform)
 
     return NextResponse.json({
       mode: activeMode,
@@ -180,8 +177,9 @@ export async function GET(req: Request) {
       isPremium,
       videos: results
     })
-  } catch (err: any) {
+  } catch (err) {
     console.error('Search API failure:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

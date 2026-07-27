@@ -1,15 +1,47 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/utils/supabase/client'
-import { Shield, Users, Video, AlertCircle, RefreshCw, Layers, Check, X, FileText, Play } from 'lucide-react'
+import { Shield, RefreshCw, Check, X, Play } from 'lucide-react'
+
+interface ModeratorUser {
+  id: string
+  email: string
+  role: 'user' | 'admin' | 'superuser'
+  is_premium: boolean
+  created_at: string
+}
+
+interface ModeratorVideo {
+  id: string
+  title: string
+  channel_name: string
+  external_id: string
+  excluded: boolean
+}
+
+interface TakedownRequest {
+  id: string
+  status: 'pending' | 'approved' | 'rejected'
+  created_at: string
+  requester_email: string
+  reason: string
+  video_id: string
+}
+
+interface AuditLog {
+  id: string
+  action: string
+  created_at: string
+  details: string
+}
 
 export default function AdminClientPage({ locale }: { locale: string }) {
-  const [usersList, setUsersList] = useState<any[]>([])
-  const [videosList, setVideosList] = useState<any[]>([])
-  const [takedownsList, setTakedownsList] = useState<any[]>([])
-  const [auditLogs, setAuditLogs] = useState<any[]>([])
-  const [categoriesList, setCategoriesList] = useState<any[]>([])
+  void locale
+  const [usersList, setUsersList] = useState<ModeratorUser[]>([])
+  const [videosList, setVideosList] = useState<ModeratorVideo[]>([])
+  const [takedownsList, setTakedownsList] = useState<TakedownRequest[]>([])
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([])
   
   const [activeTab, setActiveTab] = useState<'users' | 'videos' | 'takedowns' | 'audit' | 'ingest'>('takedowns')
   const [loading, setLoading] = useState(true)
@@ -18,11 +50,7 @@ export default function AdminClientPage({ locale }: { locale: string }) {
 
   const supabase = createClient()
 
-  useEffect(() => {
-    loadAdminData()
-  }, [])
-
-  async function loadAdminData() {
+  const loadAdminData = useCallback(async () => {
     setLoading(true)
     try {
       // 1. Fetch Users
@@ -47,13 +75,7 @@ export default function AdminClientPage({ locale }: { locale: string }) {
         .order('created_at', { ascending: false })
       setTakedownsList(takedowns || [])
 
-      // 4. Fetch Categories
-      const { data: cats } = await supabase
-        .from('categories')
-        .select('*')
-      setCategoriesList(cats || [])
-
-      // 5. Fetch Audit Logs
+      // 4. Fetch Audit Logs
       const { data: logs } = await supabase
         .from('admin_audit_logs')
         .select('*')
@@ -65,7 +87,11 @@ export default function AdminClientPage({ locale }: { locale: string }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    loadAdminData()
+  }, [loadAdminData])
 
   const handleTakedownAction = async (requestId: string, videoId: string, action: 'approved' | 'rejected') => {
     try {
@@ -139,8 +165,9 @@ export default function AdminClientPage({ locale }: { locale: string }) {
       } else {
         setIngestStatus(`Ingest Failed: ${data.error || 'Unknown error'}`)
       }
-    } catch (err: any) {
-      setIngestStatus(`Failed to trigger: ${err.message}`)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error'
+      setIngestStatus(`Failed to trigger: ${message}`)
     } finally {
       setIngesting(false)
       await loadAdminData()
@@ -190,7 +217,7 @@ export default function AdminClientPage({ locale }: { locale: string }) {
           ].map(tab => (
             <button
               key={tab.id}
-              onClick={() => setActiveTab(tab.id as any)}
+              onClick={() => setActiveTab(tab.id as 'users' | 'videos' | 'takedowns' | 'audit' | 'ingest')}
               className={`px-5 py-3 text-xs font-bold uppercase tracking-wider border-b-2 transition ${
                 activeTab === tab.id
                   ? 'border-neon-flamingo text-neon-flamingo bg-deep-teal/10'

@@ -1,7 +1,6 @@
 import { Metadata } from 'next'
 import Link from 'next/link'
 import Image from 'next/image'
-import { notFound } from 'next/navigation'
 import { Calendar, User, ArrowLeft, BookOpen } from 'lucide-react'
 import { ARTICLES } from '@/data/articles'
 

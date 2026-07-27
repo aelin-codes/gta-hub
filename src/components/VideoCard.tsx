@@ -6,6 +6,7 @@ import { Heart, Play, ExternalLink, Clock } from 'lucide-react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { useParams } from 'next/navigation'
+import { formatExactDate, formatRelativeDate } from '@/utils/date'
 
 interface Timestamp {
   label: string
@@ -112,6 +113,8 @@ export default function VideoCard({
   const embedUrl = video.platform === 'youtube'
     ? `https://www.youtube.com/embed/${video.external_id}?autoplay=1&start=${activeTimestamp || 0}`
     : `https://player.twitch.tv/?video=${video.external_id}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}&autoplay=true&time=${activeTimestamp ? `${activeTimestamp}s` : '0s'}`
+  const exactUploadDate = formatExactDate(video.published_at)
+  const relativeUploadDate = formatRelativeDate(video.published_at)
 
   return (
     <motion.div
@@ -187,7 +190,7 @@ export default function VideoCard({
               <span>{video.channel_name}</span>
               <ExternalLink className="w-3 h-3" />
             </a>
-            <span>{new Date(video.published_at).toLocaleDateString()}</span>
+            <span title={exactUploadDate}>{relativeUploadDate}</span>
           </div>
 
           {/* Title */}

@@ -83,7 +83,6 @@ export async function POST(req: Request) {
     
     // 2. subscription.charged (fires on renewals)
     else if (event === 'subscription.charged') {
-      const paymentObj = data.payment.entity
       const subObj = data.subscription.entity
       const razorpaySubId = subObj.id
       const currentPeriodEnd = new Date(subObj.current_end * 1000).toISOString()
@@ -187,8 +186,9 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ received: true })
-  } catch (err: any) {
+  } catch (err) {
     console.error('Webhook error:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

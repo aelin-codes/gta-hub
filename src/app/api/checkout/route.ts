@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server'
 
 const getStripe = () => {
   return new Stripe(process.env.STRIPE_SECRET_KEY || 'mock_key', {
-    apiVersion: '2023-10-16' as any,
+    apiVersion: '2023-10-16' as unknown as '2026-06-24.dahlia',
   })
 }
 
@@ -98,8 +98,9 @@ export async function POST(req: Request) {
       const subscription = await rzRes.json()
       return NextResponse.json({ url: subscription.short_url || `${origin}/dashboard` })
     }
-  } catch (err: any) {
+  } catch (err) {
     console.error('Checkout API failure:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

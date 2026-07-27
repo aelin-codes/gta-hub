@@ -22,7 +22,7 @@ export default function LoginClientPage({ locale }: { locale: string }) {
       const supabase = createClient()
 
       if (mode === 'signin') {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const { error } = await supabase.auth.signInWithPassword({
           email,
           password
         })
@@ -58,9 +58,10 @@ export default function LoginClientPage({ locale }: { locale: string }) {
 
         setMessage("Account created! Please check your email inbox to confirm registration.")
       }
-    } catch (err: any) {
+    } catch (err) {
       console.error(err)
-      setErrorMsg(err.message || 'Authentication failed. Please verify credentials.')
+      const msg = err instanceof Error ? err.message : 'Authentication failed. Please verify credentials.'
+      setErrorMsg(msg)
     } finally {
       setLoading(false)
     }

@@ -1,11 +1,15 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { Search, Sparkles, RefreshCw, X, SlidersHorizontal, UserCheck } from 'lucide-react'
+import { Search, Sparkles, X, SlidersHorizontal, UserCheck } from 'lucide-react'
 import VideoCard from '@/components/VideoCard'
+import VideoSkeleton from '@/components/VideoSkeleton'
+import Toast from '@/components/Toast'
 import AdInterstitial from '@/components/AdInterstitial'
+import ScrollReveal from '@/components/ScrollReveal'
 import { createClient } from '@/utils/supabase/client'
-import { PAYMENTS_ENABLED } from '@/config'
+import { PAYMENTS_ENABLED, BANNER_EVERY_N_VIDEOS, INTERSTITIAL_EVERY_N_VIDEOS } from '@/config'
+import AdBanner from '@/components/AdBanner'
 
 interface Timestamp {
   label: string;
@@ -50,6 +54,7 @@ const CATEGORIES = [
 ]
 
 export default function LibraryClientPage({ locale }: { locale: string }) {
+  void locale
   const [videos, setVideos] = useState<Video[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -64,13 +69,28 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
   const [isPremium, setIsPremium] = useState(false)
   const [favorites, setFavorites] = useState<string[]>([]) // Array of video_ids
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({})
+  const [toast, setToast] = useState<string | null>(null)
 
   // Ad State (Section 7)
   const [videoOpensThisSession, setVideoOpensThisSession] = useState(0)
+  const [lastAdDismissed, setLastAdDismissed] = useState<number>(0)
   const [isAdOpen, setIsAdOpen] = useState(false)
   const [pendingPlayCallback, setPendingPlayCallback] = useState<{ videoId: string; timestamp?: number } | null>(null)
   const [activePlayId, setActivePlayId] = useState<string | null>(null)
   const [activeTimestamp, setActiveTimestamp] = useState<number | undefined>(undefined)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedCount = sessionStorage.getItem('video_opens_count')
+      if (storedCount) {
+        setVideoOpensThisSession(parseInt(storedCount, 10))
+      }
+      const storedDismissed = sessionStorage.getItem('last_ad_dismissed_time')
+      if (storedDismissed) {
+        setLastAdDismissed(parseInt(storedDismissed, 10))
+      }
+    }
+  }, [])
 
   const supabase = createClient()
 
@@ -89,10 +109,9 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
           .single()
         
         if (profile) {
-          // If payments are disabled, everyone gets premium features
-          setIsPremium(PAYMENTS_ENABLED ? profile.is_premium : true)
-        } else if (!PAYMENTS_ENABLED) {
-          setIsPremium(true)
+          setIsPremium(!!profile.is_premium)
+        } else {
+          setIsPremium(false)
         }
 
         // Fetch favorites
@@ -119,7 +138,8 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
 
       if (data) {
         const counts: Record<string, number> = {}
-        data.forEach((row: any) => {
+        const rows = data as unknown as { categories: { name: string } | null }[]
+        rows.forEach((row) => {
           const catName = row.categories?.name
           if (catName) {
             counts[catName] = (counts[catName] || 0) + 1
@@ -197,6 +217,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
       
       if (!error) {
         setFavorites(favorites.filter(id => id !== videoUUID))
+        setToast('Removed from favorites!')
       }
     } else {
       // Add favorite
@@ -206,6 +227,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
       
       if (!error) {
         setFavorites([...favorites, videoUUID])
+        setToast('Added to favorites!')
       }
     }
   }
@@ -220,9 +242,16 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
       // Free users: increment opens count
       const nextCount = videoOpensThisSession + 1
       setVideoOpensThisSession(nextCount)
+      if (typeof window !== 'undefined') {
+        sessionStorage.setItem('video_opens_count', nextCount.toString())
+      }
 
-      // Frequency check: open interstitial before the 1st view, then skip 2, then repeat
-      if (nextCount % 3 === 1) {
+      // Check cooldown (5 minutes = 300,000 milliseconds)
+      const now = Date.now()
+      const cooldownActive = now - lastAdDismissed < 5 * 60 * 1000
+
+      // Trigger interstitial on every Nth video if cooldown is not active
+      if (nextCount % INTERSTITIAL_EVERY_N_VIDEOS === 0 && !cooldownActive) {
         setPendingPlayCallback({ videoId: videoUUID, timestamp })
         setIsAdOpen(true)
       } else {
@@ -235,6 +264,11 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
 
   const handleCloseAd = () => {
     setIsAdOpen(false)
+    const now = Date.now()
+    setLastAdDismissed(now)
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('last_ad_dismissed_time', now.toString())
+    }
     if (pendingPlayCallback) {
       setActivePlayId(pendingPlayCallback.videoId)
       setActiveTimestamp(pendingPlayCallback.timestamp)
@@ -431,9 +465,10 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
           {/* Videos Grid */}
           <section className="lg:col-span-3">
             {loading ? (
-              <div className="flex flex-col items-center justify-center min-h-[300px] text-off-white/60 space-y-4">
-                <RefreshCw className="w-8 h-8 animate-spin text-palm-teal" />
-                <span className="text-sm font-mono uppercase tracking-wider">Syncing database...</span>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[...Array(6)].map((_, i) => (
+                  <VideoSkeleton key={i} />
+                ))}
               </div>
             ) : videos.length === 0 ? (
               <div className="flex flex-col items-center justify-center min-h-[300px] text-off-white/40 space-y-4 bg-deep-teal/10 rounded-2xl border border-deep-teal/30 p-8 text-center">
@@ -448,6 +483,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
                     setDebouncedSearchQuery('')
                     setSelectedCategory(null)
                     setSelectedPlatform(null)
+                    setToast('Filters reset')
                   }}
                   className="mt-2 px-4 py-2 text-xs bg-deep-teal text-off-white hover:text-palm-teal font-bold uppercase rounded border border-deep-teal transition"
                 >
@@ -456,30 +492,44 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {videos.map((vid: Video, idx: number) => (
-                  <VideoCard
-                    key={vid.id}
-                    video={{
-                      id: vid.id,
-                      platform: vid.platform,
-                      external_id: vid.external_id,
-                      title: vid.title,
-                      description: vid.description,
-                      channel_name: vid.channel_name,
-                      channel_url: vid.channel_url,
-                      thumbnail_url: vid.thumbnail_url || `https://img.youtube.com/vi/${vid.external_id}/maxresdefault.jpg`,
-                      published_at: vid.published_at,
-                      video_timestamps: vid.video_timestamps || []
-                    }}
-                    isFavorited={favorites.includes(vid.id)}
-                    isPremium={isPremium}
-                    onToggleFavorite={() => handleToggleFavorite(vid.external_id, vid.id)}
-                    onOpenVideo={(seconds) => handleOpenVideo(vid.id, seconds)}
-                    priority={idx < 2}
-                    activePlayId={activePlayId}
-                    activeTimestamp={activeTimestamp}
-                  />
-                ))}
+                {videos.map((vid: Video, idx: number) => {
+                  const showAd = !isPremium && ((idx + 1) % BANNER_EVERY_N_VIDEOS === 0)
+                  return (
+                    <div key={vid.id} className="contents">
+                      <ScrollReveal>
+                        <VideoCard
+                          video={{
+                            id: vid.id,
+                            platform: vid.platform,
+                            external_id: vid.external_id,
+                            title: vid.title,
+                            description: vid.description,
+                            channel_name: vid.channel_name,
+                            channel_url: vid.channel_url,
+                            thumbnail_url: vid.thumbnail_url || `https://img.youtube.com/vi/${vid.external_id}/maxresdefault.jpg`,
+                            published_at: vid.published_at,
+                            video_timestamps: vid.video_timestamps || []
+                          }}
+                          isFavorited={favorites.includes(vid.id)}
+                          isPremium={isPremium}
+                          onToggleFavorite={() => handleToggleFavorite(vid.external_id, vid.id)}
+                          onOpenVideo={(seconds) => handleOpenVideo(vid.id, seconds)}
+                          priority={idx < 2}
+                          activePlayId={activePlayId}
+                          activeTimestamp={activeTimestamp}
+                        />
+                      </ScrollReveal>
+                      {showAd && (
+                        <ScrollReveal>
+                          <div className="bg-deep-teal/40 border border-deep-teal/80 rounded-xl overflow-hidden p-6 flex flex-col items-center justify-center min-h-[300px] text-center space-y-4 shadow-lg">
+                            <span className="text-[10px] font-mono text-off-white/40 uppercase tracking-widest">Sponsored Advertisement</span>
+                            <AdBanner slot={`grid-ad-${idx}`} format="rectangle" className="w-full h-full" />
+                          </div>
+                        </ScrollReveal>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             )}
           </section>
@@ -487,6 +537,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
         </div>
 
       </div>
+      {toast && <Toast text={toast} onClose={() => setToast(null)} />}
     </div>
   )
 }

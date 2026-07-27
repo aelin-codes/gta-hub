@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import { PAYMENTS_ENABLED } from '@/config'
@@ -19,10 +20,13 @@ const navLinks = (locale: string, isAdmin: boolean) => [
 export default function NavBar({ locale }: { locale: string }) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [open, setOpen] = useState(false)
+  const pathname = usePathname()
 
   useEffect(() => {
     const supabase = createClient()
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
+    async function checkAdmin() {
+      const res = await supabase.auth.getUser()
+      const user = res.data?.user
       if (!user) return
       const { data } = await supabase
         .from('users')
@@ -30,7 +34,8 @@ export default function NavBar({ locale }: { locale: string }) {
         .eq('id', user.id)
         .single()
       if (data?.role === 'admin' || data?.role === 'superuser') setIsAdmin(true)
-    })
+    }
+    checkAdmin()
   }, [])
 
   const links = navLinks(locale, isAdmin)
@@ -39,15 +44,23 @@ export default function NavBar({ locale }: { locale: string }) {
     <>
       {/* Desktop nav */}
       <nav className="hidden md:flex items-center space-x-8 text-sm uppercase tracking-wider font-semibold">
-        {links.map(({ href, label, className }) => (
-          <Link
-            key={href}
-            href={href}
-            className={`hover:text-neon-flamingo transition duration-200 ${className || ''}`}
-          >
-            {label}
-          </Link>
-        ))}
+        {links.map(({ href, label, className }) => {
+          const isActive = pathname === href || (href !== `/${locale}` && pathname.startsWith(href))
+          return (
+            <Link
+              key={href}
+              href={href}
+              aria-current={isActive ? 'page' : undefined}
+              className={`hover:text-neon-flamingo transition duration-200 ${
+                isActive 
+                  ? 'text-neon-flamingo border-b-2 border-neon-flamingo pb-1' 
+                  : className || 'text-off-white/80'
+              }`}
+            >
+              {label}
+            </Link>
+          )
+        })}
       </nav>
 
       {/* Mobile hamburger button */}
@@ -76,16 +89,24 @@ export default function NavBar({ locale }: { locale: string }) {
             >
               <X className="w-6 h-6" />
             </button>
-            {links.map(({ href, label, className }) => (
-              <Link
-                key={href}
-                href={href}
-                className={`hover:text-neon-flamingo transition duration-200 ${className || ''}`}
-                onClick={() => setOpen(false)}
-              >
-                {label}
-              </Link>
-            ))}
+            {links.map(({ href, label, className }) => {
+              const isActive = pathname === href || (href !== `/${locale}` && pathname.startsWith(href))
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`hover:text-neon-flamingo transition duration-200 block ${
+                    isActive 
+                      ? 'text-neon-flamingo border-l-2 border-neon-flamingo pl-2' 
+                      : className || 'text-off-white/80'
+                  }`}
+                  onClick={() => setOpen(false)}
+                >
+                  {label}
+                </Link>
+              )
+            })}
           </nav>
         </div>
       )}

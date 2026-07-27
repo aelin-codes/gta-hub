@@ -2,9 +2,17 @@ import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 import { createAdminClient } from '@/utils/supabase/server'
 
+interface CustomStripeSubscription {
+  current_period_end: number;
+}
+
+interface CustomStripeInvoice {
+  subscription: string | { id: string } | null;
+}
+
 const getStripe = () => {
   return new Stripe(process.env.STRIPE_SECRET_KEY || 'mock_key', {
-    apiVersion: '2023-10-16' as any,
+    apiVersion: '2023-10-16' as unknown as '2026-06-24.dahlia',
   })
 }
 
@@ -27,8 +35,9 @@ export async function POST(req: Request) {
     let event: Stripe.Event
     try {
       event = stripe.webhooks.constructEvent(rawBody, signature, webhookSecret)
-    } catch (err: any) {
-      console.warn(`Invalid signature detected in Stripe webhook: ${err.message}`)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error'
+      console.warn(`Invalid signature detected in Stripe webhook: ${message}`)
       return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
     }
 
@@ -49,7 +58,7 @@ export async function POST(req: Request) {
 
       // Fetch actual subscription details from Stripe to get period end
       const subscription = await stripe.subscriptions.retrieve(stripeSubId)
-      const currentPeriodEnd = new Date((subscription as any).current_period_end * 1000).toISOString()
+      const currentPeriodEnd = new Date((subscription as unknown as CustomStripeSubscription).current_period_end * 1000).toISOString()
 
       // Update user details
       await supabase
@@ -84,11 +93,14 @@ export async function POST(req: Request) {
     // 2. invoice.payment_succeeded (Charged / renewed)
     else if (event.type === 'invoice.payment_succeeded') {
       const invoice = event.data.object as Stripe.Invoice
-      const stripeSubId = (invoice as any).subscription as string
+      const invoiceData = invoice as unknown as CustomStripeInvoice
+      const stripeSubId = typeof invoiceData.subscription === 'string' 
+        ? invoiceData.subscription 
+        : invoiceData.subscription?.id
 
       if (stripeSubId) {
         const subscription = await stripe.subscriptions.retrieve(stripeSubId)
-        const currentPeriodEnd = new Date((subscription as any).current_period_end * 1000).toISOString()
+        const currentPeriodEnd = new Date((subscription as unknown as CustomStripeSubscription).current_period_end * 1000).toISOString()
 
         const { data: localSub } = await supabase
           .from('subscriptions')
@@ -119,7 +131,10 @@ export async function POST(req: Request) {
     // 3. invoice.payment_failed (Grace period / dunning logic)
     else if (event.type === 'invoice.payment_failed') {
       const invoice = event.data.object as Stripe.Invoice
-      const stripeSubId = (invoice as any).subscription as string
+      const invoiceData = invoice as unknown as CustomStripeInvoice
+      const stripeSubId = typeof invoiceData.subscription === 'string' 
+        ? invoiceData.subscription 
+        : invoiceData.subscription?.id
 
       if (stripeSubId) {
         const { data: localSub } = await supabase
@@ -159,7 +174,7 @@ export async function POST(req: Request) {
       const stripeSubId = stripeSub.id
       const status = stripeSub.status
       const cancelAtPeriodEnd = stripeSub.cancel_at_period_end
-      const currentPeriodEnd = new Date((stripeSub as any).current_period_end * 1000)
+      const currentPeriodEnd = new Date((stripeSub as unknown as CustomStripeSubscription).current_period_end * 1000)
 
       const { data: localSub } = await supabase
         .from('subscriptions')
@@ -195,8 +210,9 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json({ received: true })
-  } catch (err: any) {
+  } catch (err) {
     console.error('Stripe webhook error:', err)
-    return NextResponse.json({ error: err.message }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Unknown error'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
