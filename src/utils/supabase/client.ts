@@ -23,6 +23,12 @@ const mockClient = {
           resolve({ data: stored.length > 0 ? stored : MOCK_VIDEOS, error: null })
         }
       }
+      if (tableName === 'favorites' || tableName === 'follows') {
+        original.then = async (resolve: (v: { data: unknown; error: null }) => void) => {
+          const stored = JSON.parse(localStorage.getItem(`gta_${tableName}`) || '[]')
+          resolve({ data: stored, error: null })
+        }
+      }
     }
 
     return builder

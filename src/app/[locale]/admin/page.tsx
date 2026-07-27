@@ -2,7 +2,7 @@ import { Metadata } from 'next'
 import AdminClientPage from './AdminClientPage'
 
 export const metadata: Metadata = {
-  title: 'Admin Dashboard | GTA 6 Hub',
+  title: 'Admin Command Center',
   description: 'Manage users, video categories, takedowns, and view security audit logs.',
   robots: {
     index: false,

@@ -6,7 +6,7 @@ export async function generateMetadata({
 }: {
   params: { locale: string }
 }): Promise<Metadata> {
-  const title = 'Video Library | GTA 6 Hub'
+  const title = 'Video Library'
   const description = 'Browse community-curated GTA 6 guides, easter eggs, glitches, and mission walkthroughs. Filter by category, tags, or search using AI semantic search.'
   const canonicalUrl = `https://gta6hub.com/${locale}/library`
 

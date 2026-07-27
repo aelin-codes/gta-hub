@@ -6,7 +6,7 @@ export async function generateMetadata({
 }: {
   params: { locale: string }
 }): Promise<Metadata> {
-  const title = 'User Dashboard | GTA 6 Hub'
+  const title = 'User Dashboard'
   const description = 'Manage your GTA 6 Hub account, subscription status, auto-renewal preferences, and view your saved favorites and followed creators.'
   const canonicalUrl = `https://gta6hub.com/${locale}/dashboard`
 

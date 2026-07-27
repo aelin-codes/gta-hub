@@ -6,7 +6,7 @@ export async function generateMetadata({
 }: {
   params: { locale: string }
 }): Promise<Metadata> {
-  const title = 'Wiki & Interactive Database | GTA 6 Hub'
+  const title = 'Wiki & Interactive Database'
   const description = 'Explore the interactive map of Leonida, character bios for Jason and Lucia, vehicle spawn locations, and confirmed features for GTA 6.'
   const canonicalUrl = `https://gta6hub.com/${locale}/wiki`
 

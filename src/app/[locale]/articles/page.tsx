@@ -9,7 +9,7 @@ export async function generateMetadata({
 }: {
   params: { locale: string }
 }): Promise<Metadata> {
-  const title = 'News & Articles | GTA 6 Hub'
+  const title = 'News & Articles'
   const description = 'Read the latest GTA 6 fan theories, map analysis, character backstories, and news from our community.'
   const canonicalUrl = `https://gta6hub.com/${locale}/articles`
 

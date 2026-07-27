@@ -153,24 +153,13 @@ Return ONLY valid JSON (no markdown):
 
           let classification: { categories: string[], tags: string[], summary: string, timestamps: {label: string, seconds: number}[], excluded: boolean } = { categories: ['General'], tags: [], summary: snippet.description || '', timestamps: [], excluded: false }
           try {
-            const result = await model.generateContent([
-              { fileData: { mimeType: 'video/*', fileUri: `https://www.youtube.com/watch?v=${videoId}` } },
-              { text: classifyPrompt }
-            ])
+            const result = await model.generateContent(
+              `${classifyPrompt}\n\nVideo Title: "${snippet.title}"\nDescription: "${snippet.description}"`
+            )
             const cleaned = result.response.text().trim().replace(/```json|```/g, '').trim()
             classification = JSON.parse(cleaned)
           } catch (geminiErr) {
-            console.warn(`Gemini video analysis failed for ${videoId}, falling back to text:`, geminiErr)
-            // Text-only fallback using title + description
-            try {
-              const fallbackResult = await model.generateContent(
-                `${classifyPrompt}\n\nTitle: "${snippet.title}"\nDescription: "${snippet.description}"`
-              )
-              const cleaned = fallbackResult.response.text().trim().replace(/```json|```/g, '').trim()
-              classification = JSON.parse(cleaned)
-            } catch (fallbackErr) {
-              console.error(`Gemini text fallback also failed for ${videoId}:`, fallbackErr)
-            }
+            console.warn(`Gemini video analysis failed for ${videoId}:`, geminiErr)
           }
 
           // Insert video

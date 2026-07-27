@@ -88,10 +88,15 @@ export const MOCK_ADMIN_USER = {
 
 // Minimal mock query builder — returns mock data for offline/dev use
 export class MockQueryBuilder {
+  private filters: Array<{ col: string; val: unknown }> = []
+
   constructor(private tableName: string) {}
 
   select(c?: string) { void c; return this }
-  eq(c: string, v: unknown) { void c; void v; return this }
+  eq(c: string, v: unknown) {
+    this.filters.push({ col: c, val: v })
+    return this
+  }
   neq(c: string, v: unknown) { void c; void v; return this }
   or(v: string) { void v; return this }
   order(c: string, o?: unknown) { void c; void o; return this }
@@ -99,8 +104,8 @@ export class MockQueryBuilder {
   textSearch(c: string, q: string, o?: unknown) { void c; void q; void o; return this }
 
   async single() {
-    const data = this.getData()
-    return { data: Array.isArray(data) ? data[0] : data, error: null }
+    const data = this.getFilteredData()
+    return { data: Array.isArray(data) ? (data[0] || null) : data, error: null }
   }
 
   async insert(payload: unknown) {
@@ -112,13 +117,24 @@ export class MockQueryBuilder {
   async delete() { return { error: null } }
 
   async then(resolve: (v: { data: unknown; error: null }) => void) {
-    resolve({ data: this.getData(), error: null })
+    resolve({ data: this.getFilteredData(), error: null })
   }
 
-  private getData(): unknown {
-    if (this.tableName === 'videos') return MOCK_VIDEOS
-    if (this.tableName === 'categories') return MOCK_CATEGORIES
-    if (this.tableName === 'users') return MOCK_ADMIN_USER
-    return []
+  private getFilteredData(): unknown {
+    let data: unknown[] = []
+    if (this.tableName === 'videos') data = MOCK_VIDEOS
+    else if (this.tableName === 'categories') data = MOCK_CATEGORIES
+    else if (this.tableName === 'users') return MOCK_ADMIN_USER
+    else return []
+
+    if (this.filters.length > 0) {
+      return data.filter((item) =>
+        typeof item === 'object' &&
+        item !== null &&
+        this.filters.every((f) => (item as Record<string, unknown>)[f.col] === f.val)
+      )
+    }
+
+    return data
   }
 }

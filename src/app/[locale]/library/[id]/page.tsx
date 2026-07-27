@@ -2,6 +2,7 @@ import { Metadata } from 'next'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { createAdminClient } from '@/utils/supabase/server'
+import { MOCK_VIDEOS } from '@/utils/supabase/mock'
 import VideoDetailClient from './VideoDetailClient'
 
 interface Timestamp {
@@ -32,11 +33,19 @@ async function getVideo(id: string): Promise<Video | null> {
       .eq('excluded', false)
       .single()
 
-    return video as Video | null
+    if (video) return video as Video
   } catch (err) {
     console.error('Error loading video on server:', err)
-    return null
   }
+
+  const mockMatch = MOCK_VIDEOS.find(
+    (v) => v.id === id || v.external_id === id
+  )
+  if (mockMatch) {
+    return mockMatch as unknown as Video
+  }
+
+  return null
 }
 
 export async function generateMetadata({

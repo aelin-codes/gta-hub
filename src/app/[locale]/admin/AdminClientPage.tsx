@@ -157,7 +157,8 @@ export default function AdminClientPage({ locale }: { locale: string }) {
     setIngesting(true)
     setIngestStatus('Connecting to ingestion pipeline...')
     try {
-      const res = await fetch(`/api/ingest?secret=${process.env.NEXT_PUBLIC_CRON_SECRET || 'secret'}`)
+      const cronSecret = process.env.NEXT_PUBLIC_CRON_SECRET || 'gtavihub_cron_2026_secrets'
+      const res = await fetch(`/api/ingest?secret=${cronSecret}`)
       const data = await res.json()
 
       if (res.ok) {
