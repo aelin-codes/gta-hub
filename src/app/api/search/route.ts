@@ -27,6 +27,7 @@ export async function GET(req: Request) {
     const mode = searchParams.get('mode') || 'keyword' // 'keyword' | 'semantic'
     const category = searchParams.get('category') || ''
     const platform = searchParams.get('platform') || ''
+    const videoId = searchParams.get('video') || ''
 
     // Single adminClient for all DB reads in this request
     const supabase = createClient()
@@ -128,6 +129,14 @@ export async function GET(req: Request) {
     // --- Curated Fallback with AI Semantic Schematic Engine ---
     if (!results || (Array.isArray(results) && results.length === 0)) {
       let list = [...CURATED_VIDEOS]
+
+      // If specific video was targeted directly (e.g. from Map POI Intel link)
+      if (videoId) {
+        const directMatch = list.find((v) => v.id === videoId || v.external_id === videoId)
+        if (directMatch) {
+          list = [directMatch, ...list.filter((v) => v.id !== directMatch.id)]
+        }
+      }
 
       // Category matching across primary, secondary, and conceptual aliases
       if (category) {
@@ -234,6 +243,12 @@ export async function GET(req: Request) {
             }
           }
 
+          // Targeted POI video priority match
+          if (videoId && (v.id === videoId || v.external_id === videoId)) {
+            score += 250
+            matchedConcepts.unshift('📍 Map Intel Surveillance')
+          }
+
           const clampedScore = Math.min(99, Math.max(isSemantic && score > 0 ? 55 : score, 0))
           return {
             ...v,
@@ -250,16 +265,25 @@ export async function GET(req: Request) {
 
         if (isSemantic) {
           results = scored
-            .filter((v) => v.schematicMatch.score > 0)
+            .filter((v) => v.schematicMatch.score > 0 || (videoId && (v.id === videoId || v.external_id === videoId)))
             .sort((a, b) => b.schematicMatch.score - a.schematicMatch.score)
           if (results.length === 0) results = scored.slice(0, 4)
         } else {
           results = scored.filter(
             (v) =>
+              (videoId && (v.id === videoId || v.external_id === videoId)) ||
               v.title.toLowerCase().includes(qLower) ||
               v.description.toLowerCase().includes(qLower) ||
               v.schematicMatch.score >= 20
-          )
+          ).sort((a, b) => {
+            if (videoId) {
+              const aMatch = a.id === videoId || a.external_id === videoId
+              const bMatch = b.id === videoId || b.external_id === videoId
+              if (aMatch && !bMatch) return -1
+              if (!aMatch && bMatch) return 1
+            }
+            return 0
+          })
         }
       }
     }

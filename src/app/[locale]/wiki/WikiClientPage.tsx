@@ -2,7 +2,7 @@
 
 import { useRef, useState, type PointerEvent, type WheelEvent } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
-import { Map, Users, Car, Zap, Crosshair, ArrowRight, ExternalLink, ChevronRight } from 'lucide-react'
+import { Map, Users, Car, Zap, Crosshair, ArrowRight, ExternalLink, ChevronRight, Film, Play } from 'lucide-react'
 import Link from 'next/link'
 import { CHARACTERS } from '@/data/characters'
 import { soundFx } from '@/components/GtaSoundEffects'
@@ -892,11 +892,23 @@ export default function WikiClientPage({ locale }: { locale: string }) {
                           {selectedPOI.description}
                         </p>
 
+                        {/* Optic Video Surveillance Intel Badge */}
+                        <div className="p-3 bg-black/40 border border-deep-teal/60 rounded-2xl space-y-1.5">
+                          <div className="flex items-center justify-between text-[10px] font-mono">
+                            <span className="text-neon-flamingo uppercase font-semibold flex items-center gap-1.5">
+                              <Film className="w-3.5 h-3.5" /> Surveillance Video Intel
+                            </span>
+                            <span className="text-palm-teal font-bold uppercase tracking-wider">Verified 4K</span>
+                          </div>
+                          <p className="text-xs text-off-white font-medium line-clamp-1">{selectedPOI.opticVideoTitle}</p>
+                        </div>
+
                         <Link
-                          href={`/${locale}/library?q=${encodeURIComponent(selectedPOI.name)}`}
-                          className="flex items-center justify-center space-x-2 w-full py-3 px-4 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-xs font-mono uppercase font-bold tracking-wider rounded-xl hover:opacity-95 transition shadow"
+                          href={`/${locale}/library?video=${selectedPOI.opticVideoId}&q=${encodeURIComponent(selectedPOI.opticVideoTitle)}`}
+                          className="flex items-center justify-center space-x-2 w-full py-3 px-4 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-xs font-mono uppercase font-bold tracking-wider rounded-xl hover:opacity-95 transition shadow-lg"
                         >
-                          <span>Explore Video Intel</span>
+                          <Play className="w-3.5 h-3.5 fill-current" />
+                          <span>Watch Intel Video Result</span>
                           <ArrowRight className="w-3.5 h-3.5" />
                         </Link>
                       </div>

@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Heart, User, ShieldCheck, Calendar, BellOff, Trash2, ShieldAlert } from 'lucide-react'
+import { Heart, User, ShieldCheck, Calendar, BellOff, Trash2, ShieldAlert, LogOut, LogIn, Key, Mail, Shield, RefreshCw, AlertCircle } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
 import { PAYMENTS_ENABLED } from '@/config'
 import { User as AuthUser } from '@supabase/supabase-js'
+import { soundFx } from '@/components/GtaSoundEffects'
 
 interface UserProfile {
   id: string
@@ -50,6 +51,14 @@ export default function DashboardClientPage({ locale }: { locale: string }) {
   const [follows, setFollows] = useState<UserFollow[]>([])
   const [loading, setLoading] = useState(true)
   const [updatingAutoRenew, setUpdatingAutoRenew] = useState(false)
+
+  // Inline User Login / Registration Form State
+  const [authEmail, setAuthEmail] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
+  const [authLoading, setAuthLoading] = useState(false)
+  const [authError, setAuthError] = useState('')
+  const [authMsg, setAuthMsg] = useState('')
 
   const supabase = createClient()
 
@@ -191,6 +200,52 @@ export default function DashboardClientPage({ locale }: { locale: string }) {
     }
   }
 
+  const handleInlineAuth = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setAuthLoading(true)
+    setAuthError('')
+    setAuthMsg('')
+    try {
+      if (authMode === 'signin') {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: authEmail,
+          password: authPassword
+        })
+        if (error) throw error
+        setAuthMsg('Authenticated! Entering user dashboard...')
+        setTimeout(() => window.location.reload(), 600)
+      } else {
+        const { data, error } = await supabase.auth.signUp({
+          email: authEmail,
+          password: authPassword
+        })
+        if (error) throw error
+        if (data.user) {
+          await supabase.from('users').insert({
+            id: data.user.id,
+            email: authEmail,
+            role: 'user',
+            is_premium: false
+          })
+        }
+        setAuthMsg('Account created successfully! Entering dashboard...')
+        setTimeout(() => window.location.reload(), 800)
+      }
+    } catch (err) {
+      setAuthError(err instanceof Error ? err.message : 'Authentication failed. Please verify credentials.')
+    } finally {
+      setAuthLoading(false)
+    }
+  }
+
+  const handleSignOut = async () => {
+    soundFx.playClick()
+    await supabase.auth.signOut()
+    setUser(null)
+    setProfile(null)
+    window.location.href = `/${locale}`
+  }
+
   if (loading) {
     return (
       <div className="bg-midnight-teal min-h-screen flex items-center justify-center text-off-white/60 font-mono text-sm uppercase">
@@ -201,42 +256,152 @@ export default function DashboardClientPage({ locale }: { locale: string }) {
 
   if (!user) {
     return (
-      <div className="bg-midnight-teal min-h-screen flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-deep-teal/40 border border-deep-teal rounded-2xl p-8 text-center space-y-6">
-          <ShieldAlert className="w-12 h-12 text-neon-flamingo mx-auto" />
-          <h2 className="text-2xl font-display uppercase tracking-widest text-off-white">Access Denied</h2>
-          <p className="text-xs text-off-white/60">
-            Please log in or create an account to view your dashboard, manage subscription plans, and review your bookmarks.
-          </p>
-          <Link
-            href={`/${locale}/login`}
-            className="block w-full py-3 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-xs font-bold uppercase tracking-wider rounded-xl transition"
-          >
-            Go to Log In
-          </Link>
+      <div className="bg-midnight-teal min-h-screen py-16 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+        <div className="max-w-md w-full bg-deep-teal/40 border border-deep-teal/80 rounded-3xl p-6 sm:p-8 space-y-6 shadow-2xl relative">
+          <div className="text-center space-y-2">
+            <div className="w-14 h-14 rounded-2xl bg-neon-flamingo/20 border border-neon-flamingo/40 text-neon-flamingo flex items-center justify-center mx-auto">
+              <User className="w-7 h-7" />
+            </div>
+            <h2 className="text-2xl font-display uppercase tracking-widest text-off-white">
+              {authMode === 'signin' ? 'User Account Sign In' : 'Register New User'}
+            </h2>
+            <p className="text-xs text-off-white/60">
+              Sign in to manage your favorites, bookmark intel videos, and customize your profile.
+            </p>
+          </div>
+
+          <form onSubmit={handleInlineAuth} className="space-y-4">
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase font-mono tracking-wider text-off-white/60 block">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-off-white/40 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="email"
+                  required
+                  value={authEmail}
+                  onChange={(e) => setAuthEmail(e.target.value)}
+                  placeholder="user@example.com"
+                  className="w-full pl-10 pr-4 py-2.5 bg-midnight-teal border border-deep-teal focus:border-palm-teal rounded-xl text-xs text-off-white outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] uppercase font-mono tracking-wider text-off-white/60 block">
+                Password
+              </label>
+              <div className="relative">
+                <Key className="w-4 h-4 text-off-white/40 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="password"
+                  required
+                  value={authPassword}
+                  onChange={(e) => setAuthPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="w-full pl-10 pr-4 py-2.5 bg-midnight-teal border border-deep-teal focus:border-palm-teal rounded-xl text-xs text-off-white outline-none"
+                />
+              </div>
+            </div>
+
+            {authError && (
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/30 text-xs text-rose-400 font-mono">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            {authMsg && (
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-palm-teal/10 border border-palm-teal/30 text-xs text-palm-teal font-mono">
+                <ShieldCheck className="w-4 h-4 shrink-0" />
+                <span>{authMsg}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={authLoading}
+              className="w-full py-3 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-xs font-mono uppercase font-bold tracking-wider rounded-xl hover:opacity-95 transition shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {authLoading ? (
+                <RefreshCw className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  <LogIn className="w-4 h-4" />
+                  <span>{authMode === 'signin' ? 'Sign In to Dashboard' : 'Register Account'}</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="flex items-center justify-between text-xs font-mono border-t border-deep-teal/40 pt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setAuthMode(authMode === 'signin' ? 'signup' : 'signin')
+                setAuthError('')
+                setAuthMsg('')
+              }}
+              className="text-palm-teal hover:text-white transition"
+            >
+              {authMode === 'signin' ? 'Need an account? Register' : 'Already have account? Sign in'}
+            </button>
+
+            <Link href={`/${locale}/login`} className="text-off-white/40 hover:text-off-white">
+              Full Login Page →
+            </Link>
+          </div>
         </div>
       </div>
     )
   }
 
   const hasPremium = profile?.is_premium || false
+  const isAdmin = profile?.role === 'admin' || profile?.role === 'superuser'
 
   return (
     <div className="bg-midnight-teal min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-12">
         
         {/* User Card */}
-        <div className="bg-deep-teal rounded-3xl p-6 sm:p-8 border border-deep-teal/80 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+        <div className="bg-deep-teal rounded-3xl p-6 sm:p-8 border border-deep-teal/80 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-2xl">
           <div className="flex items-center space-x-4">
             <div className="w-14 h-14 rounded-full bg-midnight-teal border border-palm-teal/30 flex items-center justify-center text-palm-teal">
               <User className="w-7 h-7" />
             </div>
             <div>
               <h2 className="text-lg font-bold text-off-white">{user.email}</h2>
-              <span className="text-[10px] uppercase font-mono text-palm-teal bg-palm-teal/10 px-2 py-0.5 rounded border border-palm-teal/20 mt-1 inline-block">
-                Role: {profile?.role || 'user'}
-              </span>
+              <div className="flex items-center gap-2 mt-1">
+                <span className={`text-[10px] uppercase font-mono px-2 py-0.5 rounded border font-semibold ${
+                  isAdmin ? 'bg-neon-flamingo/20 border-neon-flamingo/40 text-neon-flamingo' : 'bg-palm-teal/20 border-palm-teal/30 text-palm-teal'
+                }`}>
+                  Role: {profile?.role || 'user'}
+                </span>
+                <span className="text-[10px] font-mono text-off-white/40">UUID: {user.id.slice(0, 8)}...</span>
+              </div>
             </div>
+          </div>
+
+          {/* User Actions & Admin Bridge */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {isAdmin && (
+              <Link
+                href={`/${locale}/admin`}
+                className="px-3.5 py-2 bg-gradient-to-r from-neon-flamingo to-sunset-orange hover:opacity-95 text-white text-xs font-mono uppercase font-bold tracking-wider rounded-xl transition shadow flex items-center gap-1.5"
+              >
+                <Shield className="w-3.5 h-3.5" />
+                <span>Admin Command Center</span>
+              </Link>
+            )}
+
+            <button
+              onClick={handleSignOut}
+              className="px-3.5 py-2 bg-midnight-teal hover:bg-black/60 border border-deep-teal text-off-white hover:text-rose-400 text-xs font-mono uppercase font-bold tracking-wider rounded-xl transition flex items-center gap-1.5"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Sign Out</span>
+            </button>
           </div>
 
           {/* Plan Panel */}

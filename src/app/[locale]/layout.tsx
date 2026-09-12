@@ -14,6 +14,7 @@ import EasterEggHunt from '@/components/EasterEggHunt'
 import GtaCheatCodes from '@/components/GtaCheatCodes'
 import GtaRetroFilter from '@/components/GtaRetroFilter'
 import FooterSecretTiki from '@/components/FooterSecretTiki'
+import AuthNavButton from '@/components/AuthNavButton'
 import Link from 'next/link'
 import '@/app/globals.css'
 import { PAYMENTS_ENABLED } from '@/config'
@@ -126,12 +127,7 @@ export default async function LocaleLayout({
                     Go Premium
                   </Link>
                 )}
-                <Link 
-                  href={`/${locale}/login`} 
-                  className="px-4 py-2 text-xs font-bold uppercase tracking-widest bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white hover:opacity-90 transition duration-300 rounded shadow-[0_4px_15px_rgba(255,61,129,0.4)]"
-                >
-                  Join
-                </Link>
+                <AuthNavButton locale={locale} />
               </div>
 
             </div>

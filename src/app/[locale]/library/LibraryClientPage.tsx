@@ -106,6 +106,8 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
   const [activePlayId, setActivePlayId] = useState<string | null>(null)
   const [activeTimestamp, setActiveTimestamp] = useState<number | undefined>(undefined)
 
+  const [targetedIntelVideo, setTargetedIntelVideo] = useState<string | null>(null)
+
   // Read URL search params on mount
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -113,6 +115,18 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
       const q = params.get('q')
       const cat = params.get('category')
       const mode = params.get('mode')
+      const videoParam = params.get('video')
+
+      if (videoParam) {
+        setTargetedIntelVideo(videoParam)
+        const match = CURATED_VIDEOS.find(v => v.id === videoParam || v.external_id === videoParam)
+        if (match) {
+          setVideos([match as Video, ...CURATED_VIDEOS.filter(v => v.id !== match.id) as Video[]])
+          // Automatically spotlight and open requested POI intel video
+          setActivePlayId(match.id)
+        }
+      }
+
       if (q) {
         setSearchQuery(q)
         setDebouncedSearchQuery(q)
@@ -176,6 +190,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
     try {
       const q = debouncedSearchQuery
       const params = new URLSearchParams({ q, mode: searchMode })
+      if (targetedIntelVideo) params.set('video', targetedIntelVideo)
       if (selectedCategory && selectedCategory !== 'All Intel') {
         params.set('category', selectedCategory)
       }
@@ -197,7 +212,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
     } finally {
       setLoading(false)
     }
-  }, [debouncedSearchQuery, searchMode, selectedCategory, selectedPlatform, sortBy])
+  }, [debouncedSearchQuery, searchMode, selectedCategory, selectedPlatform, sortBy, targetedIntelVideo])
 
   // Debounce search query
   useEffect(() => {
@@ -209,7 +224,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
 
   useEffect(() => {
     fetchVideos()
-  }, [selectedCategory, selectedPlatform, sortBy, debouncedSearchQuery, fetchVideos])
+  }, [selectedCategory, selectedPlatform, sortBy, debouncedSearchQuery, targetedIntelVideo, fetchVideos])
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -533,6 +548,56 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
             })}
           </div>
         </div>
+
+        {/* 3.5 TACTICAL POI INTEL LINKED BANNER */}
+        {targetedIntelVideo && (
+          <div className="p-5 rounded-3xl bg-gradient-to-r from-neon-flamingo/20 via-deep-teal/40 to-palm-teal/20 border border-neon-flamingo/60 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xl animate-fade-in-up">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-neon-flamingo/25 text-neon-flamingo flex items-center justify-center border border-neon-flamingo/50 shrink-0 shadow-lg">
+                <Film className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-full bg-neon-flamingo text-white font-bold tracking-wider">
+                    📍 Tactical POI Intel Linked
+                  </span>
+                  <span className="text-xs text-palm-teal font-mono font-semibold">Surveillance result ready</span>
+                </div>
+                <h3 className="text-base sm:text-lg font-bold text-white mt-1">
+                  {videos[0]?.title || searchQuery || 'Selected Location Intel Video'}
+                </h3>
+              </div>
+            </div>
+            <div className="flex items-center gap-2.5 self-end sm:self-center shrink-0">
+              {videos[0] && (
+                <button
+                  onClick={() => handleOpenVideo(videos[0].id)}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-xs font-mono uppercase font-bold tracking-wider hover:opacity-95 transition shadow-lg flex items-center gap-1.5"
+                >
+                  <Play className="w-4 h-4 fill-current" />
+                  <span>Play Intel</span>
+                </button>
+              )}
+              <button
+                onClick={() => {
+                  setTargetedIntelVideo(null)
+                  setSearchQuery('')
+                  setDebouncedSearchQuery('')
+                  if (typeof window !== 'undefined') {
+                    const url = new URL(window.location.href)
+                    url.searchParams.delete('video')
+                    url.searchParams.delete('q')
+                    window.history.replaceState({}, '', url.toString())
+                  }
+                }}
+                className="px-3 py-2.5 rounded-xl bg-black/60 hover:bg-black/90 border border-deep-teal text-off-white/70 hover:text-white text-xs font-mono uppercase font-bold transition flex items-center gap-1"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>Show All Intel</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* 4. FEATURED INTEL SPOTLIGHT (NEATER TOP SHOWCASE) */}
         {!searchQuery && selectedCategory === 'All Intel' && featuredVideo && (

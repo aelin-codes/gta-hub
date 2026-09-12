@@ -108,6 +108,15 @@ export default function NavBar({ locale }: { locale: string }) {
                 </Link>
               )
             })}
+            <div className="pt-4 border-t border-deep-teal/50">
+              <Link
+                href={`/${locale}/login`}
+                onClick={() => setOpen(false)}
+                className="w-full py-2.5 px-4 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-xs font-mono uppercase font-bold tracking-wider rounded-xl text-center block shadow"
+              >
+                Sign In / Join
+              </Link>
+            </div>
           </nav>
         </div>
       )}
