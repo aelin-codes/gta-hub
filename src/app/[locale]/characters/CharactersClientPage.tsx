@@ -20,7 +20,6 @@ import { soundFx } from '@/components/GtaSoundEffects'
 
 export default function CharactersClientPage({ locale }: { locale: string }) {
   const [search, setSearch] = useState('')
-  const [gameFilter, setGameFilter] = useState<'all' | 'GTA 6' | 'GTA Vice City'>('all')
   const [roleFilter, setRoleFilter] = useState<string>('all')
   const [selectedChar, setSelectedChar] = useState<Character | null>(null)
   const [modalTab, setModalTab] = useState<'overview' | 'stats' | 'relationships' | 'quotes' | 'outfits' | 'missions'>('overview')
@@ -32,7 +31,6 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
 
   const filteredCharacters = useMemo(() => {
     return CHARACTERS.filter((c) => {
-      if (gameFilter !== 'all' && c.game !== gameFilter) return false
       if (roleFilter !== 'all' && c.roleCategory !== roleFilter) return false
       if (!search.trim()) return true
 
@@ -47,10 +45,7 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
 
       return inName || inNick || inRole || inOcc || inVoice || inAffil || inQuotes
     })
-  }, [search, gameFilter, roleFilter])
-
-  const gta6Count = CHARACTERS.filter((c) => c.game === 'GTA 6').length
-  const vcCount = CHARACTERS.filter((c) => c.game === 'GTA Vice City').length
+  }, [search, roleFilter])
 
   const getStatColor = (val: number) => {
     if (val >= 90) return 'from-neon-flamingo to-sunset-orange'
@@ -67,28 +62,28 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
         <div className="text-center space-y-4 max-w-4xl mx-auto">
           <div className="inline-flex items-center space-x-2 bg-gradient-to-r from-neon-flamingo/20 to-sunset-orange/20 text-neon-flamingo px-4 py-1.5 rounded-full text-xs font-mono uppercase tracking-widest border border-neon-flamingo/30">
             <Users className="w-4 h-4" />
-            <span>Leonida &amp; Vice City Lore Vault</span>
+            <span>GTA VI Leonida Intelligence Registry</span>
           </div>
           <h1 className="text-4xl sm:text-6xl font-display uppercase tracking-wider text-off-white">
-            CHARACTER DATABASE
+            CHARACTER INTELLIGENCE
           </h1>
           <p className="text-sm sm:text-base text-off-white/70 max-w-2xl mx-auto">
-            The definitive intelligence registry spanning the upcoming criminals of GTA VI and 40 years of Vice City underworld history. Complete with combat analytics, wardrobe variants, voice casting, and interpersonal allegiances.
+            The definitive biometric dossiers and combat analytics for the modern outlaws, cartel bosses, associates, and law enforcement figures shaping Grand Theft Auto VI across Vice City and the State of Leonida.
           </p>
 
           {/* Quick Metrics */}
           <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
             <div className="px-4 py-2 rounded-xl bg-deep-teal/40 border border-deep-teal flex items-center space-x-2 text-xs font-mono text-off-white">
               <span className="w-2 h-2 rounded-full bg-neon-flamingo animate-pulse" />
-              <span>{CHARACTERS.length} Profiles Indexed</span>
+              <span>{CHARACTERS.length} Verified GTA VI Profiles</span>
             </div>
             <div className="px-4 py-2 rounded-xl bg-deep-teal/40 border border-deep-teal flex items-center space-x-2 text-xs font-mono text-off-white">
-              <span className="text-sunset-orange font-bold">{gta6Count}</span>
-              <span>GTA VI Confirmed</span>
+              <span className="text-sunset-orange font-bold">100%</span>
+              <span>Leonida Authenticated</span>
             </div>
             <div className="px-4 py-2 rounded-xl bg-deep-teal/40 border border-deep-teal flex items-center space-x-2 text-xs font-mono text-off-white">
-              <span className="text-palm-teal font-bold">{vcCount}</span>
-              <span>Vice City Classics</span>
+              <span className="text-palm-teal font-bold">RADAR</span>
+              <span>Combat Analytics Calibrated</span>
             </div>
             {/* Hidden Collectible Tiki Package */}
             <button
@@ -122,7 +117,7 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name, nickname, role, voice actor, quotes..."
+                placeholder="Search by name, alias, occupation, voice actor, quotes..."
                 className="w-full bg-midnight-teal/80 border border-deep-teal rounded-2xl pl-11 pr-10 py-3 text-xs sm:text-sm text-off-white placeholder:text-off-white/40 focus:outline-none focus:border-neon-flamingo transition"
               />
               {search && (
@@ -136,20 +131,20 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
               )}
             </div>
 
-            {/* Game Era Toggle */}
+            {/* Role Classification Filter Pills */}
             <div className="flex items-center gap-1.5 p-1 bg-midnight-teal/80 border border-deep-teal rounded-2xl w-full md:w-auto overflow-x-auto">
-              {(
-                [
-                  { id: 'all', label: 'All Eras' },
-                  { id: 'GTA 6', label: 'GTA VI (Leonida)' },
-                  { id: 'GTA Vice City', label: 'Vice City (1986)' },
-                ] as const
-              ).map((tab) => (
+              {[
+                { id: 'all', label: 'All Roster (10)' },
+                { id: 'Protagonist', label: 'Protagonists' },
+                { id: 'Major', label: 'Major Figures' },
+                { id: 'Supporting', label: 'Contacts & Allies' },
+                { id: 'Antagonist', label: 'Cartel & Law' },
+              ].map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setGameFilter(tab.id)}
-                  className={`px-4 py-2 rounded-xl text-xs font-mono uppercase tracking-wider transition whitespace-nowrap ${
-                    gameFilter === tab.id
+                  onClick={() => setRoleFilter(tab.id)}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-mono uppercase tracking-wider transition whitespace-nowrap ${
+                    roleFilter === tab.id
                       ? 'bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white font-bold shadow'
                       : 'text-off-white/60 hover:text-off-white'
                   }`}
@@ -158,26 +153,6 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* Role Filters */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 text-xs">
-            <span className="text-off-white/40 uppercase font-mono tracking-wider mr-2 whitespace-nowrap">
-              Role:
-            </span>
-            {['all', 'Protagonist', 'Major', 'Minor', 'Antagonist', 'Supporting'].map((role) => (
-              <button
-                key={role}
-                onClick={() => setRoleFilter(role)}
-                className={`px-3 py-1.5 rounded-full border transition whitespace-nowrap font-mono uppercase text-[11px] ${
-                  roleFilter === role
-                    ? 'bg-palm-teal/20 border-palm-teal text-palm-teal font-semibold'
-                    : 'border-deep-teal/60 text-off-white/50 hover:text-off-white hover:border-deep-teal'
-                }`}
-              >
-                {role === 'all' ? 'All Roles' : role}
-              </button>
-            ))}
           </div>
         </div>
 
@@ -220,14 +195,8 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
 
                     {/* Game badge */}
                     <div className="absolute top-2 left-2">
-                      <span
-                        className={`text-[9px] font-mono uppercase font-bold px-2 py-0.5 rounded-md shadow-md ${
-                          isGTA6
-                            ? 'bg-neon-flamingo text-white'
-                            : 'bg-palm-teal text-midnight-teal'
-                        }`}
-                      >
-                        {char.game}
+                      <span className="text-[9px] font-mono uppercase font-bold px-2 py-0.5 rounded-md shadow-md bg-neon-flamingo text-white">
+                        GTA VI
                       </span>
                     </div>
 
@@ -321,7 +290,6 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
             <button
               onClick={() => {
                 setSearch('')
-                setGameFilter('all')
                 setRoleFilter('all')
               }}
               className="mt-2 px-4 py-2 rounded-xl bg-neon-flamingo text-white text-xs font-mono uppercase font-bold"
@@ -374,14 +342,8 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
 
               <div className="space-y-2 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span
-                    className={`text-[10px] font-mono uppercase font-bold px-2.5 py-0.5 rounded-md ${
-                      selectedChar.game === 'GTA 6'
-                        ? 'bg-neon-flamingo text-white'
-                        : 'bg-palm-teal text-midnight-teal'
-                    }`}
-                  >
-                    {selectedChar.game}
+                  <span className="text-[10px] font-mono uppercase font-bold px-2.5 py-0.5 rounded-md bg-neon-flamingo text-white">
+                    GTA VI
                   </span>
                   <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-md bg-deep-teal border border-deep-teal/80 text-palm-teal font-semibold">
                     {selectedChar.roleCategory}

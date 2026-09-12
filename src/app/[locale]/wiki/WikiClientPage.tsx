@@ -22,86 +22,64 @@ interface POI {
 
 const POIS: POI[] = [
   {
-    name: 'Vice City International Airport',
-    x: 22,
-    y: 78,
-    type: 'landmark',
-    region: 'Vice City',
-    description:
-      'Primary airport serving the Vice City metro. High-security commercial tarmac, private executive hangars, and cargo smuggling routes.',
-    coordinates: 'VC-8012-AP',
-    icon: '✈️',
-  },
-  {
-    name: 'Sunken Cargo Freighter Wreck',
-    x: 55,
-    y: 91,
-    type: 'easter-egg',
-    region: 'Ocean Reefs',
-    description:
-      'Old narcotics cargo ship resting on the coral bed — underwater loot containers, speargun diving spot, and encrypted radio transmission beacon.',
-    coordinates: 'OC-4412-SUB',
-    icon: '🌊',
-  },
-  {
-    name: 'Jason & Lucia Safehouse Motel',
-    x: 42,
+    name: 'Vice Beach Strip & Ocean Drive',
+    x: 91,
     y: 55,
     type: 'landmark',
-    region: 'Leonida Border',
-    description:
-      'Main hideout early in the campaign. Weapon lockers, trunk planning boards, stolen cash stacks, and getaway vehicle parking.',
-    coordinates: 'SH-3109-VC',
-    icon: '🏠',
-  },
-  {
-    name: 'Grassrivers Sawgrass Swamp',
-    x: 78,
-    y: 35,
-    type: 'mission',
-    region: 'Grassrivers',
-    description:
-      'Alligator-infested swampland. High-speed airboat pursuits, hidden drug laboratories, and off-grid poacher cabins off the radar.',
-    coordinates: 'GL-1244-SW',
-    icon: '🐊',
-  },
-  {
-    name: 'Leonida Keys Historic Lighthouse',
-    x: 88,
-    y: 82,
-    type: 'easter-egg',
-    region: 'Leonida Keys',
-    description:
-      'Historic 19th-century lighthouse with cryptic maritime markings. Rare heavy marksman weapon spawn on the lantern gallery at sunset.',
-    coordinates: 'LK-0012-LH',
-    icon: '🔭',
-  },
-  {
-    name: 'Vice Beach Strip & Ocean Drive',
-    x: 18,
-    y: 62,
-    type: 'landmark',
     region: 'Vice City',
     description:
-      'Iconic neon-lit Art Deco boulevard. Vibrant nightlife, street racing takeovers, outdoor fitness parks, and luxury supercar showrooms.',
+      'Iconic neon-lit Art Deco boulevard. Vibrant nightlife, street racing takeovers, outdoor fitness parks, and luxury supercar showrooms along the Atlantic coast.',
     coordinates: 'VC-0031-BS',
     icon: '🌴',
   },
   {
+    name: 'Downtown Vice Financial District',
+    x: 82,
+    y: 56,
+    type: 'landmark',
+    region: 'Vice City',
+    description:
+      'Towering modern corporate skyline. Commercial bank headquarters, rooftop helipads, luxury penthouse suites, and city hall.',
+    coordinates: 'DF-4401-FD',
+    icon: '🏙️',
+  },
+  {
+    name: 'Starfish Island Luxury Enclave',
+    x: 86,
+    y: 54,
+    type: 'landmark',
+    region: 'Vice City',
+    description:
+      'Historical billionaire compound district in the bay between mainland Vice City and Vice Beach. Gated waterway estates with private yacht docks.',
+    coordinates: 'SI-5501-EST',
+    icon: '🏰',
+  },
+  {
+    name: 'Vice City International Airport',
+    x: 68,
+    y: 62,
+    type: 'landmark',
+    region: 'Vice City',
+    description:
+      'Primary international airport serving Leonida. High-security commercial tarmac, private executive hangars, and cargo smuggling routes west of the bay.',
+    coordinates: 'VC-8012-AP',
+    icon: '✈️',
+  },
+  {
     name: 'Port Gellhorn Container Docks',
-    x: 35,
-    y: 45,
+    x: 43,
+    y: 39,
     type: 'mission',
     region: 'Port Gellhorn',
     description:
-      'Industrial deep-water port. High-stakes container smuggling, freight train heists, warehouse shootouts, and dockworker union territory.',
+      'Industrial deep-water port on the west coast. High-stakes container smuggling, freight train heists, warehouse shootouts, and dockworker union territory.',
     coordinates: 'PG-0991-DK',
     icon: '⚓',
   },
   {
     name: 'Mount Kalaga Peak',
-    x: 65,
-    y: 20,
+    x: 69,
+    y: 22,
     type: 'landmark',
     region: 'Mount Kalaga',
     description:
@@ -111,91 +89,113 @@ const POIS: POI[] = [
   },
   {
     name: 'Ambrosia Gated Country Estates',
-    x: 50,
-    y: 40,
+    x: 66,
+    y: 46,
     type: 'mission',
     region: 'Ambrosia',
     description:
-      'Ultra-wealthy suburban enclave. Luxury mansion robbery targets, equestrian stables, private security patrols, and high-society infiltration scores.',
+      'Ultra-wealthy suburban enclave south of Lake Leonida. Luxury mansion robbery targets, equestrian stables, and private security patrols.',
     coordinates: 'AM-2201-SB',
     icon: '🏡',
   },
   {
-    name: 'Leonida Grand Prix Circuit',
-    x: 30,
-    y: 65,
-    type: 'easter-egg',
-    region: 'Vice City',
-    description:
-      'Repurposed speedway utilized for midnight underground drift meets. Collectible racing trophy hidden inside the abandoned pit telemetry tower.',
-    coordinates: 'VC-7788-GP',
-    icon: '🏎️',
-  },
-  {
-    name: 'Starfish Island Luxury Enclave',
-    x: 24,
-    y: 60,
-    type: 'landmark',
-    region: 'Vice City',
-    description:
-      'Historical billionaire compound district once dominated by the Diaz and Vercetti syndicates. Gated waterway estates with private helipads.',
-    coordinates: 'SI-5501-EST',
-    icon: '🏰',
-  },
-  {
     name: 'Kelly County Mudfest Bog',
-    x: 72,
-    y: 42,
+    x: 52,
+    y: 28,
     type: 'mission',
     region: 'Grassrivers',
     description:
-      'Off-road arena for monster trucks, lifted 4x4 pickups, and mud boggers. High-energy festival crowds, illegal bets, and brawl side-missions.',
+      'Off-road arena for monster trucks, lifted 4x4 pickups, and mud boggers. High-energy festival crowds, illegal bets, and brawl side-missions in northwest Leonida.',
     coordinates: 'KC-9092-MF',
     icon: '🛻',
   },
   {
-    name: 'Downtown Vice Financial District',
-    x: 20,
-    y: 70,
-    type: 'landmark',
+    name: 'Grassrivers Sawgrass Swamp',
+    x: 64,
+    y: 81,
+    type: 'mission',
+    region: 'Grassrivers',
+    description:
+      'Alligator-infested swampland. High-speed airboat pursuits, hidden drug laboratories, and off-grid poacher cabins off the radar.',
+    coordinates: 'GL-1244-SW',
+    icon: '🐊',
+  },
+  {
+    name: 'Leonida Keys Historic Lighthouse',
+    x: 58,
+    y: 95,
+    type: 'easter-egg',
+    region: 'Leonida Keys',
+    description:
+      'Historic 19th-century lighthouse with cryptic maritime markings on the southern archipelago. Rare heavy marksman weapon spawn on the lantern gallery.',
+    coordinates: 'LK-0012-LH',
+    icon: '🔭',
+  },
+  {
+    name: 'Leonida Grand Prix Circuit',
+    x: 74,
+    y: 63,
+    type: 'easter-egg',
     region: 'Vice City',
     description:
-      'Towering modern corporate skyline. Commercial bank headquarters, rooftop helipads, luxury penthouse suites, and city hall.',
-    coordinates: 'DF-4401-FD',
-    icon: '🏙️',
+      'Repurposed speedway utilized for midnight underground drift meets near the expressway interchange.',
+    coordinates: 'VC-7788-GP',
+    icon: '🏎️',
   },
   {
     name: 'Hamlet Fishing Marina',
-    x: 82,
-    y: 75,
+    x: 69,
+    y: 76,
     type: 'landmark',
     region: 'Leonida Keys',
     description:
-      'Quaint subtropical fishing community. Sport-fishing boat charters, bait shacks, seafood taverns, and illicit offshore drops.',
+      'Quaint subtropical fishing community. Sport-fishing boat charters, bait shacks, seafood taverns, and illicit offshore drops south of Vice-Dale.',
     coordinates: 'HM-3320-MR',
     icon: '🎣',
   },
   {
     name: 'Redhill Pine Nature Reserve',
-    x: 60,
-    y: 15,
+    x: 64,
+    y: 16,
     type: 'easter-egg',
     region: 'Mount Kalaga',
     description:
-      'Dense wilderness home to rare Florida panthers, elusive black bears, and a secluded off-grid survivalist compound with heavy weapon spawns.',
+      'Dense northern wilderness home to rare Florida panthers, elusive black bears, and a secluded off-grid survivalist compound.',
     coordinates: 'RH-1102-FR',
     icon: '🌲',
   },
   {
+    name: 'Jason & Lucia Safehouse Motel',
+    x: 74,
+    y: 50,
+    type: 'landmark',
+    region: 'Vice-Dale',
+    description:
+      'Main hideout early in the campaign. Weapon lockers, trunk planning boards, stolen cash stacks, and getaway vehicle parking.',
+    coordinates: 'SH-3109-VC',
+    icon: '🏠',
+  },
+  {
     name: 'San Chian Cartel Superyacht Anchorage',
-    x: 48,
-    y: 88,
+    x: 95,
+    y: 68,
     type: 'mission',
     region: 'Ocean Reefs',
     description:
-      'Heavily guarded 250-foot luxury superyacht anchored offshore. Private military guards, vault safes, and helicopter getaway landing deck.',
+      'Heavily guarded 250-foot luxury superyacht anchored offshore in Atlantic waters. Private military guards, vault safes, and helicopter pad.',
     coordinates: 'SY-9900-SY',
     icon: '🛥️',
+  },
+  {
+    name: 'Sunken Cargo Freighter Wreck',
+    x: 94,
+    y: 80,
+    type: 'easter-egg',
+    region: 'Ocean Reefs',
+    description:
+      'Old narcotics cargo ship resting on the coral bed — underwater loot containers, speargun diving spot, and encrypted radio transmission beacon.',
+    coordinates: 'OC-4412-SUB',
+    icon: '🌊',
   }
 ]
 
@@ -563,7 +563,8 @@ export default function WikiClientPage({ locale }: { locale: string }) {
   const [activeTab, setActiveTab] = useState<Tab>('map')
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(POIS[0])
   const [filter, setFilter] = useState<FilterType>('all')
-  const [charEra, setCharEra] = useState<'all' | 'GTA 6' | 'GTA Vice City'>('all')
+  const [mapStyle, setMapStyle] = useState<'topographic' | 'satellite'>('topographic')
+  const [charEra, setCharEra] = useState<'all' | 'GTA 6'>('GTA 6')
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [scale, setScale] = useState(1)
   const [isDragging, setIsDragging] = useState(false)
@@ -700,8 +701,19 @@ export default function WikiClientPage({ locale }: { locale: string }) {
                       onPointerUp={handlePointerUp}
                       className="relative aspect-[4/3] sm:aspect-[16/10] w-full rounded-3xl overflow-hidden border border-deep-teal bg-black shadow-2xl cursor-grab active:cursor-grabbing select-none"
                     >
-                      {/* Zoom controls */}
+                      {/* Zoom & Style controls */}
                       <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
+                        <button
+                          onClick={() => {
+                            soundFx.playClick()
+                            setMapStyle(s => s === 'topographic' ? 'satellite' : 'topographic')
+                          }}
+                          aria-label="Toggle map cartography style"
+                          className="px-2 py-1.5 rounded-lg bg-midnight-teal/90 border border-deep-teal hover:border-palm-teal/60 text-[10px] font-mono text-palm-teal hover:text-white flex items-center justify-center gap-1 backdrop-blur shadow-lg transition"
+                          title="Toggle between Topographic Atlas and Satellite Radar"
+                        >
+                          <span>{mapStyle === 'topographic' ? '🗺️ Atlas' : '🛰️ Radar'}</span>
+                        </button>
                         <button
                           onClick={() => setScale((s) => Math.min(3, s + 0.25))}
                           aria-label="Zoom in"
@@ -739,7 +751,7 @@ export default function WikiClientPage({ locale }: { locale: string }) {
                       >
                         {/* Map Background image - 100% local reliable high-res asset */}
                         <img
-                          src="/images/leonida-map.jpg"
+                          src={mapStyle === 'topographic' ? '/images/leonida-map.jpg' : '/images/gta6-satellite-map.jpg'}
                           alt="Leonida Tactical Cartography Map"
                           className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
                         />
@@ -891,7 +903,7 @@ export default function WikiClientPage({ locale }: { locale: string }) {
                   <div className="flex flex-col sm:flex-row items-center justify-between gap-4 bg-deep-teal/30 p-5 rounded-3xl border border-deep-teal/60">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-mono uppercase text-off-white/50 mr-2">Filter Era:</span>
-                      {(['all', 'GTA 6', 'GTA Vice City'] as const).map((era) => (
+                      {(['all', 'GTA 6'] as const).map((era) => (
                         <button
                           key={era}
                           onClick={() => setCharEra(era)}

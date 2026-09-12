@@ -13,7 +13,7 @@ interface Timestamp {
   seconds: number
 }
 
-interface Video {
+export interface Video {
   id: string
   platform: 'youtube' | 'twitch'
   external_id: string

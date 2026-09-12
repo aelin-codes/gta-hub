@@ -3,14 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --background: #0B1E23; /* Midnight Teal */
-  --foreground: #F1F5F4; /* Off-White */
+  --background: #07090E; /* Obsidian Midnight */
+  --foreground: #F4F7F6; /* Off-White */
   
-  --midnight-teal: #0B1E23;
-  --deep-teal: #0F2E33;
-  --neon-flamingo: #FF3D81;
-  --sunset-orange: #FF7A45;
-  --palm-teal: #1FA9A0;
+  --midnight-teal: #07090E;
+  --deep-teal: #101724;
+  --neon-flamingo: #FF2A85;
+  --sunset-orange: #FF7539;
+  --palm-teal: #00E5FF;
+  --vice-purple: #7928CA;
+  --vice-gold: #FFB800;
 
   /* Fluid typography scale using clamp */
   --font-size-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
@@ -27,7 +29,12 @@
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background-color: #07090E;
+  background-image: 
+    radial-gradient(ellipse 90% 60% at 50% -25%, rgba(255, 42, 133, 0.14), transparent),
+    radial-gradient(ellipse 70% 50% at 90% 50%, rgba(0, 229, 255, 0.09), transparent),
+    radial-gradient(ellipse 60% 50% at 10% 80%, rgba(255, 117, 57, 0.08), transparent);
+  background-attachment: fixed;
   font-size: var(--font-size-base);
   overflow-x: hidden;
 }
@@ -47,14 +54,14 @@ h3 {
   width: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--midnight-teal);
+  background: #07090E;
 }
 ::-webkit-scrollbar-thumb {
-  background: var(--deep-teal);
+  background: #141E2E;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--palm-teal);
+  background: #00E5FF;
 }
 
 /* Neon glow utility classes */
@@ -133,3 +140,34 @@ h3 {
     transition-delay: 0s !important;
   }
 }
+
+/* Glassmorphism & Cyber Card utilities */
+.vice-glass-card {
+  background: rgba(16, 23, 36, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
+
+.vice-glass-panel {
+  background: rgba(7, 9, 14, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(0, 229, 255, 0.2);
+}
+
+.vice-scanlines {
+  background: linear-gradient(
+    rgba(18, 16, 16, 0) 50%, 
+    rgba(0, 0, 0, 0.25) 50%
+  ), linear-gradient(
+    90deg,
+    rgba(255, 0, 0, 0.03),
+    rgba(0, 255, 0, 0.01),
+    rgba(0, 0, 255, 0.03)
+  );
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+}
+

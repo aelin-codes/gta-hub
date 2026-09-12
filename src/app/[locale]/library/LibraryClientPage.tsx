@@ -27,6 +27,12 @@ interface Video {
   channel_url: string;
   thumbnail_url: string;
   published_at: string;
+  category?: string;
+  schematicMatch?: {
+    score: number;
+    matchedConcepts: string[];
+    insight: string;
+  };
   video_timestamps?: Timestamp[];
 }
 
@@ -153,6 +159,11 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
       const counts: Record<string, number> = {}
       CURATED_VIDEOS.forEach((v) => {
         counts[v.category] = (counts[v.category] || 0) + 1
+        if (v.secondary_categories) {
+          v.secondary_categories.forEach((sc) => {
+            counts[sc] = (counts[sc] || 0) + 1
+          })
+        }
       })
       setCategoryCounts(counts)
     }
@@ -177,8 +188,8 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
 
       const filtered = (data.videos || []) as Video[]
 
-      // Sort client-side (search API returns unsorted)
-      if (sortBy === 'newest') {
+      // Only sort client-side if not in semantic mode (preserve AI schematic ranking)
+      if (searchMode !== 'semantic' && sortBy === 'newest') {
         filtered.sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime())
       }
 
@@ -505,6 +516,17 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
                   return (
                     <div key={vid.id} className="contents">
                       <ScrollReveal>
+                        {vid.schematicMatch && vid.schematicMatch.score > 0 && (
+                          <div className="mb-2 flex flex-wrap items-center justify-between gap-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-neon-flamingo/20 via-deep-teal/40 to-transparent border border-neon-flamingo/40 text-[11px] font-mono">
+                            <span className="text-neon-flamingo font-bold flex items-center gap-1">
+                              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                              {vid.schematicMatch.score}% Schematic Match
+                            </span>
+                            <span className="text-off-white/80 text-[10px] truncate max-w-[200px]">
+                              {vid.schematicMatch.insight}
+                            </span>
+                          </div>
+                        )}
                         <VideoCard
                           video={{
                             id: vid.id,

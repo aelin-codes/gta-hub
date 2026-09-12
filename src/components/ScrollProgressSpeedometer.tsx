@@ -1,15 +1,12 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState } from 'react'
 import { soundFx } from './GtaSoundEffects'
-import { Award, Zap } from 'lucide-react'
 
 export default function ScrollProgressSpeedometer() {
   const [scrollPercent, setScrollPercent] = useState(0)
   const [speedMph, setSpeedMph] = useState(35)
   const [turbo, setTurbo] = useState(false)
-  const [missionPassed, setMissionPassed] = useState(false)
-  const missionPassedTriggeredRef = useRef(false)
 
   useEffect(() => {
     let lastY = 0
@@ -30,18 +27,6 @@ export default function ScrollProgressSpeedometer() {
       setSpeedMph(calculatedSpeed)
       lastY = scrollTop
       lastTime = now
-
-      // Check for bottom of page 100% Mission Passed
-      if (percent >= 98 && !missionPassedTriggeredRef.current) {
-        missionPassedTriggeredRef.current = true
-        setMissionPassed(true)
-        soundFx.playMissionPassed()
-        setTimeout(() => {
-          setMissionPassed(false)
-        }, 5000)
-      } else if (percent < 90) {
-        missionPassedTriggeredRef.current = false
-      }
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -120,24 +105,6 @@ export default function ScrollProgressSpeedometer() {
           </span>
         </div>
       </div>
-
-      {/* MISSION PASSED STAMP WHEN SCROLLED TO END */}
-      {missionPassed && (
-        <div className="fixed bottom-24 left-1/2 -translate-x-1/2 z-[100] pointer-events-none animate-bounce">
-          <div className="px-8 py-4 rounded-3xl bg-midnight-teal/95 border-2 border-sunset-orange shadow-[0_0_50px_rgba(255,122,69,0.9)] text-center space-y-1">
-            <div className="flex items-center justify-center gap-2">
-              <Award className="w-6 h-6 text-sunset-orange" />
-              <h3 className="text-2xl font-display uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-neon-flamingo via-sunset-orange to-palm-teal">
-                MISSION PASSED!
-              </h3>
-              <Award className="w-6 h-6 text-sunset-orange" />
-            </div>
-            <p className="text-xs font-mono text-palm-teal font-bold uppercase tracking-wider">
-              RESPECT +100 • LEONIDA ARCHIVES FULLY SCOUTED
-            </p>
-          </div>
-        </div>
-      )}
     </>
   )
 }

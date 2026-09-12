@@ -22,7 +22,7 @@ const ALL_PACKAGES: PackageClue[] = [
     id: 'Ocean Beach Floral Tiki',
     name: 'Ocean Beach Floral Tiki',
     location: 'Characters Page',
-    hint: 'Search around the Character Registry header next to the Tommy Vercetti archives.',
+    hint: 'Search around the Character Registry header next to the Lucia & Jason syndicate archives.',
   },
   {
     id: 'Starfish Island Cartel Vault',
