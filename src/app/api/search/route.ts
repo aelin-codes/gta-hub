@@ -3,6 +3,7 @@ import { createClient, createAdminClient } from '@/utils/supabase/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 import { unstable_cache } from 'next/cache'
 import { PAYMENTS_ENABLED } from '@/config'
+import { CURATED_VIDEOS } from '@/data/curatedVideos'
 
 export const dynamic = 'force-dynamic'
 
@@ -167,6 +168,24 @@ export async function GET(req: Request) {
       const { data, error } = await qb
       if (error) console.error('Keyword search error:', error)
       results = data || []
+    }
+
+    // Fallback to rich curated videos when database has no records
+    if (!results || (Array.isArray(results) && results.length === 0)) {
+      let curated = [...CURATED_VIDEOS]
+      if (category) {
+        curated = curated.filter(v => v.category.toLowerCase() === category.toLowerCase())
+      }
+      if (query) {
+        const qLower = query.toLowerCase()
+        curated = curated.filter(v => 
+          v.title.toLowerCase().includes(qLower) || 
+          v.description.toLowerCase().includes(qLower) ||
+          v.channel_name.toLowerCase().includes(qLower) ||
+          v.category.toLowerCase().includes(qLower)
+        )
+      }
+      results = curated
     }
 
     if (platform) results = results.filter((v: unknown) => (v as { platform: string }).platform === platform)

@@ -1,74 +1,7 @@
-// ponytail: shared mock data — was duplicated verbatim in client.ts and server.ts
-export const MOCK_VIDEOS = [
-  {
-    id: "sub-uuid-1",
-    platform: "youtube",
-    external_id: "sub-location-01",
-    title: "GTA 6 - Hidden Submarine Easter Egg Location (Leonida Map)",
-    description: "Detailed guide to finding the hidden submarine at the bottom of the Leonida Keys. Make sure to bring scuba gear!",
-    channel_name: "GTA Series Videos",
-    channel_url: "https://youtube.com/c/gtaseriesvideos",
-    published_at: new Date(Date.now() - 3 * 3600000).toISOString(),
-    transcript: "Hey everyone, today we are showing you how to find the submarine wreck in GTA 6. Head over to the southern portion of the map near the keys...",
-    video_timestamps: [
-      { label: "Submarine Location on Map", seconds: 45 },
-      { label: "Entering the Water", seconds: 120 },
-      { label: "Wreck Walkthrough & Loot", seconds: 245 }
-    ],
-    excluded: false
-  },
-  {
-    id: "mission-uuid-2",
-    platform: "youtube",
-    external_id: "mission-guide-02",
-    title: "GTA 6 Main Story Walkthrough - Mission #12: Neon Escape",
-    description: "Lucia and Jason pull off a high-stakes robbery in Vice City downtown. Full mission walkthrough with gold medal tips.",
-    channel_name: "TGG",
-    channel_url: "https://youtube.com/c/tgg",
-    published_at: new Date(Date.now() - 12 * 3600000).toISOString(),
-    transcript: "Welcome back. Today we are doing mission 12, Neon Escape. The main objective is to lose the 4-star cops after robbing the nightclub. Here is the best escape route...",
-    video_timestamps: [
-      { label: "Heist Execution", seconds: 15 },
-      { label: "Best Cop Escape Route", seconds: 180 },
-      { label: "Gold Medal Requirements", seconds: 320 }
-    ],
-    excluded: false
-  },
-  {
-    id: "car-uuid-3",
-    platform: "youtube",
-    external_id: "car-custom-03",
-    title: "GTA 6 - Confirmed Vehicle Customization & Cheetah Location",
-    description: "Finding the Grotti Cheetah in Leonida and showing off the new advanced car tuning mechanics.",
-    channel_name: "Broughy1322",
-    channel_url: "https://youtube.com/c/broughy",
-    published_at: new Date(Date.now() - 24 * 3600000).toISOString(),
-    transcript: "Hello! We are looking at the Grotti Cheetah, a returning classic. Customization options are now deeper, with interior customization and engine tuning...",
-    video_timestamps: [
-      { label: "Where to find the Cheetah", seconds: 30 },
-      { label: "Customization Garage Overview", seconds: 110 },
-      { label: "High-speed Performance Test", seconds: 290 }
-    ],
-    excluded: false
-  },
-  {
-    id: "funny-uuid-4",
-    platform: "youtube",
-    external_id: "funny-moments-04",
-    title: "GTA 6 Streamer Fails & Funny Moments compilation",
-    description: "Hilarious clips from streamer gameplay, physics bugs, and hilarious police chases in GTA 6.",
-    channel_name: "Funny Moments Gaming",
-    channel_url: "https://youtube.com/c/funnymoments",
-    published_at: new Date(Date.now() - 48 * 3600000).toISOString(),
-    transcript: "Oh my god did you see that car fly! Classic GTA physics. Check out these crazy clips...",
-    video_timestamps: [
-      { label: "Flying Gator Glitch", seconds: 10 },
-      { label: "Stunt Jump Fail", seconds: 95 },
-      { label: "Cop Chase Blooper", seconds: 175 }
-    ],
-    excluded: false
-  }
-]
+import { CURATED_VIDEOS } from '@/data/curatedVideos'
+
+// Real curated video catalog for reliable offline/fallback operation
+export const MOCK_VIDEOS = CURATED_VIDEOS
 
 export const MOCK_CATEGORIES = [
   { id: "1", name: "Easter Eggs & Secrets" },

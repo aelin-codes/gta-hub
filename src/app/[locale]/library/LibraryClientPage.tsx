@@ -10,6 +10,7 @@ import ScrollReveal from '@/components/ScrollReveal'
 import { createClient } from '@/utils/supabase/client'
 import { PAYMENTS_ENABLED, BANNER_EVERY_N_VIDEOS, INTERSTITIAL_EVERY_N_VIDEOS } from '@/config'
 import AdBanner from '@/components/AdBanner'
+import { CURATED_VIDEOS } from '@/data/curatedVideos'
 
 interface Timestamp {
   label: string;
@@ -127,26 +128,33 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
     }
 
     async function loadCategoryCounts() {
-      const { data, error } = await supabaseClient
-        .from('video_categories')
-        .select('category_id, categories(name)')
-      
-      if (error) {
-        console.error('Error fetching category counts:', error)
-        return
+      try {
+        const { data, error } = await supabaseClient
+          .from('video_categories')
+          .select('category_id, categories(name)')
+        
+        if (!error && data && data.length > 0) {
+          const counts: Record<string, number> = {}
+          const rows = data as unknown as { categories: { name: string } | null }[]
+          rows.forEach((row) => {
+            const catName = row.categories?.name
+            if (catName) {
+              counts[catName] = (counts[catName] || 0) + 1
+            }
+          })
+          setCategoryCounts(counts)
+          return
+        }
+      } catch (err) {
+        console.error('Error fetching category counts:', err)
       }
 
-      if (data) {
-        const counts: Record<string, number> = {}
-        const rows = data as unknown as { categories: { name: string } | null }[]
-        rows.forEach((row) => {
-          const catName = row.categories?.name
-          if (catName) {
-            counts[catName] = (counts[catName] || 0) + 1
-          }
-        })
-        setCategoryCounts(counts)
-      }
+      // Fallback to real curated video category counts
+      const counts: Record<string, number> = {}
+      CURATED_VIDEOS.forEach((v) => {
+        counts[v.category] = (counts[v.category] || 0) + 1
+      })
+      setCategoryCounts(counts)
     }
 
     loadSession()

@@ -737,15 +737,14 @@ export default function WikiClientPage({ locale }: { locale: string }) {
                           transition: isDragging ? 'none' : 'transform 0.15s ease-out',
                         }}
                       >
-                        {/* Map Background image */}
-                        <div
-                          role="img"
-                          aria-label="Leonida Community Map (fan-made cartography)"
-                          className="absolute inset-0 bg-cover bg-center"
-                          style={{ backgroundImage: "url('https://i.imgur.com/DbsSI4V.jpeg')" }}
+                        {/* Map Background image - 100% local reliable high-res asset */}
+                        <img
+                          src="/images/leonida-map.jpg"
+                          alt="Leonida Tactical Cartography Map"
+                          className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
                         />
-                        {/* Blueprint grid overlay */}
-                        <div className="absolute inset-0 bg-midnight-teal bg-[radial-gradient(#1fa9a0_1px,transparent_1px)] [background-size:24px_24px] opacity-25" />
+                        {/* Blueprint tactical grid overlay */}
+                        <div className="absolute inset-0 bg-[radial-gradient(#1fa9a0_1px,transparent_1px)] [background-size:28px_28px] opacity-15 pointer-events-none" />
 
                         {/* POI Markers */}
                         {filteredPOIS.map((poi) => (

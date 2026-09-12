@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
 import { createAdminClient } from '@/utils/supabase/server'
 import { MOCK_VIDEOS } from '@/utils/supabase/mock'
+import { CURATED_VIDEOS } from '@/data/curatedVideos'
 import VideoDetailClient from './VideoDetailClient'
 
 interface Timestamp {
@@ -36,6 +37,13 @@ async function getVideo(id: string): Promise<Video | null> {
     if (video) return video as Video
   } catch (err) {
     console.error('Error loading video on server:', err)
+  }
+
+  const curatedMatch = CURATED_VIDEOS.find(
+    (v) => v.id === id || v.external_id === id
+  )
+  if (curatedMatch) {
+    return curatedMatch as unknown as Video
   }
 
   const mockMatch = MOCK_VIDEOS.find(

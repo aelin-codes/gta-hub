@@ -1,0 +1,244 @@
+export interface Timestamp {
+  label: string
+  seconds: number
+}
+
+export interface CuratedVideo {
+  id: string
+  platform: 'youtube' | 'twitch'
+  external_id: string
+  title: string
+  description: string
+  channel_name: string
+  channel_url: string
+  thumbnail_url: string
+  published_at: string
+  category: string
+  video_timestamps: Timestamp[]
+  excluded?: boolean
+}
+
+export const CURATED_VIDEOS: CuratedVideo[] = [
+  {
+    id: "gta6-official-trailer-1",
+    platform: "youtube",
+    external_id: "QdBZY2fkU-0",
+    title: "Grand Theft Auto VI Trailer 1 (Official 4K)",
+    description: "Our official first look at Grand Theft Auto VI, heading to the state of Leonida, home to the neon-soaked streets of Vice City and beyond in the biggest, most immersive evolution of the Grand Theft Auto series yet.",
+    channel_name: "Rockstar Games",
+    channel_url: "https://www.youtube.com/@RockstarGames",
+    thumbnail_url: "https://img.youtube.com/vi/QdBZY2fkU-0/maxresdefault.jpg",
+    published_at: "2023-12-05T00:00:00Z",
+    category: "News & Trailers",
+    video_timestamps: [
+      { label: "Leonida Correctional Facility & Stefanie", seconds: 0 },
+      { label: "Vice Beach Neon & Ocean Drive Speedboats", seconds: 24 },
+      { label: "Everglades Sawgrass & Alligator Wildlife", seconds: 43 },
+      { label: "Thrillbilly Mud Club & Highway Pursuits", seconds: 58 },
+      { label: "Jason & Lucia Convenience Store Robbery", seconds: 78 }
+    ],
+    excluded: false
+  },
+  {
+    id: "gta6-extended-look",
+    platform: "youtube",
+    external_id: "tJbzMqJGH4k",
+    title: "Grand Theft Auto VI: An Extended Look — World & Characters",
+    description: "A comprehensive deep dive into the state of Leonida, exploring the living ecosystem, character dynamics between Jason and Lucia, next-generation AI crowd densities, and volumetric cloud rendering.",
+    channel_name: "Rockstar Games",
+    channel_url: "https://www.youtube.com/@RockstarGames",
+    thumbnail_url: "https://img.youtube.com/vi/tJbzMqJGH4k/maxresdefault.jpg",
+    published_at: "2024-05-18T14:00:00Z",
+    category: "News & Trailers",
+    video_timestamps: [
+      { label: "Downtown Vice City Skyline & Weather", seconds: 0 },
+      { label: "Port Gellhorn Industrial Docks", seconds: 35 },
+      { label: "Underground Safehouse & Trunk Storage", seconds: 70 },
+      { label: "Police Tactical PIT Maneuver AI", seconds: 105 }
+    ],
+    excluded: false
+  },
+  {
+    id: "gta6-map-leonida-analysis",
+    platform: "youtube",
+    external_id: "qApw-Enzs-w",
+    title: "GTA 6 Full Map of Leonida Analyzed & Compared to GTA 5",
+    description: "The GTA VI mapping community breaks down the massive state of Leonida using trailer landmarks, coordinate leaks, and satellite imagery. Vice City, Port Gellhorn, Grassrivers, and the Keys measured side-by-side with Los Santos.",
+    channel_name: "Serious Bear Nick",
+    channel_url: "https://www.youtube.com/@SeriousBearNick",
+    thumbnail_url: "https://img.youtube.com/vi/qApw-Enzs-w/maxresdefault.jpg",
+    published_at: "2024-08-10T12:00:00Z",
+    category: "Map & Exploration",
+    video_timestamps: [
+      { label: "Vice City Metro vs Los Santos Scale", seconds: 45 },
+      { label: "Grassrivers Sawgrass & Mud Track Geometry", seconds: 190 },
+      { label: "Port Gellhorn Container Terminal Coordinates", seconds: 380 },
+      { label: "Leonida Keys Oceanic Bridges & Reefs", seconds: 590 }
+    ],
+    excluded: false
+  },
+  {
+    id: "gta6-trailer-hidden-details",
+    platform: "youtube",
+    external_id: "JmKZUB1NBag",
+    title: "GTA 6 Trailer Breakdown: 89 Hidden Details, Secrets & Lore",
+    description: "Frame-by-frame analysis uncovering 89 subtle details: Lucia's parole ankle monitor, enterable storefronts, high-speed boat wakes, brand parodies, and weapon holsters.",
+    channel_name: "IGN",
+    channel_url: "https://www.youtube.com/@IGN",
+    thumbnail_url: "https://img.youtube.com/vi/JmKZUB1NBag/maxresdefault.jpg",
+    published_at: "2024-06-20T18:00:00Z",
+    category: "Easter Eggs & Secrets",
+    video_timestamps: [
+      { label: "Parole Tracker Bracelet Mechanics", seconds: 30 },
+      { label: "Ocean Beach Club Neon Signage", seconds: 160 },
+      { label: "Dynamic Sand Displacement Physics", seconds: 290 },
+      { label: "Submarine Wreck in Coral Reefs", seconds: 430 }
+    ],
+    excluded: false
+  },
+  {
+    id: "gta6-vice-city-comparison",
+    platform: "youtube",
+    external_id: "zYcWQYx1tr8",
+    title: "GTA 6 Extended Look vs GTA Vice City Locations Comparison (1986 vs 2026)",
+    description: "Comparing iconic locations side-by-side: Ocean Drive, the Malibu Club, Starfish Island, Leaf Links, and Escobar Airport. Witness the 40-year visual and architectural leap from the PS2 era to modern photorealism.",
+    channel_name: "Onespot Gaming",
+    channel_url: "https://www.youtube.com/@OnespotGaming",
+    thumbnail_url: "https://img.youtube.com/vi/zYcWQYx1tr8/maxresdefault.jpg",
+    published_at: "2024-09-02T15:30:00Z",
+    category: "Theories & Comparisons",
+    video_timestamps: [
+      { label: "Ocean Drive Art Deco Strip", seconds: 15 },
+      { label: "Starfish Island Cartel Compounds", seconds: 120 },
+      { label: "Malibu Club & Vice City Nightlife", seconds: 250 },
+      { label: "Vice Beach Bridges & Marina Docks", seconds: 390 }
+    ],
+    excluded: false
+  },
+  {
+    id: "gta6-map-hidden-secrets",
+    platform: "youtube",
+    external_id: "Bh5BhyYcaL0",
+    title: "GTA 6 Leonida Map Breakdown — Secret Areas You Missed!",
+    description: "Investigating off-grid hunting cabins, offshore naval facilities, sunken drug freighters, and hidden radar stations scattered across the swamps and archipelago of Leonida.",
+    channel_name: "LeftZ games",
+    channel_url: "https://www.youtube.com/@LeftZgames",
+    thumbnail_url: "https://img.youtube.com/vi/Bh5BhyYcaL0/maxresdefault.jpg",
+    published_at: "2024-10-12T11:00:00Z",
+    category: "Map & Exploration",
+    video_timestamps: [
+      { label: "Everglades Poacher Compound", seconds: 25 },
+      { label: "Underwater Cargo Wreck Loot", seconds: 180 },
+      { label: "Keys Historic Lighthouse Sniper Nest", seconds: 320 }
+    ],
+    excluded: false
+  },
+  {
+    id: "gta6-returning-characters",
+    platform: "youtube",
+    external_id: "gGBpomUaorQ",
+    title: "Rockstar Never Forgot These Characters — GTA 6 Lore & Connections",
+    description: "Investigating returning lore connections from the 3D and HD universes: Tommy Vercetti's empire legacy, Ken Rosenberg's legal fallout, Phil Cassidy's gun shops, and modern cartel successors.",
+    channel_name: "Revenger Boss",
+    channel_url: "https://www.youtube.com/@RevengerBoss",
+    thumbnail_url: "https://img.youtube.com/vi/gGBpomUaorQ/maxresdefault.jpg",
+    published_at: "2024-11-05T16:00:00Z",
+    category: "Characters",
+    video_timestamps: [
+      { label: "The Vercetti Estate in Modern Vice City", seconds: 20 },
+      { label: "Ken Rosenberg & Legal Disbarment Lore", seconds: 110 },
+      { label: "Auntie Poulet & Haitian Syndicate Ties", seconds: 210 }
+    ],
+    excluded: false
+  },
+  {
+    id: "gta6-nightclubs-and-physics",
+    platform: "youtube",
+    external_id: "n5U51oHhlpI",
+    title: "GTA 6 Next-Gen Physics, Nightclub Interiors & RAGE 9 Capabilities",
+    description: "Digital analysis of Rockstar's proprietary RAGE 9 engine: fluid displacement for swamp water, cloth deformation, volumetric fog, dynamic lighting, and interior transitions.",
+    channel_name: "LeftZ games",
+    channel_url: "https://www.youtube.com/@LeftZgames",
+    thumbnail_url: "https://img.youtube.com/vi/n5U51oHhlpI/maxresdefault.jpg",
+    published_at: "2024-11-18T13:45:00Z",
+    category: "Easter Eggs & Secrets",
+    video_timestamps: [
+      { label: "Volumetric Smoke & Club Lasers", seconds: 15 },
+      { label: "Realistic Water Displacement in Boats", seconds: 140 },
+      { label: "Vehicle Body Deformation & Paint Shimmer", seconds: 280 }
+    ],
+    excluded: false
+  },
+  {
+    id: "gta6-5-tiny-things-missed",
+    platform: "youtube",
+    external_id: "wZ6OVggOZk4",
+    title: "5 Tiny Things You Missed in GTA 6 Trailer 1",
+    description: "Five subtle background details that confirm gameplay mechanics: vehicle trunk weapon storage, dual-wielding handguns, interactive pawn shops, and wildlife AI predators.",
+    channel_name: "GTA Mojo",
+    channel_url: "https://www.youtube.com/@GTAMojo",
+    thumbnail_url: "https://img.youtube.com/vi/wZ6OVggOZk4/maxresdefault.jpg",
+    published_at: "2024-07-22T09:00:00Z",
+    category: "Missions & Story",
+    video_timestamps: [
+      { label: "Dual Protagonist Weapon Swap", seconds: 20 },
+      { label: "Trunk Gun Locker Storage", seconds: 95 },
+      { label: "Alligator Dynamic Food Chain AI", seconds: 180 }
+    ],
+    excluded: false
+  },
+  {
+    id: "gta6-graphics-comparison",
+    platform: "youtube",
+    external_id: "8m9FJpmoIKs",
+    title: "GTA 6 Graphics Comparison — Lighting, Textures & Draw Distance",
+    description: "Comprehensive graphical comparison examining screen-space reflections, ray-traced global illumination, high-density traffic simulation, and ocean water dynamics in Leonida.",
+    channel_name: "GTA VI Now",
+    channel_url: "https://www.youtube.com/@GTAVINow",
+    thumbnail_url: "https://img.youtube.com/vi/8m9FJpmoIKs/maxresdefault.jpg",
+    published_at: "2024-10-28T17:15:00Z",
+    category: "Theories & Comparisons",
+    video_timestamps: [
+      { label: "Ray-Traced Sunset Shadows", seconds: 15 },
+      { label: "Ocean Waves & Particle Spray", seconds: 120 },
+      { label: "Traffic Density & Headlight Reflections", seconds: 230 }
+    ],
+    excluded: false
+  },
+  {
+    id: "gta6-vice-city-duo-evolution",
+    platform: "youtube",
+    external_id: "oEKwrciB7bU",
+    title: "Vice City's Duo: 1986 Tommy & Lance vs 2026 Jason & Lucia",
+    description: "Contrasting the iconic partnership of Tommy Vercetti and Lance Vance in 1986 with the modern Bonnie-and-Clyde romantic criminal dynamic of Jason and Lucia.",
+    channel_name: "Fxy",
+    channel_url: "https://www.youtube.com/@Fxy",
+    thumbnail_url: "https://img.youtube.com/vi/oEKwrciB7bU/maxresdefault.jpg",
+    published_at: "2024-12-01T20:00:00Z",
+    category: "Characters",
+    video_timestamps: [
+      { label: "The 1986 Power Grab Dynamic", seconds: 10 },
+      { label: "Trust & Betrayal in the Underworld", seconds: 80 },
+      { label: "Jason & Lucia's Shared Destiny", seconds: 150 }
+    ],
+    excluded: false
+  },
+  {
+    id: "gta6-real-life-locations",
+    platform: "youtube",
+    external_id: "HzU8xRORtac",
+    title: "GTA 6 vs Real Life Florida — Places That Are 100% Real",
+    description: "Touring the real-world Florida locations recreated in Leonida: Ocean Drive Art Deco hotels, the Wynwood graffiti district, the Overseas Highway to Key West, and the alligator swamps.",
+    channel_name: "DAX IS LIVE",
+    channel_url: "https://www.youtube.com/@DAXISLIVE",
+    thumbnail_url: "https://img.youtube.com/vi/HzU8xRORtac/maxresdefault.jpg",
+    published_at: "2024-11-12T19:30:00Z",
+    category: "Easter Eggs & Secrets",
+    video_timestamps: [
+      { label: "South Beach Ocean Drive Real Life Match", seconds: 10 },
+      { label: "Wynwood Arts District Graffiti Walls", seconds: 60 },
+      { label: "Seven Mile Bridge Overseas Highway", seconds: 110 }
+    ],
+    excluded: false
+  }
+]
