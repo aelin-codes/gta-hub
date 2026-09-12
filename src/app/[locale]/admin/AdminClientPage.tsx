@@ -134,41 +134,47 @@ export default function AdminClientPage({ locale }: { locale: string }) {
         .select('*')
         .order('created_at', { ascending: false })
       
-      // Fallback sample users if DB empty for testing
-      if (!users || users.length === 0) {
-        setUsersList([
-          {
-            id: session.user.id,
-            email: session.user.email || 'admin@gta6hub.com',
-            role: (userRole as 'admin' | 'superuser') || 'admin',
-            is_premium: true,
-            created_at: new Date().toISOString()
-          },
-          {
-            id: 'usr-vice-lucia-002',
-            email: 'lucia.vice@gta6hub.com',
-            role: 'user',
-            is_premium: true,
-            created_at: new Date(Date.now() - 86400000 * 2).toISOString()
-          },
-          {
-            id: 'usr-jason-keys-003',
-            email: 'jason.keys@gta6hub.com',
-            role: 'user',
-            is_premium: false,
-            created_at: new Date(Date.now() - 86400000 * 5).toISOString()
-          },
-          {
-            id: 'usr-gellhorn-004',
-            email: 'dockmaster@portgellhorn.com',
-            role: 'user',
-            is_premium: false,
-            created_at: new Date(Date.now() - 86400000 * 10).toISOString()
+      const combinedUsers: ModeratorUser[] = []
+      const seenEmails = new Set<string>()
+      const seenIds = new Set<string>()
+
+      if (Array.isArray(users)) {
+        for (const u of users) {
+          if (u && (u.id || u.email)) {
+            const emailKey = (u.email || '').toLowerCase()
+            const idKey = u.id || emailKey
+            if (!seenEmails.has(emailKey) && !seenIds.has(idKey)) {
+              if (emailKey) seenEmails.add(emailKey)
+              if (idKey) seenIds.add(idKey)
+              combinedUsers.push({
+                id: u.id || 'usr-' + Math.random().toString(36).substring(2, 9),
+                email: u.email || 'user@gta6hub.com',
+                role: (u.role as 'admin' | 'user' | 'superuser') || 'user',
+                is_premium: !!u.is_premium,
+                created_at: u.created_at || new Date().toISOString()
+              })
+            }
           }
-        ])
-      } else {
-        setUsersList(users)
+        }
       }
+
+      // Guarantee default accounts (admin, testuser, lucia, jason) are present
+      for (const su of SEED_USERS) {
+        const emailKey = su.email.toLowerCase()
+        if (!seenEmails.has(emailKey) && !seenIds.has(su.id)) {
+          seenEmails.add(emailKey)
+          seenIds.add(su.id)
+          combinedUsers.push({
+            id: su.id,
+            email: su.email,
+            role: su.role as 'admin' | 'user',
+            is_premium: !!su.is_premium,
+            created_at: su.created_at || new Date().toISOString()
+          })
+        }
+      }
+
+      setUsersList(combinedUsers)
 
       // Fetch Videos
       const { data: vids } = await supabase
@@ -279,19 +285,36 @@ export default function AdminClientPage({ locale }: { locale: string }) {
     // 2. Persist to localStorage users directory
     if (typeof window !== 'undefined') {
       const stored = JSON.parse(localStorage.getItem('gta_users') || 'null') || [...SEED_USERS]
-      const updated = stored.map((u: any) =>
-        (u.id === userId || u.email?.toLowerCase() === email.toLowerCase())
-          ? { ...u, role }
-          : u
-      )
+      let matched = false
+      const updated = stored.map((u: any) => {
+        if (u.id === userId || (u.email && u.email.toLowerCase() === email.toLowerCase())) {
+          matched = true
+          return { ...u, role }
+        }
+        return u
+      })
+      if (!matched) {
+        updated.push({
+          id: userId,
+          email,
+          role,
+          is_premium: false,
+          created_at: new Date().toISOString()
+        })
+      }
       localStorage.setItem('gta_users', JSON.stringify(updated))
 
       // 3. If the modified user is currently logged in, update active session and cookie
       const activeUser = JSON.parse(localStorage.getItem('gta_active_user') || 'null')
-      if (activeUser && (activeUser.id === userId || activeUser.email?.toLowerCase() === email.toLowerCase())) {
-        const updatedActive = { ...activeUser, role }
+      const loggedEmail = localStorage.getItem('gta_logged_email')
+      if (
+        (activeUser && (activeUser.id === userId || (activeUser.email && activeUser.email.toLowerCase() === email.toLowerCase()))) ||
+        (loggedEmail && loggedEmail.toLowerCase() === email.toLowerCase())
+      ) {
+        const updatedActive = { ...(activeUser || {}), id: userId, email, role }
         localStorage.setItem('gta_active_user', JSON.stringify(updatedActive))
         document.cookie = `gta_user_role=${role}; path=/; max-age=604800; SameSite=Lax`
+        document.cookie = `gta_user_email=${encodeURIComponent(email)}; path=/; max-age=604800; SameSite=Lax`
       }
     }
   }
@@ -316,6 +339,7 @@ export default function AdminClientPage({ locale }: { locale: string }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           targetUserId: targetUser.id,
+          targetEmail: targetUser.email,
           newRole: targetRole,
           adminPassword: sudoPassword
         })
@@ -328,8 +352,11 @@ export default function AdminClientPage({ locale }: { locale: string }) {
         if (sudoPassword.length >= 4) {
           // Perform client-side demo role escalation in DB & storage
           await syncRoleToDb(targetUser.id, targetUser.email, targetRole)
-          const updated = usersList.map(u => u.id === targetUser.id ? { ...u, role: targetRole } : u)
-          setUsersList(updated)
+          setUsersList(prev => prev.map(u =>
+            (u.id === targetUser.id || (u.email && u.email.toLowerCase() === targetUser.email.toLowerCase()))
+              ? { ...u, role: targetRole }
+              : u
+          ))
           setAuditLogs(prev => [
             {
               id: 'log-' + Date.now(),
@@ -354,7 +381,11 @@ export default function AdminClientPage({ locale }: { locale: string }) {
       
       // Update DB and persistent state
       await syncRoleToDb(targetUser.id, targetUser.email, targetRole)
-      setUsersList(prev => prev.map(u => u.id === targetUser.id ? { ...u, role: targetRole } : u))
+      setUsersList(prev => prev.map(u =>
+        (u.id === targetUser.id || (u.email && u.email.toLowerCase() === targetUser.email.toLowerCase()))
+          ? { ...u, role: targetRole }
+          : u
+      ))
       setAuditLogs(prev => [
         {
           id: 'log-' + Date.now(),

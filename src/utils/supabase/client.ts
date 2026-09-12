@@ -1,6 +1,28 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { MOCK_VIDEOS, MOCK_ADMIN_USER, MockQueryBuilder, SEED_USERS } from './mock'
 
+function getStoredUsers() {
+  if (typeof window === 'undefined') return [...SEED_USERS]
+  const raw = localStorage.getItem('gta_users')
+  const stored = raw ? JSON.parse(raw) : null
+  if (!stored || !Array.isArray(stored) || stored.length === 0) {
+    localStorage.setItem('gta_users', JSON.stringify(SEED_USERS))
+    return [...SEED_USERS]
+  }
+  const merged = [...stored]
+  let changed = false
+  for (const su of SEED_USERS) {
+    if (!merged.some((u: any) => u.id === su.id || (u.email && u.email.toLowerCase() === su.email.toLowerCase()))) {
+      merged.push({ ...su })
+      changed = true
+    }
+  }
+  if (changed) {
+    localStorage.setItem('gta_users', JSON.stringify(merged))
+  }
+  return merged
+}
+
 const mockClient = {
   from(tableName: string) {
     return new MockQueryBuilder(tableName)
@@ -10,8 +32,8 @@ const mockClient = {
       if (typeof window !== 'undefined') {
         const email = localStorage.getItem('gta_logged_email')
         if (!email) return { data: { session: null } }
-        const users = JSON.parse(localStorage.getItem('gta_users') || 'null') || SEED_USERS
-        const user = users.find((u: any) => u.email?.toLowerCase() === email.toLowerCase()) || { id: 'mock-user-uuid', email, role: 'user' }
+        const users = getStoredUsers()
+        const user = users.find((u: any) => u.email?.toLowerCase() === email.toLowerCase()) || { id: 'mock-user-uuid', email, role: 'user', is_premium: false }
         return { data: { session: { user } } }
       }
       return { data: { session: null } }
@@ -20,15 +42,15 @@ const mockClient = {
       if (typeof window !== 'undefined') {
         const email = localStorage.getItem('gta_logged_email')
         if (!email) return { data: { user: null }, error: null }
-        const users = JSON.parse(localStorage.getItem('gta_users') || 'null') || SEED_USERS
-        const user = users.find((u: any) => u.email?.toLowerCase() === email.toLowerCase()) || { id: 'mock-user-uuid', email, role: 'user' }
+        const users = getStoredUsers()
+        const user = users.find((u: any) => u.email?.toLowerCase() === email.toLowerCase()) || { id: 'mock-user-uuid', email, role: 'user', is_premium: false }
         return { data: { user }, error: null }
       }
       return { data: { user: null }, error: null }
     },
     async signInWithPassword({ email }: { email: string; password?: string }) {
       if (typeof window !== 'undefined') {
-        const users = JSON.parse(localStorage.getItem('gta_users') || 'null') || [...SEED_USERS]
+        const users = getStoredUsers()
         let user = users.find((u: any) => u.email?.toLowerCase() === email.toLowerCase())
         if (!user) {
           const isAdmin = email.toLowerCase().includes('admin')

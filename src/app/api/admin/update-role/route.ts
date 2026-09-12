@@ -6,11 +6,11 @@ export const dynamic = 'force-dynamic'
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { targetUserId, newRole, adminPassword } = body
+    const { targetUserId, targetEmail, newRole, adminPassword } = body
 
-    if (!targetUserId || !newRole || !adminPassword) {
+    if ((!targetUserId && !targetEmail) || !newRole || !adminPassword) {
       return NextResponse.json(
-        { error: 'Missing targetUserId, newRole, or adminPassword' },
+        { error: 'Missing targetUserId, targetEmail, newRole, or adminPassword' },
         { status: 400 }
       )
     }
@@ -64,14 +64,34 @@ export async function POST(req: Request) {
     }
 
     // 4. Update the target user's role in the database (public.users)
-    const { data: updatedUser, error: updateError } = await adminClient
-      .from('users')
-      .update({ role: newRole })
-      .eq('id', targetUserId)
-      .select('*')
-      .single()
+    let updatedUser: any = null
+    let updateError: any = null
 
-    if (updateError) {
+    if (targetUserId) {
+      const res = await adminClient
+        .from('users')
+        .update({ role: newRole })
+        .eq('id', targetUserId)
+        .select('*')
+        .single()
+      updatedUser = res.data
+      updateError = res.error
+    }
+
+    if (!updatedUser && targetEmail) {
+      const res = await adminClient
+        .from('users')
+        .update({ role: newRole })
+        .eq('email', targetEmail)
+        .select('*')
+        .single()
+      if (res.data) {
+        updatedUser = res.data
+        updateError = null
+      }
+    }
+
+    if (updateError && !updatedUser) {
       console.error('Error updating user role in DB:', updateError)
       return NextResponse.json(
         { error: 'Failed to update user role in database' },
@@ -81,7 +101,7 @@ export async function POST(req: Request) {
 
     // 4b. Synchronize auth system user role in Supabase Auth DB (auth.users metadata & claims)
     try {
-      if ((adminClient.auth as any)?.admin?.updateUserById) {
+      if (targetUserId && (adminClient.auth as any)?.admin?.updateUserById) {
         await (adminClient.auth as any).admin.updateUserById(targetUserId, {
           app_metadata: { role: newRole, claims_admin: newRole === 'admin' },
           user_metadata: { role: newRole }
@@ -96,7 +116,7 @@ export async function POST(req: Request) {
       await adminClient.from('admin_audit_logs').insert({
         admin_id: currentUser.id,
         action: newRole === 'admin' ? 'promote_admin' : 'demote_user',
-        details: `Admin ${currentUser.email} updated user ${targetUserId} role to '${newRole}' with sudo password re-authentication.`
+        details: `Admin ${currentUser.email} updated user ${targetEmail || targetUserId} role to '${newRole}' with sudo password re-authentication.`
       })
     } catch (auditErr) {
       console.warn('Audit log write error:', auditErr)
@@ -105,7 +125,7 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       message: `User role successfully updated to ${newRole}`,
-      user: updatedUser,
+      user: updatedUser || { id: targetUserId, email: targetEmail, role: newRole },
     })
   } catch (err) {
     console.error('Update role error:', err)

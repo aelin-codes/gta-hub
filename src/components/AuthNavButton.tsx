@@ -19,6 +19,9 @@ export default function AuthNavButton({ locale }: { locale: string }) {
         const { data: { session } } = await supabase.auth.getSession()
         if (session?.user) {
           setUser({ email: session.user.email, id: session.user.id })
+          if ((session.user as any).role) {
+            setRole((session.user as any).role)
+          }
           const { data: profile } = await supabase
             .from('users')
             .select('role')
@@ -26,6 +29,15 @@ export default function AuthNavButton({ locale }: { locale: string }) {
             .single()
           if (profile?.role) {
             setRole(profile.role)
+          } else if (session.user.email) {
+            const { data: profEmail } = await supabase
+              .from('users')
+              .select('role')
+              .eq('email', session.user.email)
+              .single()
+            if (profEmail?.role) {
+              setRole(profEmail.role)
+            }
           }
         } else {
           setUser(null)

@@ -77,6 +77,7 @@ export default function DashboardClientPage({ locale }: { locale: string }) {
       setUser(session.user)
 
       // 1. Fetch profile details (role, is_premium)
+      let userProfile = null
       const { data: prof } = await supabase
         .from('users')
         .select('*')
@@ -84,8 +85,27 @@ export default function DashboardClientPage({ locale }: { locale: string }) {
         .single()
       
       if (prof) {
-        setProfile(prof)
+        userProfile = prof
+      } else if (session.user.email) {
+        const { data: profByEmail } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', session.user.email)
+          .single()
+        if (profByEmail) {
+          userProfile = profByEmail
+        }
       }
+
+      if (!userProfile) {
+        userProfile = {
+          id: session.user.id,
+          email: session.user.email || '',
+          role: (session.user as any).role || 'user',
+          is_premium: false
+        }
+      }
+      setProfile(userProfile)
 
       // 2. Fetch subscription details
       const { data: subs } = await supabase
