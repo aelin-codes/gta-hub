@@ -7,6 +7,10 @@ import { CookieConsentBanner, ThirdPartyScripts } from '@/components/CookieConse
 import { locales } from '@/i18n'
 import NavBar from '@/components/NavBar'
 import Header from '@/components/Header'
+import ScrollProgressSpeedometer from '@/components/ScrollProgressSpeedometer'
+import GtaWantedLevel from '@/components/GtaWantedLevel'
+import GtaRadioPlayer from '@/components/GtaRadioPlayer'
+import EasterEggHunt from '@/components/EasterEggHunt'
 import Link from 'next/link'
 import '@/app/globals.css'
 import { PAYMENTS_ENABLED } from '@/config'
@@ -90,6 +94,7 @@ export default async function LocaleLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThirdPartyScripts />
           
+          <ScrollProgressSpeedometer />
           {/* Header Navigation */}
           <Header>
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
@@ -107,8 +112,9 @@ export default async function LocaleLayout({
               {/* Navigation Items */}
               <NavBar locale={locale} />
 
-              {/* Action Buttons */}
-              <div className="flex items-center space-x-4">
+              {/* Action Buttons & Wanted Level */}
+              <div className="flex items-center space-x-3 sm:space-x-4">
+                <GtaWantedLevel />
                 {PAYMENTS_ENABLED && (
                   <Link 
                     href={`/${locale}/pricing`} 
@@ -168,6 +174,8 @@ export default async function LocaleLayout({
             </div>
           </footer>
           <CookieConsentBanner />
+          <GtaRadioPlayer />
+          <EasterEggHunt />
         </NextIntlClientProvider>
       </body>
     </html>

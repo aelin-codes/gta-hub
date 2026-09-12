@@ -9,8 +9,9 @@ import { PAYMENTS_ENABLED } from '@/config'
 
 const navLinks = (locale: string, isAdmin: boolean) => [
   { href: `/${locale}`, label: 'Home' },
-  { href: `/${locale}/library`, label: 'Library' },
+  { href: `/${locale}/characters`, label: 'Characters' },
   { href: `/${locale}/wiki`, label: 'Wiki / Map' },
+  { href: `/${locale}/library`, label: 'Library' },
   { href: `/${locale}/articles`, label: 'Articles' },
   ...(PAYMENTS_ENABLED ? [{ href: `/${locale}/pricing`, label: 'Pricing' }] : []),
   { href: `/${locale}/dashboard`, label: 'Dashboard' },

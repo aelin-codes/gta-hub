@@ -1,12 +1,13 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { Play, ShieldAlert, Award, Clock } from 'lucide-react'
+import { Play, ShieldAlert, Award, Clock, Users, Map, Crosshair, BookOpen, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import VideoCard from '@/components/VideoCard'
 import { createClient } from '@/utils/supabase/client'
+import { soundFx } from '@/components/GtaSoundEffects'
 
 const SkylineHero = dynamic(() => import('@/components/SkylineHero'), {
   ssr: false,
@@ -235,31 +236,42 @@ export default function HomeClientPage({ locale }: { locale: string }) {
         {/* 3. Trailer & Details Section */}
         <section className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div>
-            <h2 className="text-4xl sm:text-5xl font-display uppercase tracking-widest text-off-white mb-6 leading-none">
+            <div className="inline-flex items-center space-x-2 bg-neon-flamingo/15 text-neon-flamingo px-3.5 py-1 rounded-full text-xs font-mono uppercase tracking-widest border border-neon-flamingo/30 mb-4">
+              <span>PlayStation 5 • Xbox Series X|S</span>
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-display uppercase tracking-widest text-off-white mb-6 leading-tight">
               WELCOME TO THE NEXT GENERATION
             </h2>
             <p className="text-off-white/70 leading-relaxed mb-6">
-              Grand Theft Auto VI heads to the state of Leonida, home to the neon-soaked streets of Vice City and beyond in the biggest, most immersive evolution of the Grand Theft Auto series yet. 
+              Grand Theft Auto VI heads to the state of Leonida, home to the neon-soaked streets of Vice City and beyond. Experience the biggest evolution in open-world history: dual protagonists Lucia and Jason, an enterable commercial economy, and a living, breathing simulated Florida ecosystem.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-wrap gap-3">
               <Link 
-                href={`/${locale}/library`} 
-                className="flex items-center justify-center space-x-2 px-6 py-3.5 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white font-bold uppercase tracking-wider rounded-xl hover:opacity-95 transition shadow-lg"
+                href={`/${locale}/characters`} 
+                className="flex items-center justify-center space-x-2 px-6 py-3.5 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white font-bold uppercase tracking-wider rounded-xl hover:opacity-95 transition shadow-lg text-xs sm:text-sm font-mono"
               >
-                <Play className="w-4 h-4 fill-current" />
-                <span>Explore Video Library</span>
+                <Users className="w-4 h-4" />
+                <span>Character Vault</span>
               </Link>
               <Link 
                 href={`/${locale}/wiki`} 
-                className="flex items-center justify-center space-x-2 px-6 py-3.5 bg-deep-teal hover:bg-palm-teal/20 text-off-white border border-deep-teal hover:border-palm-teal/40 font-bold uppercase tracking-wider rounded-xl transition"
+                className="flex items-center justify-center space-x-2 px-6 py-3.5 bg-deep-teal hover:bg-palm-teal/20 text-off-white border border-deep-teal hover:border-palm-teal/40 font-bold uppercase tracking-wider rounded-xl transition text-xs sm:text-sm font-mono"
               >
+                <Map className="w-4 h-4" />
                 <span>Interactive Wiki</span>
+              </Link>
+              <Link 
+                href={`/${locale}/library`} 
+                className="flex items-center justify-center space-x-2 px-5 py-3.5 bg-deep-teal/60 hover:bg-white/10 text-off-white/80 border border-deep-teal font-bold uppercase tracking-wider rounded-xl transition text-xs sm:text-sm font-mono"
+              >
+                <Play className="w-4 h-4 fill-current" />
+                <span>Video Guides</span>
               </Link>
             </div>
           </div>
 
           {/* Official Trailer Video Embed */}
-          <div className="relative aspect-video w-full rounded-2xl overflow-hidden shadow-2xl border border-deep-teal/60 bg-black">
+          <div className="relative aspect-video w-full rounded-3xl overflow-hidden shadow-2xl border border-deep-teal/80 bg-black">
             <iframe 
               src="https://www.youtube.com/embed/QdBZY2fkU-0" 
               title="Grand Theft Auto VI Trailer 1"
@@ -268,6 +280,205 @@ export default function HomeClientPage({ locale }: { locale: string }) {
               allowFullScreen
               className="w-full h-full"
             />
+          </div>
+        </section>
+
+        {/* 3.5 Exploration & Intelligence Hubs */}
+        <section className="space-y-8">
+          <div className="text-center space-y-2 max-w-3xl mx-auto">
+            <div className="inline-flex items-center space-x-2 bg-palm-teal/15 text-palm-teal px-3 py-1 rounded-full text-xs font-mono uppercase tracking-widest border border-palm-teal/30">
+              <Crosshair className="w-3.5 h-3.5" />
+              <span>Field Intel Dossiers</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-display uppercase tracking-widest text-off-white">
+              DISCOVER THE LORE OF LEONIDA
+            </h2>
+            <p className="text-xs sm:text-sm text-off-white/60">
+              Explore our categorized databases covering criminal dossiers, tactical maps, vehicles, and investigative articles.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {/* Card 1: Characters */}
+            <Link
+              href={`/${locale}/characters`}
+              className="group bg-deep-teal/25 hover:bg-deep-teal/45 border border-deep-teal/70 hover:border-neon-flamingo/50 rounded-3xl p-6 space-y-4 transition duration-300 flex flex-col justify-between hover:-translate-y-1 shadow-lg"
+            >
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-neon-flamingo/10 border border-neon-flamingo/30 text-neon-flamingo flex items-center justify-center">
+                  <Users className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-display uppercase tracking-wider text-off-white group-hover:text-neon-flamingo transition">
+                  Character Vault
+                </h3>
+                <p className="text-xs text-off-white/60 leading-relaxed">
+                  56 profiles cataloged. Lucia Caminos, Jason Duval, and 40 years of Vice City legends with full combat stats, quotes, and wardrobe variants.
+                </p>
+              </div>
+              <div className="flex items-center justify-between text-xs font-mono uppercase text-neon-flamingo pt-2 border-t border-deep-teal/40">
+                <span>Access Dossiers</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+
+            {/* Card 2: Interactive Map */}
+            <Link
+              href={`/${locale}/wiki`}
+              className="group bg-deep-teal/25 hover:bg-deep-teal/45 border border-deep-teal/70 hover:border-palm-teal/50 rounded-3xl p-6 space-y-4 transition duration-300 flex flex-col justify-between hover:-translate-y-1 shadow-lg"
+            >
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-palm-teal/10 border border-palm-teal/30 text-palm-teal flex items-center justify-center">
+                  <Map className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-display uppercase tracking-wider text-off-white group-hover:text-palm-teal transition">
+                  Leonida Atlas
+                </h3>
+                <p className="text-xs text-off-white/60 leading-relaxed">
+                  Interactive tactical map with 20+ GPS coordinates spanning Vice Beach, Port Gellhorn, Starfish Island, and alligator sawgrass swamps.
+                </p>
+              </div>
+              <div className="flex items-center justify-between text-xs font-mono uppercase text-palm-teal pt-2 border-t border-deep-teal/40">
+                <span>Launch Atlas</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+
+            {/* Card 3: Weapons & Armory */}
+            <Link
+              href={`/${locale}/wiki`}
+              className="group bg-deep-teal/25 hover:bg-deep-teal/45 border border-deep-teal/70 hover:border-sunset-orange/50 rounded-3xl p-6 space-y-4 transition duration-300 flex flex-col justify-between hover:-translate-y-1 shadow-lg"
+            >
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-sunset-orange/10 border border-sunset-orange/30 text-sunset-orange flex items-center justify-center">
+                  <Crosshair className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-display uppercase tracking-wider text-off-white group-hover:text-sunset-orange transition">
+                  Vehicles & Armory
+                </h3>
+                <p className="text-xs text-off-white/60 leading-relaxed">
+                  18 confirmed sports cars, supercars, airboats, and aircraft, alongside tactical firearm specs and car trunk inventory logistics.
+                </p>
+              </div>
+              <div className="flex items-center justify-between text-xs font-mono uppercase text-sunset-orange pt-2 border-t border-deep-teal/40">
+                <span>Inspect Gear</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+
+            {/* Card 4: Editorial Articles */}
+            <Link
+              href={`/${locale}/articles`}
+              className="group bg-deep-teal/25 hover:bg-deep-teal/45 border border-deep-teal/70 hover:border-palm-teal/50 rounded-3xl p-6 space-y-4 transition duration-300 flex flex-col justify-between hover:-translate-y-1 shadow-lg"
+            >
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-palm-teal/10 border border-palm-teal/30 text-palm-teal flex items-center justify-center">
+                  <BookOpen className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-display uppercase tracking-wider text-off-white group-hover:text-palm-teal transition">
+                  Lore Deep Dives
+                </h3>
+                <p className="text-xs text-off-white/60 leading-relaxed">
+                  In-depth leak investigations: 1986 vs 2026 Vice City comparison, RAGE 9 weather simulation, wildlife food chains, and heist tactics.
+                </p>
+              </div>
+              <div className="flex items-center justify-between text-xs font-mono uppercase text-palm-teal pt-2 border-t border-deep-teal/40">
+                <span>Read Articles</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+          </div>
+        </section>
+
+                {/* 3.6 Live Leonida Surveillance & Weather Radar */}
+        <section className="bg-gradient-to-br from-deep-teal/40 via-midnight-teal/90 to-deep-teal/20 rounded-3xl p-6 sm:p-8 border border-deep-teal shadow-2xl relative overflow-hidden">
+          <div className="absolute -right-16 -bottom-16 w-64 h-64 bg-palm-teal/10 rounded-full blur-3xl pointer-events-none" />
+          
+          <div className="flex flex-col lg:flex-row gap-8 items-center justify-between relative z-10">
+            {/* Left: Radar & Telemetry */}
+            <div className="space-y-4 max-w-xl w-full">
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+                <span className="text-xs font-mono uppercase tracking-widest text-palm-teal font-bold">
+                  STATE OF LEONIDA • LIVE TELEMETRY &amp; RADAR
+                </span>
+              </div>
+
+              <h3 className="text-2xl sm:text-3xl font-display uppercase tracking-wider text-off-white">
+                VICE CITY ATMOSPHERIC &amp; DISPATCH SENSORS
+              </h3>
+
+              {/* Weather readout pills */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+                <div className="p-3 rounded-2xl bg-midnight-teal/80 border border-deep-teal">
+                  <span className="text-[10px] text-off-white/40 block">VICE BEACH</span>
+                  <span className="text-base font-bold text-sunset-orange">86°F / 30°C</span>
+                  <span className="text-[9px] text-palm-teal block mt-0.5">Swell: 4.5 ft</span>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-midnight-teal/80 border border-deep-teal">
+                  <span className="text-[10px] text-off-white/40 block">GRASSRIVERS</span>
+                  <span className="text-base font-bold text-neon-flamingo">91°F / 33°C</span>
+                  <span className="text-[9px] text-rose-400 block mt-0.5">Storm Surge</span>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-midnight-teal/80 border border-deep-teal">
+                  <span className="text-[10px] text-off-white/40 block">GATOR KEYS</span>
+                  <span className="text-base font-bold text-palm-teal">84°F / 29°C</span>
+                  <span className="text-[9px] text-off-white/50 block mt-0.5">Gale Watch</span>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-midnight-teal/80 border border-deep-teal">
+                  <span className="text-[10px] text-off-white/40 block">PORT GELLHORN</span>
+                  <span className="text-base font-bold text-off-white">88°F / 31°C</span>
+                  <span className="text-[9px] text-sunset-orange block mt-0.5">Container Rail OK</span>
+                </div>
+              </div>
+
+              {/* Live Police Scanner Radio Ticker */}
+              <div className="p-3 rounded-2xl bg-black/60 border border-deep-teal/70 flex items-center gap-3">
+                <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-400 font-mono text-[9px] uppercase font-bold tracking-wider animate-pulse">
+                  VCPD TAC-1
+                </span>
+                <p className="text-xs font-mono text-off-white/70 truncate animate-pulse">
+                  &quot;10-4 Dispatch, Air-1 tracking Cheetah at 145 MPH crossing Ocean Beach expressway...&quot;
+                </p>
+              </div>
+            </div>
+
+            {/* Right: Interactive Scanner Graphic & Hidden Package Easter Egg */}
+            <div className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-full border-2 border-palm-teal/40 bg-midnight-teal/90 shadow-[0_0_40px_rgba(31,169,160,0.2)] flex items-center justify-center shrink-0">
+              {/* Radar sweep line */}
+              <div className="absolute inset-0 rounded-full border border-palm-teal/20 animate-spin [animation-duration:6s]">
+                <div className="w-1/2 h-full bg-gradient-to-r from-transparent to-palm-teal/20 origin-right" />
+              </div>
+
+              {/* Concentric distance circles */}
+              <div className="w-3/4 h-3/4 rounded-full border border-palm-teal/30 flex items-center justify-center">
+                <div className="w-1/2 h-1/2 rounded-full border border-palm-teal/40" />
+              </div>
+
+              {/* Center blip */}
+              <div className="w-3 h-3 rounded-full bg-neon-flamingo shadow-[0_0_10px_#ff3d81] animate-ping" />
+
+              {/* Hidden Package Collectible Easter Egg! */}
+              <button
+                onClick={() => {
+                  soundFx.playCash()
+                  if (typeof window !== 'undefined') {
+                    const stored = JSON.parse(localStorage.getItem('gta_hidden_packages') || '[]')
+                    if (!stored.includes('Radar Satellite Cache')) {
+                      stored.push('Radar Satellite Cache')
+                      localStorage.setItem('gta_hidden_packages', JSON.stringify(stored))
+                    }
+                    window.dispatchEvent(new CustomEvent('gta_package_found', { detail: 'Radar Satellite Cache' }))
+                  }
+                }}
+                className="absolute bottom-4 right-4 p-2 rounded-full bg-midnight-teal border border-sunset-orange hover:scale-125 transition-transform group"
+                title="Hidden Easter Egg Package! Tap to collect"
+              >
+                <span className="text-base select-none group-hover:animate-bounce">🗿</span>
+              </button>
+            </div>
           </div>
         </section>
 
