@@ -15,7 +15,9 @@ import {
   ShieldAlert, 
   Cpu, 
   ArrowRight,
-  UserCheck
+  UserCheck,
+  Check,
+  UserPlus
 } from 'lucide-react'
 import Link from 'next/link'
 import VideoCard from '@/components/VideoCard'
@@ -95,6 +97,8 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
   const [user, setUser] = useState<DbUser | null>(null)
   const [isPremium, setIsPremium] = useState(false)
   const [favorites, setFavorites] = useState<string[]>([])
+  const [followedCreators, setFollowedCreators] = useState<string[]>([])
+  const [followedCategories, setFollowedCategories] = useState<string[]>([])
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({})
   const [toast, setToast] = useState<string | null>(null)
 
@@ -116,6 +120,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
       const cat = params.get('category')
       const mode = params.get('mode')
       const videoParam = params.get('video')
+      const creatorParam = params.get('creator')
 
       if (videoParam) {
         setTargetedIntelVideo(videoParam)
@@ -127,7 +132,10 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
         }
       }
 
-      if (q) {
+      if (creatorParam) {
+        setSearchQuery(creatorParam)
+        setDebouncedSearchQuery(creatorParam)
+      } else if (q) {
         setSearchQuery(q)
         setDebouncedSearchQuery(q)
       }
@@ -167,6 +175,16 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
           .eq('user_id', session.user.id)
         
         if (favs) setFavorites((favs as { video_id: string }[]).map((f) => f.video_id))
+
+        const { data: fols } = await supabase
+          .from('follows')
+          .select('*')
+          .eq('user_id', session.user.id)
+        
+        if (fols) {
+          setFollowedCreators(fols.filter((f: any) => f.target_type === 'creator').map((f: any) => f.target_id))
+          setFollowedCategories(fols.filter((f: any) => f.target_type === 'category').map((f: any) => f.target_id))
+        }
       }
     }
 
@@ -183,6 +201,107 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
     loadSession()
     if (!PAYMENTS_ENABLED) setIsPremium(true)
   }, [])
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    setDebouncedSearchQuery(searchQuery)
+  }
+
+  const handleToggleFavorite = async (videoId: string, videoUUID: string) => {
+    if (!user) {
+      alert("Please log in to save favorites.")
+      return
+    }
+
+    const isFav = favorites.includes(videoUUID) || favorites.includes(videoId)
+    if (isFav) {
+      await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('video_id', videoUUID)
+
+      await supabase
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('video_id', videoId)
+
+      setFavorites(favorites.filter(id => id !== videoUUID && id !== videoId))
+      setToast('Removed from favorites!')
+    } else {
+      const vidObj = videos.find(v => v.id === videoUUID || v.external_id === videoId) || CURATED_VIDEOS.find(v => v.id === videoUUID || v.external_id === videoId)
+      await supabase
+        .from('favorites')
+        .insert({
+          user_id: user.id,
+          video_id: videoUUID,
+          external_id: videoId,
+          title: vidObj?.title || '',
+          channel_name: vidObj?.channel_name || '',
+          thumbnail_url: vidObj?.thumbnail_url || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
+        })
+
+      setFavorites([...favorites, videoUUID])
+      setToast('Added to favorites!')
+    }
+  }
+
+  const handleToggleFollowCreator = async (creatorName: string) => {
+    if (!user) {
+      alert("Please log in to follow creators.")
+      return
+    }
+    const isFollowing = followedCreators.includes(creatorName)
+    if (isFollowing) {
+      await supabase
+        .from('follows')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('target_type', 'creator')
+        .eq('target_id', creatorName)
+      setFollowedCreators(prev => prev.filter(c => c !== creatorName))
+      setToast(`Unfollowed ${creatorName}`)
+    } else {
+      await supabase
+        .from('follows')
+        .insert({
+          user_id: user.id,
+          target_type: 'creator',
+          target_id: creatorName
+        })
+      setFollowedCreators(prev => [...prev, creatorName])
+      setToast(`Following ${creatorName}`)
+    }
+  }
+
+  const handleToggleFollowCategory = async (categoryName: string) => {
+    if (!user) {
+      alert("Please log in to follow categories.")
+      return
+    }
+    const isFollowing = followedCategories.includes(categoryName)
+    if (isFollowing) {
+      await supabase
+        .from('follows')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('target_type', 'category')
+        .eq('target_id', categoryName)
+      setFollowedCategories(prev => prev.filter(c => c !== categoryName))
+      setToast(`Unfollowed category ${categoryName}`)
+    } else {
+      await supabase
+        .from('follows')
+        .insert({
+          user_id: user.id,
+          target_type: 'category',
+          target_id: categoryName
+        })
+      setFollowedCategories(prev => [...prev, categoryName])
+      setToast(`Following category ${categoryName}`)
+    }
+  }
 
   // Fetch Videos
   const fetchVideos = useCallback(async () => {
@@ -226,40 +345,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
     fetchVideos()
   }, [selectedCategory, selectedPlatform, sortBy, debouncedSearchQuery, targetedIntelVideo, fetchVideos])
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    setDebouncedSearchQuery(searchQuery)
-  }
 
-  const handleToggleFavorite = async (videoId: string, videoUUID: string) => {
-    if (!user) {
-      alert("Please log in to save favorites.")
-      return
-    }
-
-    const isFav = favorites.includes(videoUUID)
-    if (isFav) {
-      const { error } = await supabase
-        .from('favorites')
-        .delete()
-        .eq('user_id', user.id)
-        .eq('video_id', videoUUID)
-      
-      if (!error) {
-        setFavorites(favorites.filter(id => id !== videoUUID))
-        setToast('Removed from favorites!')
-      }
-    } else {
-      const { error } = await supabase
-        .from('favorites')
-        .insert({ user_id: user.id, video_id: videoUUID })
-      
-      if (!error) {
-        setFavorites([...favorites, videoUUID])
-        setToast('Added to favorites!')
-      }
-    }
-  }
 
   const handleOpenVideo = (videoUUID: string, timestamp?: number) => {
     if (isPremium) {
@@ -500,11 +586,36 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
 
         {/* 3. NEAT HORIZONTAL CATEGORY NAVIGATION BAR */}
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-mono uppercase text-off-white/50 tracking-wider flex items-center gap-1.5">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-palm-teal" />
-              <span>Category Filtering</span>
-            </span>
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-mono uppercase text-off-white/50 tracking-wider flex items-center gap-1.5">
+                <SlidersHorizontal className="w-3.5 h-3.5 text-palm-teal" />
+                <span>Category Filtering</span>
+              </span>
+              {selectedCategory !== 'All Intel' && (
+                <button
+                  type="button"
+                  onClick={() => handleToggleFollowCategory(selectedCategory)}
+                  className={`px-3 py-1 rounded-xl text-xs font-mono uppercase tracking-wider transition flex items-center space-x-1.5 ${
+                    followedCategories.includes(selectedCategory)
+                      ? 'bg-palm-teal/20 text-palm-teal border border-palm-teal/40 font-bold'
+                      : 'bg-[#0E1522] hover:bg-palm-teal/20 text-off-white/70 hover:text-palm-teal border border-deep-teal/70'
+                  }`}
+                >
+                  {followedCategories.includes(selectedCategory) ? (
+                    <>
+                      <Check className="w-3 h-3 text-palm-teal" />
+                      <span>Following {selectedCategory}</span>
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus className="w-3 h-3" />
+                      <span>Follow {selectedCategory}</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-mono uppercase text-off-white/40">Sort:</span>
               <select
@@ -730,8 +841,10 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
                             published_at: vid.published_at,
                             video_timestamps: vid.video_timestamps || []
                           }}
-                          isFavorited={favorites.includes(vid.id)}
+                          isFavorited={favorites.includes(vid.id) || favorites.includes(vid.external_id)}
                           isPremium={isPremium}
+                          isFollowingCreator={followedCreators.includes(vid.channel_name)}
+                          onToggleFollowCreator={() => handleToggleFollowCreator(vid.channel_name)}
                           onToggleFavorite={() => handleToggleFavorite(vid.external_id, vid.id)}
                           onOpenVideo={(seconds) => handleOpenVideo(vid.id, seconds)}
                           priority={idx < 3}

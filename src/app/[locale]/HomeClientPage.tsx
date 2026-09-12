@@ -6,6 +6,7 @@ import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import VideoCard, { type Video } from '@/components/VideoCard'
+import AgeBypassPlayer from '@/components/AgeBypassPlayer'
 import { createClient } from '@/utils/supabase/client'
 import { soundFx } from '@/components/GtaSoundEffects'
 
@@ -298,13 +299,10 @@ export default function HomeClientPage({ locale }: { locale: string }) {
 
           {/* Official Trailer Video Embed */}
           <div className="relative aspect-video w-full rounded-3xl overflow-hidden shadow-2xl border border-deep-teal/80 bg-black">
-            <iframe 
-              src="https://www.youtube.com/embed/QdBZY2fkU-0" 
+            <AgeBypassPlayer
+              videoId="QdBZY2fkU-0"
               title="Grand Theft Auto VI Trailer 1"
-              frameBorder="0" 
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-              allowFullScreen
-              className="w-full h-full"
+              autoplay={false}
             />
           </div>
         </section>

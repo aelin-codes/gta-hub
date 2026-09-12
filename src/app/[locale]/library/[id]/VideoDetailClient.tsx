@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Heart, Play, Clock, ArrowLeft, ExternalLink, Calendar } from 'lucide-react'
+import { Heart, Play, Clock, ArrowLeft, ExternalLink, Calendar, Check, UserPlus } from 'lucide-react'
 import Image from 'next/image'
 import { createClient } from '@/utils/supabase/client'
 import AdBanner from '@/components/AdBanner'
+import AgeBypassPlayer from '@/components/AgeBypassPlayer'
 
 interface Timestamp {
   label: string
@@ -22,6 +23,7 @@ interface Video {
   channel_url: string
   thumbnail_url: string
   published_at: string
+  category_id?: string
   video_timestamps?: Timestamp[]
 }
 
@@ -33,6 +35,7 @@ interface UserProfile {
 export default function VideoDetailClient({ video, locale }: { video: Video; locale: string }) {
   const router = useRouter()
   const [isFavorited, setIsFavorited] = useState(false)
+  const [isFollowingCreator, setIsFollowingCreator] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [activeTimestamp, setActiveTimestamp] = useState<number | null>(null)
   const [user, setUser] = useState<UserProfile | null>(null)
@@ -57,6 +60,17 @@ export default function VideoDetailClient({ video, locale }: { video: Video; loc
           
           setIsFavorited(!!fav)
 
+          // Check if following creator
+          const { data: fol } = await supabase
+            .from('follows')
+            .select('*')
+            .eq('user_id', session.user.id)
+            .eq('target_type', 'creator')
+            .eq('target_id', video.channel_name)
+            .maybeSingle()
+
+          setIsFollowingCreator(!!fol)
+
           // Fetch is_premium status
           const { data: profile } = await supabase
             .from('users')
@@ -74,7 +88,7 @@ export default function VideoDetailClient({ video, locale }: { video: Video; loc
     }
 
     checkFavoriteAndSession()
-  }, [video.id])
+  }, [video.id, video.channel_name])
 
   const handleToggleFavorite = async () => {
     if (!user) {
@@ -95,9 +109,46 @@ export default function VideoDetailClient({ video, locale }: { video: Video; loc
     } else {
       const { error } = await supabase
         .from('favorites')
-        .insert({ user_id: user.id, video_id: video.id })
+        .insert({ 
+          user_id: user.id, 
+          video_id: video.id,
+          title: video.title,
+          channel_name: video.channel_name,
+          thumbnail_url: video.thumbnail_url,
+          external_id: video.external_id
+        })
 
       if (!error) setIsFavorited(true)
+    }
+  }
+
+  const handleToggleFollowCreator = async () => {
+    if (!user) {
+      alert('Please log in to follow creators.')
+      return
+    }
+
+    const supabase = createClient()
+
+    if (isFollowingCreator) {
+      const { error } = await supabase
+        .from('follows')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('target_type', 'creator')
+        .eq('target_id', video.channel_name)
+
+      if (!error) setIsFollowingCreator(false)
+    } else {
+      const { error } = await supabase
+        .from('follows')
+        .insert({
+          user_id: user.id,
+          target_type: 'creator',
+          target_id: video.channel_name
+        })
+
+      if (!error) setIsFollowingCreator(true)
     }
   }
 
@@ -144,13 +195,12 @@ export default function VideoDetailClient({ video, locale }: { video: Video; loc
             {/* Embedded Player */}
             <div className="relative aspect-video w-full bg-black rounded-2xl overflow-hidden shadow-2xl border border-deep-teal/60">
               {isPlaying ? (
-                <iframe
-                  src={embedUrl}
+                <AgeBypassPlayer
+                  videoId={video.external_id}
                   title={video.title}
-                  frameBorder="0"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                  className="w-full h-full"
+                  timestamp={activeTimestamp || 0}
+                  platform={video.platform}
+                  autoplay={true}
                 />
               ) : (
                 <div className="relative w-full h-full group flex items-center justify-center">
@@ -183,17 +233,41 @@ export default function VideoDetailClient({ video, locale }: { video: Video; loc
                   <h1 className="text-xl sm:text-2xl font-bold text-off-white leading-snug">
                     {video.title}
                   </h1>
-                  <div className="flex items-center space-x-4 text-xs font-mono uppercase tracking-wider text-palm-teal mt-3">
-                    <a
-                      href={video.channel_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:underline flex items-center space-x-1 hover:text-sunset-orange"
-                    >
-                      <span>{video.channel_name}</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                    <span className="flex items-center space-x-1">
+                  <div className="flex flex-wrap items-center gap-3 text-xs font-mono uppercase tracking-wider text-palm-teal mt-3">
+                    <div className="flex items-center space-x-2">
+                      <a
+                        href={video.channel_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:underline flex items-center space-x-1 hover:text-sunset-orange"
+                      >
+                        <span>{video.channel_name}</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                      <button
+                        type="button"
+                        onClick={handleToggleFollowCreator}
+                        className={`px-2 py-0.5 rounded text-[11px] font-mono tracking-wider transition flex items-center space-x-1 ${
+                          isFollowingCreator
+                            ? 'bg-palm-teal/20 text-palm-teal border border-palm-teal/40 font-bold'
+                            : 'bg-deep-teal/60 hover:bg-palm-teal/20 text-off-white/80 hover:text-palm-teal border border-deep-teal/80'
+                        }`}
+                        title={isFollowingCreator ? `Unfollow ${video.channel_name}` : `Follow ${video.channel_name}`}
+                      >
+                        {isFollowingCreator ? (
+                          <>
+                            <Check className="w-3 h-3 text-palm-teal" />
+                            <span>Following Creator</span>
+                          </>
+                        ) : (
+                          <>
+                            <UserPlus className="w-3 h-3" />
+                            <span>Follow Creator</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <span className="flex items-center space-x-1 text-off-white/60">
                       <Calendar className="w-3.5 h-3.5" />
                       <span>{new Date(video.published_at).toLocaleDateString()}</span>
                     </span>

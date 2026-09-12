@@ -1,13 +1,14 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Heart, User, ShieldCheck, Calendar, BellOff, Trash2, ShieldAlert, LogOut, LogIn, Key, Mail, Shield, RefreshCw, AlertCircle } from 'lucide-react'
+import { Heart, User, ShieldCheck, Calendar, BellOff, Trash2, ShieldAlert, LogOut, LogIn, Key, Mail, Shield, RefreshCw, AlertCircle, ExternalLink } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'
 import { PAYMENTS_ENABLED } from '@/config'
 import { User as AuthUser } from '@supabase/supabase-js'
 import { soundFx } from '@/components/GtaSoundEffects'
+import { CURATED_VIDEOS } from '@/data/curatedVideos'
 
 interface UserProfile {
   id: string
@@ -98,25 +99,40 @@ export default function DashboardClientPage({ locale }: { locale: string }) {
         setSubscription(subs[0])
       }
 
-      // 3. Fetch favorites (join with video details)
+      // 3. Fetch favorites (join with video details, with metadata fallback)
       const { data: favs } = await supabase
         .from('favorites')
-        .select(`
-          video_id,
-          videos (
-            id,
-            title,
-            channel_name,
-            thumbnail_url,
-            external_id
-          )
-        `)
+        .select('*')
         .eq('user_id', session.user.id)
 
       if (favs) {
-        const mapped = favs
-          .map((f: { videos: unknown }) => f.videos as unknown as FavoriteVideo)
-          .filter(Boolean)
+        const mapped = (favs as any[])
+          .map((f: any) => {
+            if (f.videos && f.videos.title) {
+              return f.videos as FavoriteVideo
+            }
+            if (f.title) {
+              return {
+                id: f.video_id || f.id,
+                title: f.title,
+                channel_name: f.channel_name || 'Creator',
+                thumbnail_url: f.thumbnail_url || (f.external_id ? `https://img.youtube.com/vi/${f.external_id}/maxresdefault.jpg` : ''),
+                external_id: f.external_id || f.video_id
+              }
+            }
+            const match = CURATED_VIDEOS.find(v => v.id === f.video_id || v.external_id === f.video_id)
+            if (match) {
+              return {
+                id: match.id,
+                title: match.title,
+                channel_name: match.channel_name,
+                thumbnail_url: match.thumbnail_url || `https://img.youtube.com/vi/${match.external_id}/maxresdefault.jpg`,
+                external_id: match.external_id
+              }
+            }
+            return null
+          })
+          .filter(Boolean) as FavoriteVideo[]
         setFavorites(mapped)
       }
 
@@ -173,31 +189,38 @@ export default function DashboardClientPage({ locale }: { locale: string }) {
     }
   }
 
-  const handleUnfavorite = async (videoId: string) => {
+  const handleUnfavorite = async (videoId: string, externalId?: string) => {
     if (!user) return
-    const { error } = await supabase
+    const supabaseClient = createClient()
+    
+    await supabaseClient
       .from('favorites')
       .delete()
       .eq('user_id', user.id)
       .eq('video_id', videoId)
 
-    if (!error) {
-      setFavorites(favorites.filter(f => f.id !== videoId))
+    if (externalId && externalId !== videoId) {
+      await supabaseClient
+        .from('favorites')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('video_id', externalId)
     }
+
+    setFavorites(prev => prev.filter(f => f.id !== videoId && f.external_id !== videoId && f.id !== externalId))
   }
 
   const handleUnfollow = async (targetType: string, targetId: string) => {
     if (!user) return
-    const { error } = await supabase
+    const supabaseClient = createClient()
+    await supabaseClient
       .from('follows')
       .delete()
       .eq('user_id', user.id)
       .eq('target_type', targetType)
       .eq('target_id', targetId)
 
-    if (!error) {
-      setFollows(follows.filter(f => !(f.target_type === targetType && f.target_id === targetId)))
-    }
+    setFollows(prev => prev.filter(f => !(f.target_type === targetType && f.target_id === targetId)))
   }
 
   const handleInlineAuth = async (e: React.FormEvent) => {
@@ -505,27 +528,30 @@ export default function DashboardClientPage({ locale }: { locale: string }) {
             ) : (
               <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                 {favorites.map(video => (
-                  <div key={video.id} className="flex items-center justify-between bg-midnight-teal/40 p-3 rounded-xl border border-deep-teal/40">
-                    <div className="flex items-center space-x-3 min-w-0">
+                  <div key={video.id} className="flex items-center justify-between bg-midnight-teal/40 p-3 rounded-xl border border-deep-teal/40 hover:border-palm-teal/40 transition">
+                    <Link 
+                      href={`/${locale}/library?video=${video.external_id || video.id}`}
+                      className="flex items-center space-x-3 min-w-0 flex-grow hover:opacity-90 transition"
+                    >
                       <Image 
                         src={video.thumbnail_url || `https://img.youtube.com/vi/${video.external_id}/default.jpg`} 
                         alt="" 
                         width={64}
                         height={36}
-                        className="object-cover rounded-lg shrink-0"
+                        className="object-cover rounded-lg shrink-0 aspect-video bg-black"
                       />
                       <div className="min-w-0">
-                        <h4 className="text-xs font-bold text-off-white truncate hover:underline">
-                          <Link href={`/${locale}/library`}>{video.title}</Link>
+                        <h4 className="text-xs font-bold text-off-white truncate hover:underline flex items-center space-x-1">
+                          <span className="truncate">{video.title}</span>
                         </h4>
-                        <span className="text-[10px] font-mono text-palm-teal">{video.channel_name}</span>
+                        <span className="text-[10px] font-mono text-palm-teal truncate block">{video.channel_name}</span>
                       </div>
-                    </div>
+                    </Link>
                     
                     <button
-                      onClick={() => handleUnfavorite(video.id)}
+                      onClick={() => handleUnfavorite(video.id, video.external_id)}
                       aria-label="Remove favorite"
-                      className="p-2 hover:bg-neon-flamingo/10 text-off-white/40 hover:text-neon-flamingo rounded transition"
+                      className="p-2 hover:bg-neon-flamingo/10 text-off-white/40 hover:text-neon-flamingo rounded transition ml-2 shrink-0"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
@@ -543,22 +569,30 @@ export default function DashboardClientPage({ locale }: { locale: string }) {
             </h3>
 
             {follows.length === 0 ? (
-              <p className="text-xs text-off-white/40 py-6 text-center">Not following any creators or categories.</p>
+              <p className="text-xs text-off-white/40 py-6 text-center">Not following any creators or categories. Follow them in the Library or Video detail pages.</p>
             ) : (
               <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
                 {follows.map((fol, index) => (
-                  <div key={index} className="flex items-center justify-between bg-midnight-teal/40 p-3.5 rounded-xl border border-deep-teal/40">
-                    <div>
+                  <div key={index} className="flex items-center justify-between bg-midnight-teal/40 p-3.5 rounded-xl border border-deep-teal/40 hover:border-palm-teal/40 transition">
+                    <Link
+                      href={fol.target_type === 'creator' 
+                        ? `/${locale}/library?creator=${encodeURIComponent(fol.target_id)}` 
+                        : `/${locale}/library?category=${encodeURIComponent(fol.target_id)}`}
+                      className="min-w-0 flex-grow hover:opacity-80 transition block"
+                    >
                       <span className="text-[9px] uppercase font-mono text-palm-teal bg-palm-teal/10 px-1.5 py-0.5 rounded border border-palm-teal/20">
                         {fol.target_type}
                       </span>
-                      <h4 className="text-xs font-bold text-off-white mt-1.5">{fol.target_id}</h4>
-                    </div>
+                      <h4 className="text-xs font-bold text-off-white mt-1.5 truncate flex items-center space-x-1.5">
+                        <span className="truncate">{fol.target_id}</span>
+                        <ExternalLink className="w-3 h-3 text-palm-teal/60 shrink-0" />
+                      </h4>
+                    </Link>
 
                     <button
                       onClick={() => handleUnfollow(fol.target_type, fol.target_id)}
                       aria-label="Unfollow"
-                      className="p-2 hover:bg-sunset-orange/10 text-off-white/40 hover:text-sunset-orange rounded transition"
+                      className="p-2 hover:bg-sunset-orange/10 text-off-white/40 hover:text-sunset-orange rounded transition ml-2 shrink-0"
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>

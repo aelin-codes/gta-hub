@@ -8,6 +8,8 @@ import Image from 'next/image'
 import { useParams } from 'next/navigation'
 import { formatExactDate, formatRelativeDate } from '@/utils/date'
 
+import AgeBypassPlayer from '@/components/AgeBypassPlayer'
+
 interface Timestamp {
   label: string
   seconds: number
@@ -30,6 +32,8 @@ interface VideoCardProps {
   video: Video
   isFavorited: boolean
   isPremium: boolean
+  isFollowingCreator?: boolean
+  onToggleFollowCreator?: () => void
   onToggleFavorite: () => void
   onOpenVideo: (seconds?: number) => void // Trigger open video / interstitial
   priority?: boolean
@@ -41,6 +45,8 @@ export default function VideoCard({
   video,
   isFavorited,
   isPremium,
+  isFollowingCreator = false,
+  onToggleFollowCreator,
   onToggleFavorite,
   onOpenVideo,
   priority = false,
@@ -132,13 +138,12 @@ export default function VideoCard({
       {/* 1. Thumbnail / Embedded Player */}
       <div className="relative aspect-video w-full bg-black overflow-hidden flex items-center justify-center">
         {isPlaying ? (
-          <iframe
-            src={embedUrl}
+          <AgeBypassPlayer
+            videoId={video.external_id}
             title={video.title}
-            frameBorder="0"
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-            allowFullScreen
-            className="w-full h-full"
+            timestamp={activeTimestamp || 0}
+            platform={video.platform}
+            autoplay={true}
           />
         ) : (
           <>
@@ -181,16 +186,36 @@ export default function VideoCard({
         <div>
           {/* Creator Attribution */}
           <div className="flex items-center justify-between text-xs font-mono uppercase tracking-wider text-palm-teal mb-2">
-            <a 
-              href={video.channel_url} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="hover:underline flex items-center space-x-1 hover:text-sunset-orange"
-            >
-              <span>{video.channel_name}</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
-            <span title={exactUploadDate}>{relativeUploadDate}</span>
+            <div className="flex items-center space-x-2 truncate">
+              <a 
+                href={video.channel_url} 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="hover:underline flex items-center space-x-1 hover:text-sunset-orange truncate"
+              >
+                <span className="truncate">{video.channel_name}</span>
+                <ExternalLink className="w-3 h-3 flex-shrink-0" />
+              </a>
+              {onToggleFollowCreator && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    e.stopPropagation()
+                    onToggleFollowCreator()
+                  }}
+                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono tracking-wider transition ${
+                    isFollowingCreator
+                      ? 'bg-palm-teal/20 text-palm-teal border border-palm-teal/40 font-bold'
+                      : 'bg-deep-teal/60 hover:bg-palm-teal/20 text-off-white/70 hover:text-palm-teal border border-deep-teal/80'
+                  }`}
+                  title={isFollowingCreator ? `Unfollow ${video.channel_name}` : `Follow ${video.channel_name}`}
+                >
+                  {isFollowingCreator ? '✓ Following' : '+ Follow'}
+                </button>
+              )}
+            </div>
+            <span title={exactUploadDate} className="flex-shrink-0 ml-2">{relativeUploadDate}</span>
           </div>
 
           {/* Title */}

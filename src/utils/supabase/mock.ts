@@ -46,6 +46,7 @@ export const SEED_USERS = [
 // Minimal mock query builder — returns mock data for offline/dev use
 export class MockQueryBuilder {
   private filters: Array<{ col: string; val: unknown }> = []
+  private isDelete: boolean = false
 
   constructor(private tableName: string) {}
 
@@ -71,35 +72,68 @@ export class MockQueryBuilder {
   }
 
   async insert(payload: unknown) {
-    if (typeof window !== 'undefined' && this.tableName === 'users') {
-      const users = JSON.parse(localStorage.getItem('gta_users') || 'null') || [...SEED_USERS]
-      const items = Array.isArray(payload) ? payload : [payload]
-      const updated = [...users, ...items]
-      localStorage.setItem('gta_users', JSON.stringify(updated))
+    if (typeof window !== 'undefined') {
+      const current = JSON.parse(localStorage.getItem(`gta_${this.tableName}`) || 'null') || (
+        this.tableName === 'users' ? [...SEED_USERS] : []
+      )
+      const items = (Array.isArray(payload) ? payload : [payload]).map((item: Record<string, unknown>) => ({
+        id: item.id || 'rec-' + Math.random().toString(36).substring(2, 9),
+        created_at: new Date().toISOString(),
+        ...item
+      }))
+      const updated = [...current, ...items]
+      localStorage.setItem(`gta_${this.tableName}`, JSON.stringify(updated))
+      return { data: items[0], error: null }
     }
     return { data: Array.isArray(payload) ? payload[0] : payload, error: null }
   }
 
   async update(payload: unknown) {
-    if (typeof window !== 'undefined' && this.tableName === 'users') {
-      const users = JSON.parse(localStorage.getItem('gta_users') || 'null') || [...SEED_USERS]
+    if (typeof window !== 'undefined') {
+      const current = JSON.parse(localStorage.getItem(`gta_${this.tableName}`) || 'null') || (
+        this.tableName === 'users' ? [...SEED_USERS] : []
+      )
       const targetId = this.filters.find(f => f.col === 'id')?.val
-      const updated = users.map((u: any) => u.id === targetId ? { ...u, ...(payload as object) } : u)
-      localStorage.setItem('gta_users', JSON.stringify(updated))
+      const updated = current.map((u: any) => u.id === targetId ? { ...u, ...(payload as object) } : u)
+      localStorage.setItem(`gta_${this.tableName}`, JSON.stringify(updated))
     }
     return { data: payload, error: null }
   }
 
   async upsert(payload: unknown, onConflict?: unknown) { void onConflict; return { data: payload, error: null } }
-  async delete() { return { error: null } }
+
+  delete() {
+    this.isDelete = true
+    return this
+  }
 
   async then(resolve: (v: { data: unknown; error: null }) => void) {
+    if (this.isDelete) {
+      if (typeof window !== 'undefined') {
+        const stored = JSON.parse(localStorage.getItem(`gta_${this.tableName}`) || '[]')
+        const remaining = stored.filter((item: Record<string, unknown>) => {
+          // If all filters match this item, remove it
+          return !this.filters.every((f) => item[f.col] === f.val)
+        })
+        localStorage.setItem(`gta_${this.tableName}`, JSON.stringify(remaining))
+      }
+      resolve({ data: null, error: null })
+      return
+    }
+
     resolve({ data: this.getFilteredData(), error: null })
   }
 
   private getFilteredData(): unknown {
     let data: unknown[] = []
-    if (this.tableName === 'videos') data = MOCK_VIDEOS
+    if (this.tableName === 'videos') {
+      if (typeof window !== 'undefined') {
+        const stored = JSON.parse(localStorage.getItem('gta_videos') || 'null')
+        data = stored || MOCK_VIDEOS
+      } else {
+        data = MOCK_VIDEOS
+      }
+    }
     else if (this.tableName === 'categories') data = MOCK_CATEGORIES
     else if (this.tableName === 'users') {
       if (typeof window !== 'undefined') {
@@ -109,7 +143,20 @@ export class MockQueryBuilder {
         data = SEED_USERS
       }
     }
-    else return []
+    else if (this.tableName === 'favorites' || this.tableName === 'follows') {
+      if (typeof window !== 'undefined') {
+        data = JSON.parse(localStorage.getItem(`gta_${this.tableName}`) || '[]')
+      } else {
+        data = []
+      }
+    }
+    else {
+      if (typeof window !== 'undefined') {
+        data = JSON.parse(localStorage.getItem(`gta_${this.tableName}`) || '[]')
+      } else {
+        data = []
+      }
+    }
 
     if (this.filters.length > 0) {
       return data.filter((item) =>

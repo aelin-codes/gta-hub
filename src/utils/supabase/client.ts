@@ -3,35 +3,7 @@ import { MOCK_VIDEOS, MOCK_ADMIN_USER, MockQueryBuilder, SEED_USERS } from './mo
 
 const mockClient = {
   from(tableName: string) {
-    const builder = new MockQueryBuilder(tableName)
-
-    // Client-side: persist videos and subscriptions in localStorage for offline demo
-    if (typeof window !== 'undefined') {
-      const original = builder as MockQueryBuilder & Record<string, unknown>
-      original.insert = async (payload: unknown) => {
-        const current = JSON.parse(localStorage.getItem(`gta_${tableName}`) || '[]')
-        const items = (Array.isArray(payload) ? payload : [payload]).map(
-          (item: Record<string, unknown>) => ({ id: Math.random().toString(), created_at: new Date().toISOString(), ...item })
-        )
-        localStorage.setItem(`gta_${tableName}`, JSON.stringify([...current, ...items]))
-        return { data: items[0], error: null }
-      }
-      if (tableName === 'videos') {
-        // Prefer localStorage videos over hardcoded mocks when available
-        original.then = async (resolve: (v: { data: unknown; error: null }) => void) => {
-          const stored = JSON.parse(localStorage.getItem('gta_videos') || '[]')
-          resolve({ data: stored.length > 0 ? stored : MOCK_VIDEOS, error: null })
-        }
-      }
-      if (tableName === 'favorites' || tableName === 'follows') {
-        original.then = async (resolve: (v: { data: unknown; error: null }) => void) => {
-          const stored = JSON.parse(localStorage.getItem(`gta_${tableName}`) || '[]')
-          resolve({ data: stored, error: null })
-        }
-      }
-    }
-
-    return builder
+    return new MockQueryBuilder(tableName)
   },
   auth: {
     async getSession() {
@@ -72,6 +44,11 @@ const mockClient = {
         }
         localStorage.setItem('gta_logged_email', user.email)
         localStorage.setItem('gta_active_user', JSON.stringify(user))
+
+        // Set client auth cookies for edge middleware
+        document.cookie = `gta_user_role=${user.role}; path=/; max-age=604800; SameSite=Lax`
+        document.cookie = `gta_user_email=${encodeURIComponent(user.email)}; path=/; max-age=604800; SameSite=Lax`
+
         return { data: { user, session: { user } }, error: null }
       }
       return { data: { user: null, session: null }, error: null }
@@ -91,6 +68,11 @@ const mockClient = {
         localStorage.setItem('gta_users', JSON.stringify(users))
         localStorage.setItem('gta_logged_email', user.email)
         localStorage.setItem('gta_active_user', JSON.stringify(user))
+
+        // Set client auth cookies for edge middleware
+        document.cookie = `gta_user_role=${user.role}; path=/; max-age=604800; SameSite=Lax`
+        document.cookie = `gta_user_email=${encodeURIComponent(user.email)}; path=/; max-age=604800; SameSite=Lax`
+
         return { data: { user, session: { user } }, error: null }
       }
       return { data: { user: null }, error: null }
@@ -99,6 +81,8 @@ const mockClient = {
       if (typeof window !== 'undefined') {
         localStorage.removeItem('gta_logged_email')
         localStorage.removeItem('gta_active_user')
+        document.cookie = 'gta_user_role=; path=/; max-age=0'
+        document.cookie = 'gta_user_email=; path=/; max-age=0'
       }
       return { error: null }
     }
