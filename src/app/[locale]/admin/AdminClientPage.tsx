@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/utils/supabase/client'
+import { SEED_USERS } from '@/utils/supabase/mock'
 import { 
   Shield, 
   RefreshCw, 
@@ -267,6 +268,34 @@ export default function AdminClientPage({ locale }: { locale: string }) {
     setSudoModalOpen(true)
   }
 
+  const syncRoleToDb = async (userId: string, email: string, role: 'admin' | 'user') => {
+    // 1. Update public.users table in Supabase
+    try {
+      await supabase.from('users').update({ role }).eq('id', userId)
+    } catch (e) {
+      console.warn('Direct client users update warning:', e)
+    }
+
+    // 2. Persist to localStorage users directory
+    if (typeof window !== 'undefined') {
+      const stored = JSON.parse(localStorage.getItem('gta_users') || 'null') || [...SEED_USERS]
+      const updated = stored.map((u: any) =>
+        (u.id === userId || u.email?.toLowerCase() === email.toLowerCase())
+          ? { ...u, role }
+          : u
+      )
+      localStorage.setItem('gta_users', JSON.stringify(updated))
+
+      // 3. If the modified user is currently logged in, update active session and cookie
+      const activeUser = JSON.parse(localStorage.getItem('gta_active_user') || 'null')
+      if (activeUser && (activeUser.id === userId || activeUser.email?.toLowerCase() === email.toLowerCase())) {
+        const updatedActive = { ...activeUser, role }
+        localStorage.setItem('gta_active_user', JSON.stringify(updatedActive))
+        document.cookie = `gta_user_role=${role}; path=/; max-age=604800; SameSite=Lax`
+      }
+    }
+  }
+
   // Execute Role Escalation with Password Re-Authentication Guard
   const handleExecuteSudoEscalation = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -297,7 +326,8 @@ export default function AdminClientPage({ locale }: { locale: string }) {
       if (!res.ok) {
         // Fallback for offline demo mode
         if (sudoPassword.length >= 4) {
-          // Perform client-side demo role escalation
+          // Perform client-side demo role escalation in DB & storage
+          await syncRoleToDb(targetUser.id, targetUser.email, targetRole)
           const updated = usersList.map(u => u.id === targetUser.id ? { ...u, role: targetRole } : u)
           setUsersList(updated)
           setAuditLogs(prev => [
@@ -322,7 +352,8 @@ export default function AdminClientPage({ locale }: { locale: string }) {
       soundFx.playCash()
       setSudoSuccess(`User ${targetUser.email} is now an authorized ${targetRole.toUpperCase()}!`)
       
-      // Update local state
+      // Update DB and persistent state
+      await syncRoleToDb(targetUser.id, targetUser.email, targetRole)
       setUsersList(prev => prev.map(u => u.id === targetUser.id ? { ...u, role: targetRole } : u))
       setAuditLogs(prev => [
         {

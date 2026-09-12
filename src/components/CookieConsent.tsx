@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Script from 'next/script'
+import { Cookie, X } from 'lucide-react'
 
 export function ThirdPartyScripts() {
   const [consent, setConsent] = useState<string | null>(null)
@@ -44,9 +45,6 @@ export function CookieConsentBanner() {
   const handleAccept = () => {
     localStorage.setItem('gta_cookie_consent', 'accepted')
     setShow(false)
-    if (typeof window !== 'undefined') {
-      window.location.reload()
-    }
   }
 
   const handleDecline = () => {
@@ -57,23 +55,42 @@ export function CookieConsentBanner() {
   if (!show) return null
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-50 p-4 bg-[#0F2E33] border-t border-[#1FA9A0]/30 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-4 max-w-7xl mx-auto md:rounded-t-2xl md:border-x">
-      <div className="text-xs text-[#F1F5F4]/80 leading-relaxed max-w-3xl">
-        <p className="font-bold text-[#F1F5F4] mb-1">We respect your privacy</p>
-        GTA 6 Hub uses cookies to personalize content, analyze traffic, and support monetization via non-intrusive Vignette ads (Google AdSense). 
-        You can read more in our <a href="/en/privacy" className="underline hover:text-[#1FA9A0]">Privacy Policy</a>. 
-        By clicking &quot;Accept All&quot;, you consent to our use of non-essential cookies.
-      </div>
-      <div className="flex space-x-3 shrink-0">
+    <div className="fixed top-20 right-4 sm:right-6 z-40 max-w-sm sm:max-w-md bg-[#091519]/95 border border-palm-teal/40 rounded-2xl p-5 shadow-[0_12px_40px_rgba(0,0,0,0.7)] backdrop-blur-md animate-fade-in-up">
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <div className="flex items-center space-x-2">
+          <span className="p-1.5 rounded-lg bg-palm-teal/20 text-palm-teal">
+            <Cookie className="w-4 h-4" />
+          </span>
+          <span className="text-xs font-bold uppercase tracking-wider text-off-white font-mono">
+            Cookies & Privacy Notice
+          </span>
+        </div>
         <button
           onClick={handleDecline}
-          className="px-4 py-2 border border-[#0F2E33] hover:border-[#FF3D81] text-xs font-bold uppercase rounded-lg text-[#F1F5F4]/60 hover:text-[#F1F5F4] transition"
+          className="p-1 text-off-white/40 hover:text-off-white rounded-lg transition"
+          aria-label="Close"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      <div className="text-xs text-[#F1F5F4]/75 leading-relaxed space-y-1 mt-1">
+        <p>
+          GTA 6 Hub uses minimal cookies to personalize intel, cache local favorites, and support the project via non-intrusive ads. 
+          Learn more in our <a href="/en/privacy" className="underline hover:text-palm-teal text-palm-teal">Privacy Policy</a>.
+        </p>
+      </div>
+
+      <div className="flex items-center justify-end space-x-2 mt-4 pt-2 border-t border-deep-teal/40">
+        <button
+          onClick={handleDecline}
+          className="px-3.5 py-1.5 border border-deep-teal/80 hover:border-neon-flamingo/50 text-[11px] font-mono uppercase font-bold rounded-xl text-[#F1F5F4]/60 hover:text-[#F1F5F4] transition"
         >
           Decline
         </button>
         <button
           onClick={handleAccept}
-          className="px-5 py-2 bg-gradient-to-r from-[#FF3D81] to-[#FF7A45] text-white text-xs font-bold uppercase rounded-lg hover:opacity-90 transition shadow-lg"
+          className="px-4 py-1.5 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-[11px] font-mono uppercase font-bold rounded-xl hover:opacity-95 transition shadow-lg"
         >
           Accept All
         </button>

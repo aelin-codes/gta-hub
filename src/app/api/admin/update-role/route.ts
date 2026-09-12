@@ -63,7 +63,7 @@ export async function POST(req: Request) {
       )
     }
 
-    // 4. Update the target user's role in the database
+    // 4. Update the target user's role in the database (public.users)
     const { data: updatedUser, error: updateError } = await adminClient
       .from('users')
       .update({ role: newRole })
@@ -72,11 +72,23 @@ export async function POST(req: Request) {
       .single()
 
     if (updateError) {
-      console.error('Error updating user role:', updateError)
+      console.error('Error updating user role in DB:', updateError)
       return NextResponse.json(
         { error: 'Failed to update user role in database' },
         { status: 500 }
       )
+    }
+
+    // 4b. Synchronize auth system user role in Supabase Auth DB (auth.users metadata & claims)
+    try {
+      if ((adminClient.auth as any)?.admin?.updateUserById) {
+        await (adminClient.auth as any).admin.updateUserById(targetUserId, {
+          app_metadata: { role: newRole, claims_admin: newRole === 'admin' },
+          user_metadata: { role: newRole }
+        })
+      }
+    } catch (authAdminErr) {
+      console.warn('Auth admin updateUserById note:', authAdminErr)
     }
 
     // 5. Audit Log Entry
