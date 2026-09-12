@@ -29,7 +29,16 @@ export default function GtaWantedLevel() {
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
-    return () => window.removeEventListener('scroll', handleScroll)
+    const handleClearEvent = () => {
+      soundFx.playSpray()
+      setStars(0)
+    }
+    window.addEventListener('gta_clear_wanted', handleClearEvent)
+
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      window.removeEventListener('gta_clear_wanted', handleClearEvent)
+    }
   }, [])
 
   const handleClearWanted = () => {

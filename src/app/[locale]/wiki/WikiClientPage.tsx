@@ -5,6 +5,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Map, Users, Car, Zap, Crosshair, ArrowRight, ExternalLink, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { CHARACTERS } from '@/data/characters'
+import { soundFx } from '@/components/GtaSoundEffects'
 
 type POIType = 'landmark' | 'mission' | 'easter-egg'
 
@@ -638,7 +639,10 @@ export default function WikiClientPage({ locale }: { locale: string }) {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setActiveTab(tab.id as Tab)}
+                    onClick={() => {
+                      soundFx.playClick()
+                      setActiveTab(tab.id as Tab)
+                    }}
                     className={`flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs font-mono uppercase tracking-wider transition-all duration-200 ${
                       activeTab === tab.id
                         ? 'bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white font-bold shadow-lg'
@@ -650,6 +654,26 @@ export default function WikiClientPage({ locale }: { locale: string }) {
                   </button>
                 )
               })}
+
+              {/* Secret Collectible Tiki Package */}
+              <button
+                onClick={() => {
+                  soundFx.playCash()
+                  if (typeof window !== 'undefined') {
+                    const stored = JSON.parse(localStorage.getItem('gta_hidden_packages') || '[]')
+                    if (!stored.includes('Starfish Island Cartel Vault')) {
+                      stored.push('Starfish Island Cartel Vault')
+                      localStorage.setItem('gta_hidden_packages', JSON.stringify(stored))
+                    }
+                    window.dispatchEvent(new CustomEvent('gta_package_found', { detail: 'Starfish Island Cartel Vault' }))
+                  }
+                }}
+                className="p-2 rounded-xl bg-deep-teal/60 border border-deep-teal hover:border-sunset-orange/50 hover:scale-110 transition-transform cursor-pointer group"
+                title="Starfish Island Secret Stash! Tap to collect"
+                aria-label="Collect secret package"
+              >
+                <span className="text-sm select-none group-hover:animate-bounce">🗿</span>
+              </button>
             </div>
           </div>
         </div>

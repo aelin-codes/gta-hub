@@ -16,6 +16,7 @@ import {
   ChevronRight
 } from 'lucide-react'
 import { CHARACTERS, type Character } from '@/data/characters'
+import { soundFx } from '@/components/GtaSoundEffects'
 
 export default function CharactersClientPage({ locale }: { locale: string }) {
   const [search, setSearch] = useState('')
@@ -89,6 +90,25 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
               <span className="text-palm-teal font-bold">{vcCount}</span>
               <span>Vice City Classics</span>
             </div>
+            {/* Hidden Collectible Tiki Package */}
+            <button
+              onClick={() => {
+                soundFx.playCash()
+                if (typeof window !== 'undefined') {
+                  const stored = JSON.parse(localStorage.getItem('gta_hidden_packages') || '[]')
+                  if (!stored.includes('Ocean Beach Floral Tiki')) {
+                    stored.push('Ocean Beach Floral Tiki')
+                    localStorage.setItem('gta_hidden_packages', JSON.stringify(stored))
+                  }
+                  window.dispatchEvent(new CustomEvent('gta_package_found', { detail: 'Ocean Beach Floral Tiki' }))
+                }
+              }}
+              className="px-3 py-2 rounded-xl bg-deep-teal/40 border border-deep-teal hover:border-sunset-orange/50 hover:scale-110 transition-transform cursor-pointer group"
+              title="Secret Collectible Tiki Package! Tap to collect"
+              aria-label="Collect secret package"
+            >
+              <span className="text-sm select-none group-hover:animate-bounce">🗿</span>
+            </button>
           </div>
         </div>
 
@@ -171,6 +191,7 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
               <div
                 key={char.id}
                 onClick={() => {
+                  soundFx.playClick()
                   setSelectedChar(char)
                   setModalTab('overview')
                 }}
@@ -406,7 +427,10 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
                 return (
                   <button
                     key={tab.id}
-                    onClick={() => setModalTab(tab.id as typeof modalTab)}
+                    onClick={() => {
+                      soundFx.playClick()
+                      setModalTab(tab.id as typeof modalTab)
+                    }}
                     className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition whitespace-nowrap ${
                       modalTab === tab.id
                         ? 'bg-neon-flamingo/20 border border-neon-flamingo/40 text-neon-flamingo font-bold'

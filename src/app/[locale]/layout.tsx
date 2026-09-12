@@ -11,6 +11,9 @@ import ScrollProgressSpeedometer from '@/components/ScrollProgressSpeedometer'
 import GtaWantedLevel from '@/components/GtaWantedLevel'
 import GtaRadioPlayer from '@/components/GtaRadioPlayer'
 import EasterEggHunt from '@/components/EasterEggHunt'
+import GtaCheatCodes from '@/components/GtaCheatCodes'
+import GtaRetroFilter from '@/components/GtaRetroFilter'
+import FooterSecretTiki from '@/components/FooterSecretTiki'
 import Link from 'next/link'
 import '@/app/globals.css'
 import { PAYMENTS_ENABLED } from '@/config'
@@ -168,13 +171,18 @@ export default async function LocaleLayout({
             </div>
 
             {/* Legal Disclaimer Requirement (Section 9) */}
-            <div className="max-w-7xl mx-auto border-t border-midnight-teal/30 pt-8 mt-8 text-center text-[10px] text-off-white/40 leading-relaxed">
-              GTA 6 Hub is an unofficial fan site and is not affiliated with, endorsed by, or sponsored by Rockstar Games or Take-Two Interactive. 
-              All trademarks belong to their respective owners. All videos remain the property of their original creators and are embedded via official platform players.
+            <div className="max-w-7xl mx-auto border-t border-midnight-teal/30 pt-8 mt-8 text-center text-[10px] text-off-white/40 leading-relaxed flex items-center justify-center">
+              <span>
+                GTA 6 Hub is an unofficial fan site and is not affiliated with, endorsed by, or sponsored by Rockstar Games or Take-Two Interactive. 
+                All trademarks belong to their respective owners. All videos remain the property of their original creators and are embedded via official platform players.
+              </span>
+              <FooterSecretTiki />
             </div>
           </footer>
           <CookieConsentBanner />
           <GtaRadioPlayer />
+          <GtaCheatCodes />
+          <GtaRetroFilter />
           <EasterEggHunt />
         </NextIntlClientProvider>
       </body>

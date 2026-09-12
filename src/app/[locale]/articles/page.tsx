@@ -3,6 +3,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { Calendar, User, ArrowRight, BookOpen } from 'lucide-react'
 import { ARTICLES, Article } from '@/data/articles'
+import ArticleSecretTiki from '@/components/ArticleSecretTiki'
 
 export async function generateMetadata({
   params: { locale }
@@ -48,6 +49,7 @@ export default async function ArticlesPage({
           <div className="inline-flex items-center space-x-2 bg-neon-flamingo/10 text-neon-flamingo px-3 py-1 rounded-full text-xs font-mono uppercase tracking-widest border border-neon-flamingo/20">
             <BookOpen className="w-3.5 h-3.5" />
             <span>Editorial Hub</span>
+            <ArticleSecretTiki />
           </div>
           <h1 className="text-4xl sm:text-6xl font-display uppercase tracking-widest text-off-white">
             NEWS & ARTICLES

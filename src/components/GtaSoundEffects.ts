@@ -116,7 +116,7 @@ class SoundManager {
     if (!ctx) return
 
     const now = ctx.currentTime
-    const bufferSize = ctx.sampleRate * 0.25
+    const bufferSize = Math.floor(ctx.sampleRate * 0.25)
     const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
     const data = buffer.getChannelData(0)
     for (let i = 0; i < bufferSize; i++) {
@@ -140,6 +140,86 @@ class SoundManager {
 
     noise.start(now)
     noise.stop(now + 0.25)
+  }
+
+  // Classic GTA Mission Passed Fanfare (Ascending victory fanfare)
+  public playMissionPassed() {
+    if (!this.enabled) return
+    const ctx = this.getContext()
+    if (!ctx) return
+
+    const now = ctx.currentTime
+    const notes = [
+      { f: 523.25, d: 0.14, t: 0 },       // C5
+      { f: 659.25, d: 0.14, t: 0.14 },    // E5
+      { f: 783.99, d: 0.14, t: 0.28 },    // G5
+      { f: 1046.50, d: 0.55, t: 0.42 }    // C6 triumph
+    ]
+
+    notes.forEach(({ f, d, t }) => {
+      const osc = ctx.createOscillator()
+      const gain = ctx.createGain()
+      osc.type = 'sawtooth'
+      osc.frequency.setValueAtTime(f, now + t)
+
+      gain.gain.setValueAtTime(0.1, now + t)
+      gain.gain.exponentialRampToValueAtTime(0.001, now + t + d)
+
+      osc.connect(gain)
+      gain.connect(ctx.destination)
+
+      osc.start(now + t)
+      osc.stop(now + t + d)
+    })
+  }
+
+  // GTA Cheat Code Activation Chime
+  public playCheatActivated() {
+    if (!this.enabled) return
+    const ctx = this.getContext()
+    if (!ctx) return
+
+    const now = ctx.currentTime
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    osc.type = 'triangle'
+    osc.frequency.setValueAtTime(587.33, now)
+    osc.frequency.setValueAtTime(880.00, now + 0.08)
+    osc.frequency.setValueAtTime(1174.66, now + 0.16)
+
+    gain.gain.setValueAtTime(0.15, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35)
+
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+
+    osc.start(now)
+    osc.stop(now + 0.35)
+  }
+
+  // Heavy weapon trigger click / gunshot
+  public playGunshot() {
+    if (!this.enabled) return
+    const ctx = this.getContext()
+    if (!ctx) return
+
+    const now = ctx.currentTime
+    const osc = ctx.createOscillator()
+    const gain = ctx.createGain()
+
+    osc.type = 'square'
+    osc.frequency.setValueAtTime(180, now)
+    osc.frequency.exponentialRampToValueAtTime(30, now + 0.12)
+
+    gain.gain.setValueAtTime(0.18, now)
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12)
+
+    osc.connect(gain)
+    gain.connect(ctx.destination)
+
+    osc.start(now)
+    osc.stop(now + 0.12)
   }
 }
 
