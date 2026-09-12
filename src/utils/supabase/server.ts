@@ -10,6 +10,12 @@ const mockServerClient = {
     },
     async getSession() {
       return { data: { session: { user: MOCK_ADMIN_USER } }, error: null }
+    },
+    async signInWithPassword({ email, password }: { email: string; password?: string }) {
+      if (password && password.length >= 4) {
+        return { data: { user: { ...MOCK_ADMIN_USER, email } }, error: null }
+      }
+      return { data: { user: null }, error: new Error('Invalid administrator password.') }
     }
   },
   rpc(fn: string, args: unknown) {
@@ -22,8 +28,7 @@ const mockServerClient = {
 export function createClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !anonKey) {
-    console.log('Supabase credentials missing — using mock server client')
+  if (!url || !anonKey || url.includes('osueeoocryhxawazasui') || url.includes('your-project') || url.includes('example')) {
     return mockServerClient as unknown as ReturnType<typeof createServerClient>
   }
   const cookieStore = cookies()
@@ -44,8 +49,7 @@ export function createClient() {
 export function createAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !serviceKey) {
-    console.log('Supabase service key missing — using mock admin client')
+  if (!url || !serviceKey || url.includes('osueeoocryhxawazasui') || url.includes('your-project') || url.includes('example')) {
     return mockServerClient as unknown as ReturnType<typeof createServerClient>
   }
   return createServerClient(url, serviceKey, {
