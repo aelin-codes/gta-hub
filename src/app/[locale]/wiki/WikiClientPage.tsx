@@ -18,6 +18,8 @@ interface POI {
   description: string
   coordinates: string
   icon: string
+  opticVideoId: string
+  opticVideoTitle: string
 }
 
 const POIS: POI[] = [
@@ -31,6 +33,8 @@ const POIS: POI[] = [
       'Iconic neon-lit Art Deco boulevard. Vibrant nightlife, street racing takeovers, outdoor fitness parks, and luxury supercar showrooms along the Atlantic coast.',
     coordinates: 'VC-0031-BS',
     icon: '🌴',
+    opticVideoId: 'gta6-official-trailer-1',
+    opticVideoTitle: 'Trailer 1 (4K) — Ocean Drive & Vice Beach Marina',
   },
   {
     name: 'Downtown Vice Financial District',
@@ -42,6 +46,8 @@ const POIS: POI[] = [
       'Towering modern corporate skyline. Commercial bank headquarters, rooftop helipads, luxury penthouse suites, and city hall.',
     coordinates: 'DF-4401-FD',
     icon: '🏙️',
+    opticVideoId: 'gta6-extended-look',
+    opticVideoTitle: 'Extended Look — Downtown Vice City Skyline & Weather',
   },
   {
     name: 'Starfish Island Luxury Enclave',
@@ -53,6 +59,8 @@ const POIS: POI[] = [
       'Historical billionaire compound district in the bay between mainland Vice City and Vice Beach. Gated waterway estates with private yacht docks.',
     coordinates: 'SI-5501-EST',
     icon: '🏰',
+    opticVideoId: 'gta6-vice-city-comparison',
+    opticVideoTitle: 'Vice City 1986 vs 2026 — Starfish Island Mansion Evolution',
   },
   {
     name: 'Vice City International Airport',
@@ -64,6 +72,8 @@ const POIS: POI[] = [
       'Primary international airport serving Leonida. High-security commercial tarmac, private executive hangars, and cargo smuggling routes west of the bay.',
     coordinates: 'VC-8012-AP',
     icon: '✈️',
+    opticVideoId: 'gta6-map-leonida-analysis',
+    opticVideoTitle: 'Leonida Map Breakdown — Airport Flight Corridors',
   },
   {
     name: 'Port Gellhorn Container Docks',
@@ -75,6 +85,8 @@ const POIS: POI[] = [
       'Industrial deep-water port on the west coast. High-stakes container smuggling, freight train heists, warehouse shootouts, and dockworker union territory.',
     coordinates: 'PG-0991-DK',
     icon: '⚓',
+    opticVideoId: 'gta6-extended-look',
+    opticVideoTitle: 'Extended Look — Port Gellhorn Industrial Docks & Cargo',
   },
   {
     name: 'Mount Kalaga Peak',
@@ -86,6 +98,8 @@ const POIS: POI[] = [
       'Highest topographical point in Leonida. Mountain bike trails, paraglider launches, radio relay towers, and hidden cave cache on the eastern cliff face.',
     coordinates: 'MK-0001-SM',
     icon: '⛰️',
+    opticVideoId: 'gta6-map-hidden-secrets',
+    opticVideoTitle: 'Map Secrets — Mount Kalaga Northern Ridge & Wilderness',
   },
   {
     name: 'Ambrosia Gated Country Estates',
@@ -97,6 +111,8 @@ const POIS: POI[] = [
       'Ultra-wealthy suburban enclave south of Lake Leonida. Luxury mansion robbery targets, equestrian stables, and private security patrols.',
     coordinates: 'AM-2201-SB',
     icon: '🏡',
+    opticVideoId: 'gta6-map-leonida-analysis',
+    opticVideoTitle: 'Full Map Analyzed — Ambrosia Suburban Highway Coordinates',
   },
   {
     name: 'Kelly County Mudfest Bog',
@@ -108,6 +124,8 @@ const POIS: POI[] = [
       'Off-road arena for monster trucks, lifted 4x4 pickups, and mud boggers. High-energy festival crowds, illegal bets, and brawl side-missions in northwest Leonida.',
     coordinates: 'KC-9092-MF',
     icon: '🛻',
+    opticVideoId: 'gta6-official-trailer-1',
+    opticVideoTitle: 'Trailer 1 — Thrillbilly Mud Club & 4x4 Mudfest Arena',
   },
   {
     name: 'Grassrivers Sawgrass Swamp',
@@ -119,6 +137,8 @@ const POIS: POI[] = [
       'Alligator-infested swampland. High-speed airboat pursuits, hidden drug laboratories, and off-grid poacher cabins off the radar.',
     coordinates: 'GL-1244-SW',
     icon: '🐊',
+    opticVideoId: 'gta6-real-life-locations',
+    opticVideoTitle: 'Real Life Florida — Everglades Sawgrass & Airboat Swamps',
   },
   {
     name: 'Leonida Keys Historic Lighthouse',
@@ -130,6 +150,8 @@ const POIS: POI[] = [
       'Historic 19th-century lighthouse with cryptic maritime markings on the southern archipelago. Rare heavy marksman weapon spawn on the lantern gallery.',
     coordinates: 'LK-0012-LH',
     icon: '🔭',
+    opticVideoId: 'gta6-trailer-hidden-details',
+    opticVideoTitle: '89 Hidden Secrets — Historic Lighthouse Maritime Clues',
   },
   {
     name: 'Leonida Grand Prix Circuit',
@@ -141,6 +163,8 @@ const POIS: POI[] = [
       'Repurposed speedway utilized for midnight underground drift meets near the expressway interchange.',
     coordinates: 'VC-7788-GP',
     icon: '🏎️',
+    opticVideoId: 'gta6-nightclubs-and-physics',
+    opticVideoTitle: 'RAGE 9 Capabilities — Supercar Physics & Underground Drag',
   },
   {
     name: 'Hamlet Fishing Marina',
@@ -152,6 +176,8 @@ const POIS: POI[] = [
       'Quaint subtropical fishing community. Sport-fishing boat charters, bait shacks, seafood taverns, and illicit offshore drops south of Vice-Dale.',
     coordinates: 'HM-3320-MR',
     icon: '🎣',
+    opticVideoId: 'gta6-real-life-locations',
+    opticVideoTitle: 'Real Life Florida — Keys Marina & Offshore Smuggling Drops',
   },
   {
     name: 'Redhill Pine Nature Reserve',
@@ -163,6 +189,8 @@ const POIS: POI[] = [
       'Dense northern wilderness home to rare Florida panthers, elusive black bears, and a secluded off-grid survivalist compound.',
     coordinates: 'RH-1102-FR',
     icon: '🌲',
+    opticVideoId: 'gta6-map-hidden-secrets',
+    opticVideoTitle: 'Secret Areas — Northern Redhill Wilderness & Wildlife',
   },
   {
     name: 'Jason & Lucia Safehouse Motel',
@@ -174,6 +202,8 @@ const POIS: POI[] = [
       'Main hideout early in the campaign. Weapon lockers, trunk planning boards, stolen cash stacks, and getaway vehicle parking.',
     coordinates: 'SH-3109-VC',
     icon: '🏠',
+    opticVideoId: 'gta6-vice-city-duo-evolution',
+    opticVideoTitle: 'Vice Duo Evolution — Jason & Lucia Safehouse Dynamic',
   },
   {
     name: 'San Chian Cartel Superyacht Anchorage',
@@ -185,6 +215,8 @@ const POIS: POI[] = [
       'Heavily guarded 250-foot luxury superyacht anchored offshore in Atlantic waters. Private military guards, vault safes, and helicopter pad.',
     coordinates: 'SY-9900-SY',
     icon: '🛥️',
+    opticVideoId: 'gta6-returning-characters',
+    opticVideoTitle: 'Lore & Connections — Modern Cartel Empires & Offshore Vaults',
   },
   {
     name: 'Sunken Cargo Freighter Wreck',
@@ -196,7 +228,9 @@ const POIS: POI[] = [
       'Old narcotics cargo ship resting on the coral bed — underwater loot containers, speargun diving spot, and encrypted radio transmission beacon.',
     coordinates: 'OC-4412-SUB',
     icon: '🌊',
-  }
+    opticVideoId: 'gta6-5-tiny-things-missed',
+    opticVideoTitle: '5 Tiny Details — Underwater Cargo Wreck & Diving Spots',
+  },
 ]
 
 const VEHICLES = [
@@ -563,7 +597,7 @@ export default function WikiClientPage({ locale }: { locale: string }) {
   const [activeTab, setActiveTab] = useState<Tab>('map')
   const [selectedPOI, setSelectedPOI] = useState<POI | null>(POIS[0])
   const [filter, setFilter] = useState<FilterType>('all')
-  const [mapStyle, setMapStyle] = useState<'topographic' | 'satellite'>('topographic')
+  const [mapStyle, setMapStyle] = useState<'topographic' | 'satellite'>('satellite')
   const [charEra, setCharEra] = useState<'all' | 'GTA 6'>('GTA 6')
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [scale, setScale] = useState(1)

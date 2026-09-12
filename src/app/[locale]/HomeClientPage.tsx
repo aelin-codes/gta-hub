@@ -157,11 +157,11 @@ export default function HomeClientPage({ locale }: { locale: string }) {
       />
       
       {/* 1. 3D Parallax Skyline Hero (Lazy Loaded) */}
-      <div ref={heroContainerRef} className="min-h-[95vh] w-full bg-gradient-to-b from-[#0F2E33] to-[#0B1E23]">
+      <div ref={heroContainerRef} className="min-h-[95vh] w-full bg-[#07090E]">
         {heroInView ? (
           <SkylineHero />
         ) : (
-          <div className="relative h-[95vh] w-full flex items-center justify-center">
+          <div className="relative h-[95vh] w-full flex items-center justify-center bg-[#07090E]">
             <div className="text-off-white/40 font-mono text-xs uppercase tracking-widest animate-pulse">
               Initializing 3D Skyline...
             </div>

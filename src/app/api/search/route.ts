@@ -47,9 +47,8 @@ export async function GET(req: Request) {
 
     // Force keyword mode if user is not premium (security constraint)
     // Bypass when payments are disabled — everyone gets all features
-    // Force keyword mode if user is not premium (security constraint)
-    // Bypass when payments are disabled — everyone gets all features
-    const activeMode = (!PAYMENTS_ENABLED || (mode === 'semantic' && isPremium)) ? (mode === 'semantic' ? 'semantic' : 'keyword') : 'keyword'
+    const isSchematic = mode === 'schematic' || mode === 'semantic'
+    const activeMode: 'schematic' | 'semantic' | 'keyword' = (!PAYMENTS_ENABLED || (isSchematic && isPremium)) ? (isSchematic ? 'schematic' : 'keyword') : 'keyword'
 
     let results: unknown[] = []
     let categoryVideoIds: string[] | null = null
@@ -87,7 +86,7 @@ export async function GET(req: Request) {
         } else if (!category) {
           results = await getCachedVideos()
         }
-      } else if (activeMode === 'semantic') {
+      } else if (isSchematic) {
         const geminiKey = process.env.GEMINI_API_KEY
         if (geminiKey) {
           try {
@@ -157,7 +156,7 @@ export async function GET(req: Request) {
       } else {
         const qLower = query.toLowerCase().trim()
         const qTerms = qLower.split(/\s+/).filter(Boolean)
-        const isSemantic = activeMode === 'semantic'
+        const isSemantic = isSchematic
 
         const scored = list.map((v) => {
           let score = 0

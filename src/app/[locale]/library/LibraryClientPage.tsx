@@ -1,7 +1,23 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
-import { Search, Sparkles, X, SlidersHorizontal, UserCheck } from 'lucide-react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
+import { 
+  Search, 
+  Sparkles, 
+  X, 
+  SlidersHorizontal, 
+  Play, 
+  Clock, 
+  Film, 
+  Map, 
+  Compass, 
+  Car, 
+  ShieldAlert, 
+  Cpu, 
+  ArrowRight,
+  UserCheck
+} from 'lucide-react'
+import Link from 'next/link'
 import VideoCard from '@/components/VideoCard'
 import VideoSkeleton from '@/components/VideoSkeleton'
 import Toast from '@/components/Toast'
@@ -11,6 +27,7 @@ import { createClient } from '@/utils/supabase/client'
 import { PAYMENTS_ENABLED, BANNER_EVERY_N_VIDEOS, INTERSTITIAL_EVERY_N_VIDEOS } from '@/config'
 import AdBanner from '@/components/AdBanner'
 import { CURATED_VIDEOS } from '@/data/curatedVideos'
+import { soundFx } from '@/components/GtaSoundEffects'
 
 interface Timestamp {
   label: string;
@@ -28,6 +45,7 @@ interface Video {
   thumbnail_url: string;
   published_at: string;
   category?: string;
+  secondary_categories?: string[];
   schematicMatch?: {
     score: number;
     matchedConcepts: string[];
@@ -42,39 +60,41 @@ interface DbUser {
 }
 
 const CATEGORIES = [
+  "All Intel",
+  "News & Trailers",
+  "Map & Exploration",
   "Easter Eggs & Secrets",
   "Missions & Story",
-  "Map & Exploration",
+  "Theories & Comparisons",
   "Characters",
   "Vehicles",
   "Weapons & Combat",
-  "Money & Economy",
-  "Online & Multiplayer",
-  "Glitches & Bugs",
-  "Speedruns & Challenges",
-  "Customization & Style",
-  "News & Trailers",
-  "Mods & PC",
-  "Soundtrack & World",
-  "Theories & Comparisons",
-  "Funny & Highlight Moments"
+]
+
+const SCHEMATIC_PRESETS = [
+  { label: '🗺️ 2.5x Los Santos Map Scale', query: 'Compare the full map of Leonida to GTA 5 scale' },
+  { label: '🏎️ RAGE 9 Vehicle Dynamics', query: 'Next-gen vehicle physics and trunk storage weapons' },
+  { label: '🐊 Sawgrass Wildlife & Swamps', query: 'Everglades sawgrass alligators and wildlife ecosystem' },
+  { label: '💰 Lucia & Jason Heist Protocol', query: 'Lucia and Jason Bonnie and Clyde store robberies' },
+  { label: '🚨 Tactical VCPD Intercept AI', query: 'Police PIT maneuver AI and tactical pursuit response' },
+  { label: '🌆 Ray-Traced Vice Beach Lighting', query: 'Nightclub interiors volumetric lighting and water physics' },
+  { label: '🏝️ Vice City 1986 vs 2026', query: 'Iconic landmark comparison between 1986 and 2026' },
 ]
 
 export default function LibraryClientPage({ locale }: { locale: string }) {
-  void locale
   const [videos, setVideos] = useState<Video[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
-  const [searchMode, setSearchMode] = useState<'keyword' | 'semantic'>('keyword')
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+  const [searchMode, setSearchMode] = useState<'keyword' | 'schematic'>('keyword')
+  const [selectedCategory, setSelectedCategory] = useState<string>('All Intel')
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null)
-  const [sortBy, setSortBy] = useState('newest')
+  const [sortBy, setSortBy] = useState<'relevance' | 'newest' | 'schematic'>('relevance')
   
   // Auth and Subscription State
   const [user, setUser] = useState<DbUser | null>(null)
   const [isPremium, setIsPremium] = useState(false)
-  const [favorites, setFavorites] = useState<string[]>([]) // Array of video_ids
+  const [favorites, setFavorites] = useState<string[]>([])
   const [categoryCounts, setCategoryCounts] = useState<Record<string, number>>({})
   const [toast, setToast] = useState<string | null>(null)
 
@@ -86,111 +106,89 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
   const [activePlayId, setActivePlayId] = useState<string | null>(null)
   const [activeTimestamp, setActiveTimestamp] = useState<number | undefined>(undefined)
 
+  // Read URL search params on mount
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      const q = params.get('q')
+      const cat = params.get('category')
+      const mode = params.get('mode')
+      if (q) {
+        setSearchQuery(q)
+        setDebouncedSearchQuery(q)
+      }
+      if (cat) setSelectedCategory(cat)
+      if (mode === 'schematic' || mode === 'semantic') setSearchMode('schematic')
+    }
+  }, [])
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedCount = sessionStorage.getItem('video_opens_count')
-      if (storedCount) {
-        setVideoOpensThisSession(parseInt(storedCount, 10))
-      }
+      if (storedCount) setVideoOpensThisSession(parseInt(storedCount, 10))
       const storedDismissed = sessionStorage.getItem('last_ad_dismissed_time')
-      if (storedDismissed) {
-        setLastAdDismissed(parseInt(storedDismissed, 10))
-      }
+      if (storedDismissed) setLastAdDismissed(parseInt(storedDismissed, 10))
     }
   }, [])
 
   const supabase = createClient()
 
-  // Load User, Favorites, and initial Videos
+  // Load User & Category Counts
   useEffect(() => {
-    const supabaseClient = createClient()
     async function loadSession() {
-      const { data: { session } } = await supabaseClient.auth.getSession()
+      const { data: { session } } = await supabase.auth.getSession()
       if (session?.user) {
         setUser({ id: session.user.id, email: session.user.email })
-        // Fetch user premium status and role from db
-        const { data: profile } = await supabaseClient
+        const { data: profile } = await supabase
           .from('users')
           .select('is_premium')
           .eq('id', session.user.id)
           .single()
         
-        if (profile) {
-          setIsPremium(!!profile.is_premium)
-        } else {
-          setIsPremium(false)
-        }
+        setIsPremium(!!profile?.is_premium)
 
-        // Fetch favorites
-        const { data: favs } = await supabaseClient
+        const { data: favs } = await supabase
           .from('favorites')
           .select('video_id')
           .eq('user_id', session.user.id)
         
-        if (favs) {
-          setFavorites((favs as { video_id: string }[]).map((f) => f.video_id))
-        }
+        if (favs) setFavorites((favs as { video_id: string }[]).map((f) => f.video_id))
       }
     }
 
-    async function loadCategoryCounts() {
-      try {
-        const { data, error } = await supabaseClient
-          .from('video_categories')
-          .select('category_id, categories(name)')
-        
-        if (!error && data && data.length > 0) {
-          const counts: Record<string, number> = {}
-          const rows = data as unknown as { categories: { name: string } | null }[]
-          rows.forEach((row) => {
-            const catName = row.categories?.name
-            if (catName) {
-              counts[catName] = (counts[catName] || 0) + 1
-            }
-          })
-          setCategoryCounts(counts)
-          return
-        }
-      } catch (err) {
-        console.error('Error fetching category counts:', err)
-      }
-
-      // Fallback to real curated video category counts
-      const counts: Record<string, number> = {}
-      CURATED_VIDEOS.forEach((v) => {
-        counts[v.category] = (counts[v.category] || 0) + 1
-        if (v.secondary_categories) {
-          v.secondary_categories.forEach((sc) => {
-            counts[sc] = (counts[sc] || 0) + 1
-          })
-        }
+    // Category counts tally
+    const counts: Record<string, number> = { 'All Intel': CURATED_VIDEOS.length }
+    CURATED_VIDEOS.forEach((v) => {
+      counts[v.category] = (counts[v.category] || 0) + 1
+      v.secondary_categories?.forEach((sc) => {
+        counts[sc] = (counts[sc] || 0) + 1
       })
-      setCategoryCounts(counts)
-    }
+    })
+    setCategoryCounts(counts)
 
     loadSession()
-    loadCategoryCounts()
-    // When payments are off, default to premium for non-logged-in users too
     if (!PAYMENTS_ENABLED) setIsPremium(true)
   }, [])
 
-  // fetchVideos must be declared BEFORE useEffects that reference it to avoid ReferenceError
+  // Fetch Videos
   const fetchVideos = useCallback(async () => {
     setLoading(true)
     try {
       const q = debouncedSearchQuery
       const params = new URLSearchParams({ q, mode: searchMode })
-      if (selectedCategory) params.set('category', selectedCategory)
+      if (selectedCategory && selectedCategory !== 'All Intel') {
+        params.set('category', selectedCategory)
+      }
       if (selectedPlatform) params.set('platform', selectedPlatform)
 
       const res = await fetch(`/api/search?${params}`)
       const data = await res.json()
+      let filtered = (data.videos || []) as Video[]
 
-      const filtered = (data.videos || []) as Video[]
-
-      // Only sort client-side if not in semantic mode (preserve AI schematic ranking)
-      if (searchMode !== 'semantic' && sortBy === 'newest') {
+      if (sortBy === 'newest') {
         filtered.sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime())
+      } else if (sortBy === 'schematic') {
+        filtered.sort((a, b) => (b.schematicMatch?.score || 0) - (a.schematicMatch?.score || 0))
       }
 
       setVideos(filtered)
@@ -201,15 +199,14 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
     }
   }, [debouncedSearchQuery, searchMode, selectedCategory, selectedPlatform, sortBy])
 
-  // Debounce the searchQuery to prevent triggering a query per keystroke (Phase 4.3)
+  // Debounce search query
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearchQuery(searchQuery)
-    }, 300)
+    }, 280)
     return () => clearTimeout(timer)
   }, [searchQuery])
 
-  // Refetch videos when sorting, filtering, or searching changes
   useEffect(() => {
     fetchVideos()
   }, [selectedCategory, selectedPlatform, sortBy, debouncedSearchQuery, fetchVideos])
@@ -227,7 +224,6 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
 
     const isFav = favorites.includes(videoUUID)
     if (isFav) {
-      // Delete favorite
       const { error } = await supabase
         .from('favorites')
         .delete()
@@ -239,7 +235,6 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
         setToast('Removed from favorites!')
       }
     } else {
-      // Add favorite
       const { error } = await supabase
         .from('favorites')
         .insert({ user_id: user.id, video_id: videoUUID })
@@ -251,30 +246,24 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
     }
   }
 
-  // Handle opening video & triggering Interstitial (Section 7)
   const handleOpenVideo = (videoUUID: string, timestamp?: number) => {
     if (isPremium) {
-      // Premium users: bypass ads completely
       setActivePlayId(videoUUID)
       setActiveTimestamp(timestamp)
     } else {
-      // Free users: increment opens count
       const nextCount = videoOpensThisSession + 1
       setVideoOpensThisSession(nextCount)
       if (typeof window !== 'undefined') {
         sessionStorage.setItem('video_opens_count', nextCount.toString())
       }
 
-      // Check cooldown (5 minutes = 300,000 milliseconds)
       const now = Date.now()
       const cooldownActive = now - lastAdDismissed < 5 * 60 * 1000
 
-      // Trigger interstitial on every Nth video if cooldown is not active
       if (nextCount % INTERSTITIAL_EVERY_N_VIDEOS === 0 && !cooldownActive) {
         setPendingPlayCallback({ videoId: videoUUID, timestamp })
         setIsAdOpen(true)
       } else {
-        // Go straight to video
         setActivePlayId(videoUUID)
         setActiveTimestamp(timestamp)
       }
@@ -295,238 +284,374 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
     }
   }
 
+  // Spotlight featured video (First video in current result set or official trailer)
+  const featuredVideo = useMemo(() => {
+    if (videos.length === 0) return null
+    return videos[0]
+  }, [videos])
+
   return (
-    <div className="bg-midnight-teal min-h-screen py-10 px-4 sm:px-6 lg:px-8">
+    <div className="bg-[#07090E] min-h-screen py-10 px-4 sm:px-6 lg:px-8 text-off-white">
       
-      {/* Ad Interstitial wrapper component */}
+      {/* Ad Interstitial wrapper */}
       <AdInterstitial 
         isOpen={isAdOpen} 
         onClose={handleCloseAd} 
         isPremium={isPremium} 
       />
 
-      <div className="max-w-7xl mx-auto space-y-8">
+      <div className="max-w-7xl mx-auto space-y-10">
         
-        {/* Page Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
+        {/* 1. Header & Quick Metrics */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-4 border-b border-deep-teal/70 pb-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[#101724] border border-neon-flamingo/40 text-neon-flamingo text-xs font-mono uppercase tracking-widest">
+              <Film className="w-3.5 h-3.5" />
+              <span>Leonida Tactical Video Archive</span>
+            </div>
             <h1 className="text-4xl sm:text-6xl font-display uppercase tracking-wider text-off-white">
-              Video Library
+              INTEL &amp; VIDEO VAULT
             </h1>
             <p className="text-xs sm:text-sm text-off-white/60">
-              Auto-indexing GTA 6 guides, easter eggs, glitches, and mission walkthroughs.
+              Verified 4K game trailers, cartography analyses, RAGE 9 physics deep dives, and mission breakdowns for Grand Theft Auto VI.
             </p>
           </div>
 
-          {/* Premium Status Banner — only show plan badge when payments are enabled */}
-          {user && PAYMENTS_ENABLED && (
-            <div className="flex items-center space-x-2 bg-deep-teal/80 border border-palm-teal/30 px-4 py-2 rounded-xl text-xs">
-              <UserCheck className="w-4 h-4 text-palm-teal" />
-              <span>Logged in as: <strong className="text-off-white">{user.email}</strong></span>
-              {isPremium ? (
-                <span className="bg-neon-flamingo text-white text-[9px] uppercase font-bold px-2 py-0.5 rounded">Premium</span>
-              ) : (
-                <span className="bg-off-white/10 text-off-white/60 text-[9px] uppercase px-2 py-0.5 rounded">Free Tier</span>
-              )}
+          {/* Quick Metrics */}
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="px-3.5 py-2 rounded-xl bg-deep-teal/40 border border-deep-teal/80 text-xs font-mono">
+              <span className="text-sunset-orange font-bold mr-1.5">{videos.length}</span>
+              <span className="text-off-white/60">Reels Indexed</span>
+            </div>
+            <div className="px-3.5 py-2 rounded-xl bg-deep-teal/40 border border-deep-teal/80 text-xs font-mono">
+              <span className="text-palm-teal font-bold mr-1.5">100%</span>
+              <span className="text-off-white/60">Verified 4K</span>
+            </div>
+          </div>
+        </div>
+
+        {/* 2. DUAL-MODE SEARCH SUITE (BIG DIFFERENCE BETWEEN KEYWORD & SCHEMATIC) */}
+        <div className="space-y-4">
+          {/* High-Contrast Mode Toggle Switch */}
+          <div className="flex items-center justify-center">
+            <div className="p-1.5 bg-[#0A0E17] border border-deep-teal rounded-2xl flex items-center gap-2 shadow-2xl">
+              <button
+                type="button"
+                onClick={() => {
+                  soundFx.playClick()
+                  setSearchMode('keyword')
+                }}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-mono text-xs uppercase tracking-wider font-bold transition-all duration-200 ${
+                  searchMode === 'keyword'
+                    ? 'bg-gradient-to-r from-deep-teal to-[#162235] text-palm-teal border border-palm-teal/40 shadow-lg'
+                    : 'text-off-white/50 hover:text-off-white hover:bg-white/5'
+                }`}
+              >
+                <Search className="w-4 h-4" />
+                <span>🔍 Standard Keyword Search</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  soundFx.playClick()
+                  setSearchMode('schematic')
+                }}
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-mono text-xs uppercase tracking-wider font-bold transition-all duration-200 ${
+                  searchMode === 'schematic'
+                    ? 'bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white shadow-[0_0_25px_rgba(255,42,133,0.45)] border border-white/20'
+                    : 'text-off-white/50 hover:text-neon-flamingo hover:bg-white/5'
+                }`}
+              >
+                <Cpu className="w-4 h-4 animate-pulse" />
+                <span>🧠 AI Schematic Vector Search</span>
+              </button>
+            </div>
+          </div>
+
+          {/* MODE A: STANDARD KEYWORD SEARCH BAR */}
+          {searchMode === 'keyword' && (
+            <div className="p-5 rounded-3xl bg-[#0C121D]/90 border border-deep-teal/80 shadow-xl space-y-3">
+              <div className="flex items-center justify-between text-xs font-mono text-off-white/50 px-1">
+                <span className="flex items-center gap-1.5 text-palm-teal uppercase tracking-widest font-bold">
+                  <Search className="w-3.5 h-3.5" />
+                  Literal String &amp; Title Engine
+                </span>
+                <span>Fast Direct Search</span>
+              </div>
+
+              <form onSubmit={handleSearchSubmit} className="relative flex items-center gap-3">
+                <div className="relative flex-grow">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-off-white/40" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search by video title, creator, or topic (e.g., 'trailer', 'infernus', 'physics')..."
+                    className="w-full bg-[#07090E] border border-deep-teal/90 rounded-2xl pl-11 pr-10 py-3.5 text-xs sm:text-sm text-off-white placeholder:text-off-white/40 focus:outline-none focus:border-palm-teal transition shadow-inner"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-off-white/40 hover:text-off-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="submit"
+                  className="px-6 py-3.5 bg-deep-teal hover:bg-deep-teal/80 text-palm-teal border border-palm-teal/40 font-mono text-xs uppercase font-bold tracking-wider rounded-2xl transition shadow hover:text-white"
+                >
+                  Search
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* MODE B: ADVANCED AI SCHEMATIC TERMINAL */}
+          {searchMode === 'schematic' && (
+            <div className="p-6 rounded-3xl bg-[#090D15]/95 border-2 border-neon-flamingo/70 shadow-[0_0_35px_rgba(255,42,133,0.2)] space-y-4 relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-neon-flamingo/15 via-transparent to-transparent pointer-events-none" />
+              
+              {/* Terminal Banner */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-deep-teal/80 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-neon-flamingo animate-ping" />
+                  <span className="text-xs font-mono font-bold uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-neon-flamingo to-sunset-orange">
+                    NEURAL SCHEMATIC VECTOR ENGINE • ACTIVE
+                  </span>
+                </div>
+                <div className="text-[10px] font-mono text-palm-teal uppercase">
+                  Semantic Concept Vectorization • High Precision
+                </div>
+              </div>
+
+              {/* Schematic Query Input */}
+              <form onSubmit={handleSearchSubmit} className="relative flex items-center gap-3">
+                <div className="relative flex-grow">
+                  <Sparkles className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neon-flamingo animate-pulse" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Input conceptual schematic query (e.g. 'How does Leonida map scale compare to GTA 5?')..."
+                    className="w-full bg-[#05070B] border border-neon-flamingo/50 rounded-2xl pl-11 pr-10 py-4 text-xs sm:text-sm text-off-white placeholder:text-off-white/40 focus:outline-none focus:border-sunset-orange focus:ring-1 focus:ring-sunset-orange transition font-mono shadow-inner"
+                  />
+                  {searchQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 p-1 text-off-white/40 hover:text-off-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                <button
+                  type="submit"
+                  className="px-7 py-4 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white font-mono text-xs uppercase font-bold tracking-wider rounded-2xl transition shadow-[0_0_20px_rgba(255,42,133,0.4)] hover:scale-105"
+                >
+                  Execute Scan
+                </button>
+              </form>
+
+              {/* Clickable Schematic Vector Preset Nodes */}
+              <div className="space-y-2 pt-1">
+                <div className="text-[10px] font-mono uppercase text-off-white/40 tracking-wider">
+                  Interactive Schematic Vector Nodes (Tap to Scan):
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {SCHEMATIC_PRESETS.map((preset) => (
+                    <button
+                      key={preset.label}
+                      type="button"
+                      onClick={() => {
+                        soundFx.playClick()
+                        setSearchQuery(preset.query)
+                        setDebouncedSearchQuery(preset.query)
+                      }}
+                      className="text-[11px] font-mono px-3 py-1.5 rounded-xl bg-deep-teal/40 border border-deep-teal hover:border-sunset-orange/60 hover:text-sunset-orange text-off-white/70 transition shadow-sm hover:scale-105 cursor-pointer"
+                    >
+                      {preset.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
         </div>
 
-        {/* 2. Search Controls */}
-        <form onSubmit={handleSearchSubmit} className="relative w-full bg-deep-teal rounded-2xl p-4 border border-deep-teal/60 shadow-lg space-y-4">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            
-            {/* Search Input */}
-            <div className="relative flex-grow w-full">
-              <span className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-off-white/40">
-                <Search className="w-5 h-5" />
-              </span>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={searchMode === 'semantic' ? "Ask: 'Where is the hidden vehicle in the keys?'" : "Search easter eggs, missions..."}
-                className="w-full pl-12 pr-4 py-3.5 bg-midnight-teal border border-deep-teal/80 hover:border-palm-teal/40 focus:border-palm-teal focus:ring-1 focus:ring-palm-teal rounded-xl text-sm text-off-white placeholder-off-white/40 transition outline-none"
-              />
-            </div>
-
-            {/* Search Button */}
-            <button
-              type="submit"
-              className="w-full md:w-auto px-6 py-3.5 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white font-bold uppercase tracking-wider rounded-xl transition duration-200 shadow-md hover:scale-[1.02]"
-            >
-              Search
-            </button>
-          </div>
-
-          {/* Search Modes Toggle */}
-          <div className="flex flex-wrap items-center gap-4 text-xs font-semibold">
-            <span className="text-off-white/40 uppercase font-mono text-[10px] tracking-wider">Search mode:</span>
-            
-            {/* Keyword Search Option */}
-            <button
-              type="button"
-              onClick={() => setSearchMode('keyword')}
-              className={`px-3 py-1.5 rounded-lg border transition ${
-                searchMode === 'keyword'
-                  ? 'bg-midnight-teal border-palm-teal/50 text-palm-teal'
-                  : 'bg-transparent border-transparent text-off-white/60 hover:text-off-white'
-              }`}
-            >
-              Keyword Match
-            </button>
-
-            {/* Semantic Search — always available when payments off */}
-            <button
-              type="button"
-              onClick={() => {
-                if (PAYMENTS_ENABLED && !isPremium) {
-                  alert("AI Natural Language Semantic Search is a Premium Feature. Upgrade on the Pricing page to unlock it!")
-                } else {
-                  setSearchMode('semantic')
-                }
-              }}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border transition ${
-                searchMode === 'semantic'
-                  ? 'bg-midnight-teal border-neon-flamingo/50 text-neon-flamingo'
-                  : 'bg-transparent border-transparent text-off-white/60 hover:text-neon-flamingo'
-              }`}
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>AI Semantic Search</span>
-            </button>
-          </div>
-        </form>
-
-        {/* 3. Main Grid Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
-          
-          {/* Collapsible Sidebar Filter Panel */}
-          <aside className="lg:col-span-1 bg-deep-teal/40 border border-deep-teal/80 rounded-2xl p-6 space-y-6">
-            <div className="flex items-center justify-between border-b border-midnight-teal/40 pb-4">
-              <span className="font-display uppercase text-lg text-off-white flex items-center space-x-2">
-                <SlidersHorizontal className="w-4 h-4 text-palm-teal" />
-                <span>Filters</span>
-              </span>
-              {(selectedCategory || selectedPlatform) && (
-                <button
-                  onClick={() => {
-                    setSelectedCategory(null)
-                    setSelectedPlatform(null)
-                  }}
-                  className="text-[10px] text-neon-flamingo uppercase font-bold hover:underline"
-                >
-                  Clear All
-                </button>
-              )}
-            </div>
-
-            {/* Sorting Select */}
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase font-mono tracking-widest text-off-white/40 block">Sort By</label>
+        {/* 3. NEAT HORIZONTAL CATEGORY NAVIGATION BAR */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-mono uppercase text-off-white/50 tracking-wider flex items-center gap-1.5">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-palm-teal" />
+              <span>Category Filtering</span>
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-[10px] font-mono uppercase text-off-white/40">Sort:</span>
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="w-full px-3 py-2 bg-midnight-teal border border-deep-teal/80 text-sm text-off-white rounded-lg outline-none focus:ring-1 focus:ring-palm-teal"
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className="px-2.5 py-1.5 bg-[#0C121D] border border-deep-teal/80 text-xs font-mono text-off-white rounded-xl outline-none focus:border-palm-teal"
               >
-                <option value="newest">Newest Uploads</option>
-                <option value="relevance">Relevance</option>
-                <option value="discussed">Most Discussed</option>
+                <option value="relevance">🔥 Relevance</option>
+                <option value="schematic">⚡ Highest Match</option>
+                <option value="newest">📅 Newest First</option>
               </select>
             </div>
+          </div>
 
-            {/* Platform Select */}
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase font-mono tracking-widest text-off-white/40 block">Platform</label>
-              <div className="flex gap-2">
-                {['youtube', 'twitch'].map(plat => (
-                  <button
-                    key={plat}
-                    type="button"
-                    onClick={() => setSelectedPlatform(selectedPlatform === plat ? null : plat)}
-                    className={`flex-1 py-1.5 border text-xs capitalize font-bold rounded-lg transition ${
-                      selectedPlatform === plat
-                        ? 'bg-palm-teal text-white border-palm-teal'
-                        : 'bg-midnight-teal border-deep-teal text-off-white/70 hover:text-off-white'
-                    }`}
-                  >
-                    {plat}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Collapsible categories list */}
-            <div className="space-y-2">
-              <label className="text-[10px] uppercase font-mono tracking-widest text-off-white/40 block">Category Taxonomy</label>
-              <div className="max-h-[300px] overflow-y-auto space-y-1.5 pr-2">
-                {CATEGORIES.map(cat => (
-                  <button
-                    key={cat}
-                    type="button"
-                    onClick={() => setSelectedCategory(selectedCategory === cat ? null : cat)}
-                    className={`w-full text-left px-3 py-2 text-xs rounded-lg transition ${
-                      selectedCategory === cat
-                        ? 'bg-palm-teal/20 text-palm-teal font-semibold'
-                        : 'hover:bg-midnight-teal/40 text-off-white/75 hover:text-off-white'
-                    }`}
-                  >
-                    <span className="flex justify-between items-center w-full">
-                      <span>{cat}</span>
-                      <span className="opacity-50 text-[10px] font-mono">({categoryCounts[cat] || 0})</span>
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          </aside>
-
-          {/* Videos Grid */}
-          <section className="lg:col-span-3">
-            {loading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[...Array(6)].map((_, i) => (
-                  <VideoSkeleton key={i} />
-                ))}
-              </div>
-            ) : videos.length === 0 ? (
-              <div className="flex flex-col items-center justify-center min-h-[300px] text-off-white/40 space-y-4 bg-deep-teal/10 rounded-2xl border border-deep-teal/30 p-8 text-center">
-                <X className="w-12 h-12 text-neon-flamingo" />
-                <h3 className="text-lg font-bold text-off-white">No results found</h3>
-                <p className="text-xs max-w-sm">
-                  Try searching another term, or verify that the simulated database cron ingest has been run.
-                </p>
+          {/* Clean Horizontal Filter Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-thin">
+            {CATEGORIES.map((cat) => {
+              const isSelected = selectedCategory === cat
+              const count = categoryCounts[cat] || (cat === 'All Intel' ? CURATED_VIDEOS.length : 0)
+              return (
                 <button
+                  key={cat}
                   onClick={() => {
-                    setSearchQuery('')
-                    setDebouncedSearchQuery('')
-                    setSelectedCategory(null)
-                    setSelectedPlatform(null)
-                    setToast('Filters reset')
+                    soundFx.playClick()
+                    setSelectedCategory(cat)
                   }}
-                  className="mt-2 px-4 py-2 text-xs bg-deep-teal text-off-white hover:text-palm-teal font-bold uppercase rounded border border-deep-teal transition"
+                  className={`px-4 py-2 rounded-2xl text-xs font-mono uppercase tracking-wider transition whitespace-nowrap flex items-center gap-2 ${
+                    isSelected
+                      ? 'bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white font-bold shadow-md'
+                      : 'bg-[#0E1522] border border-deep-teal/70 text-off-white/60 hover:text-off-white hover:border-palm-teal/50'
+                  }`}
                 >
-                  Reset Filter
+                  <span>{cat}</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
+                    isSelected ? 'bg-black/30 text-white' : 'bg-midnight-teal text-off-white/40'
+                  }`}>
+                    {count}
+                  </span>
                 </button>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* 4. FEATURED INTEL SPOTLIGHT (NEATER TOP SHOWCASE) */}
+        {!searchQuery && selectedCategory === 'All Intel' && featuredVideo && (
+          <div className="relative rounded-3xl overflow-hidden bg-gradient-to-r from-[#0C131F] via-[#101928] to-[#0A0F1A] border border-deep-teal/90 shadow-2xl p-6 sm:p-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+              {/* Spotlight Thumbnail */}
+              <div className="lg:col-span-7 relative aspect-video rounded-2xl overflow-hidden group bg-black shadow-xl">
+                <img
+                  src={featuredVideo.thumbnail_url}
+                  alt={featuredVideo.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
+                <Link
+                  href={`/${locale}/library/${featuredVideo.id}`}
+                  className="absolute inset-0 flex items-center justify-center group-hover:scale-110 transition-transform"
+                >
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white flex items-center justify-center shadow-[0_0_30px_rgba(255,42,133,0.5)]">
+                    <Play className="w-7 h-7 fill-current ml-1" />
+                  </div>
+                </Link>
+                <div className="absolute bottom-3 left-3 px-3 py-1 rounded-md bg-black/80 text-[10px] font-mono text-palm-teal">
+                  FEATURED 4K INTELLIGENCE
+                </div>
               </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {videos.map((vid: Video, idx: number) => {
-                  const showAd = !isPremium && ((idx + 1) % BANNER_EVERY_N_VIDEOS === 0)
-                  return (
-                    <div key={vid.id} className="contents">
-                      <ScrollReveal>
-                        {vid.schematicMatch && vid.schematicMatch.score > 0 && (
-                          <div className="mb-2 flex flex-wrap items-center justify-between gap-1 px-3 py-1.5 rounded-xl bg-gradient-to-r from-neon-flamingo/20 via-deep-teal/40 to-transparent border border-neon-flamingo/40 text-[11px] font-mono">
-                            <span className="text-neon-flamingo font-bold flex items-center gap-1">
-                              <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-                              {vid.schematicMatch.score}% Schematic Match
-                            </span>
-                            <span className="text-off-white/80 text-[10px] truncate max-w-[200px]">
+
+              {/* Spotlight Meta */}
+              <div className="lg:col-span-5 space-y-4">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-neon-flamingo/15 border border-neon-flamingo/30 text-neon-flamingo text-[10px] font-mono uppercase tracking-widest">
+                  <Sparkles className="w-3 h-3" />
+                  <span>Verified Anchor Intel</span>
+                </div>
+                <h3 className="text-2xl sm:text-3xl font-display uppercase tracking-wide text-off-white leading-tight">
+                  {featuredVideo.title}
+                </h3>
+                <p className="text-xs sm:text-sm text-off-white/70 line-clamp-3 leading-relaxed">
+                  {featuredVideo.description}
+                </p>
+                <div className="flex items-center gap-4 text-xs font-mono text-off-white/50 pt-2">
+                  <span>{featuredVideo.channel_name}</span>
+                  <span>•</span>
+                  <span>{featuredVideo.category}</span>
+                </div>
+                <div className="pt-2">
+                  <Link
+                    href={`/${locale}/library/${featuredVideo.id}`}
+                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-xs font-mono uppercase font-bold tracking-wider shadow-lg hover:scale-105 transition-all"
+                  >
+                    <Play className="w-3.5 h-3.5 fill-current" />
+                    <span>Watch Full Breakdown</span>
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 5. ORGANIZED VIDEO GRID */}
+        <div>
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <VideoSkeleton key={i} />
+              ))}
+            </div>
+          ) : videos.length === 0 ? (
+            <div className="flex flex-col items-center justify-center min-h-[300px] text-off-white/40 space-y-4 bg-deep-teal/10 rounded-3xl border border-deep-teal/30 p-12 text-center">
+              <X className="w-12 h-12 text-neon-flamingo" />
+              <h3 className="text-xl font-bold text-off-white font-display uppercase">No Intelligence Matches</h3>
+              <p className="text-xs max-w-sm text-off-white/60">
+                No videos match &quot;{searchQuery}&quot;. Try selecting an active schematic node or resetting your category filters.
+              </p>
+              <button
+                onClick={() => {
+                  setSearchQuery('')
+                  setDebouncedSearchQuery('')
+                  setSelectedCategory('All Intel')
+                  setSelectedPlatform(null)
+                  setToast('Filters reset')
+                }}
+                className="mt-2 px-5 py-2.5 text-xs bg-neon-flamingo text-white font-bold font-mono uppercase rounded-xl shadow transition"
+              >
+                Reset Filters
+              </button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {videos.map((vid: Video, idx: number) => {
+                const showAd = !isPremium && ((idx + 1) % BANNER_EVERY_N_VIDEOS === 0)
+                return (
+                  <div key={vid.id} className="contents">
+                    <ScrollReveal>
+                      <div className="flex flex-col h-full space-y-2">
+                        {/* Schematic Mode Intelligence Badge */}
+                        {searchMode === 'schematic' && vid.schematicMatch && vid.schematicMatch.score > 0 && (
+                          <div className="p-3 rounded-2xl bg-gradient-to-r from-neon-flamingo/20 via-[#101724] to-deep-teal/40 border border-neon-flamingo/50 space-y-1.5 shadow-md">
+                            <div className="flex items-center justify-between text-[11px] font-mono">
+                              <span className="text-neon-flamingo font-bold flex items-center gap-1">
+                                <Sparkles className="w-3.5 h-3.5 animate-pulse" />
+                                {vid.schematicMatch.score}% Schematic Match
+                              </span>
+                              <span className="text-palm-teal text-[10px]">VERIFIED</span>
+                            </div>
+                            <p className="text-[11px] font-mono text-off-white/80 leading-snug">
                               {vid.schematicMatch.insight}
-                            </span>
+                            </p>
+                            {vid.schematicMatch.matchedConcepts?.length > 0 && (
+                              <div className="flex flex-wrap gap-1 pt-0.5">
+                                {vid.schematicMatch.matchedConcepts.map((c) => (
+                                  <span key={c} className="text-[9px] font-mono px-2 py-0.5 rounded bg-black/40 text-sunset-orange border border-sunset-orange/30">
+                                    #{c}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
                         )}
+
                         <VideoCard
                           video={{
                             id: vid.id,
@@ -544,26 +669,26 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
                           isPremium={isPremium}
                           onToggleFavorite={() => handleToggleFavorite(vid.external_id, vid.id)}
                           onOpenVideo={(seconds) => handleOpenVideo(vid.id, seconds)}
-                          priority={idx < 2}
+                          priority={idx < 3}
                           activePlayId={activePlayId}
                           activeTimestamp={activeTimestamp}
                         />
-                      </ScrollReveal>
-                      {showAd && (
-                        <ScrollReveal>
-                          <div className="bg-deep-teal/40 border border-deep-teal/80 rounded-xl overflow-hidden p-6 flex flex-col items-center justify-center min-h-[300px] text-center space-y-4 shadow-lg">
-                            <span className="text-[10px] font-mono text-off-white/40 uppercase tracking-widest">Sponsored Advertisement</span>
-                            <AdBanner slot={`grid-ad-${idx}`} format="rectangle" className="w-full h-full" />
-                          </div>
-                        </ScrollReveal>
-                      )}
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </section>
+                      </div>
+                    </ScrollReveal>
 
+                    {showAd && (
+                      <ScrollReveal>
+                        <div className="bg-deep-teal/40 border border-deep-teal/80 rounded-2xl overflow-hidden p-6 flex flex-col items-center justify-center min-h-[300px] text-center space-y-4 shadow-lg">
+                          <span className="text-[10px] font-mono text-off-white/40 uppercase tracking-widest">Sponsored Intel</span>
+                          <AdBanner slot={`grid-ad-${idx}`} format="rectangle" className="w-full h-full" />
+                        </div>
+                      </ScrollReveal>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
 
       </div>
