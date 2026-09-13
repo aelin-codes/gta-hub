@@ -14,10 +14,11 @@ const getCachedVideos = unstable_cache(
       .from('videos')
       .select('*, video_timestamps(*)')
       .eq('excluded', false)
+      .order('published_at', { ascending: false })
     return data || []
   },
   ['all-videos-list'],
-  { revalidate: 60 }
+  { revalidate: 30 }
 )
 
 export async function GET(req: Request) {
@@ -78,14 +79,19 @@ export async function GET(req: Request) {
 
       if (!query) {
         if (categoryVideoIds && categoryVideoIds.length > 0) {
-          const { data } = await adminClient
+          let qb = adminClient
             .from('videos')
             .select('*, video_timestamps(*)')
             .in('id', categoryVideoIds)
             .eq('excluded', false)
+            .order('published_at', { ascending: false })
+
+          if (platform) qb = qb.eq('platform', platform)
+          const { data } = await qb
           results = data || []
         } else if (!category) {
-          results = await getCachedVideos()
+          const cached = await getCachedVideos()
+          results = platform ? cached.filter((v: any) => v.platform === platform) : cached
         }
       } else if (isSchematic) {
         const geminiKey = process.env.GEMINI_API_KEY
@@ -114,9 +120,13 @@ export async function GET(req: Request) {
           .select('*, video_timestamps(*)')
           .or(`title.ilike.%${query}%,description.ilike.%${query}%`)
           .eq('excluded', false)
+          .order('published_at', { ascending: false })
 
         if (categoryVideoIds && categoryVideoIds.length > 0) {
           qb = qb.in('id', categoryVideoIds)
+        }
+        if (platform) {
+          qb = qb.eq('platform', platform)
         }
 
         const { data } = await qb
@@ -128,7 +138,7 @@ export async function GET(req: Request) {
 
     // --- Curated Fallback with AI Semantic Schematic Engine ---
     if (!results || (Array.isArray(results) && results.length === 0)) {
-      let list = [...CURATED_VIDEOS]
+      let list = [...CURATED_VIDEOS].sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime())
 
       // If specific video was targeted directly (e.g. from Map POI Intel link)
       if (videoId) {

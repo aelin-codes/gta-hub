@@ -17,7 +17,8 @@ import {
   ArrowRight,
   UserCheck,
   Check,
-  UserPlus
+  UserPlus,
+  RefreshCw
 } from 'lucide-react'
 import Link from 'next/link'
 import VideoCard from '@/components/VideoCard'
@@ -91,7 +92,9 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
   const [searchMode, setSearchMode] = useState<'keyword' | 'schematic'>('keyword')
   const [selectedCategory, setSelectedCategory] = useState<string>('All Intel')
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null)
-  const [sortBy, setSortBy] = useState<'relevance' | 'newest' | 'schematic'>('relevance')
+  const [sortBy, setSortBy] = useState<'newest' | 'relevance' | 'schematic'>('newest')
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [lastSyncedTime, setLastSyncedTime] = useState<string | null>(null)
   
   // Auth and Subscription State
   const [user, setUser] = useState<DbUser | null>(null)
@@ -319,10 +322,11 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
       const data = await res.json()
       let filtered = (data.videos || []) as Video[]
 
-      if (sortBy === 'newest') {
-        filtered.sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime())
-      } else if (sortBy === 'schematic') {
+      if (sortBy === 'schematic') {
         filtered.sort((a, b) => (b.schematicMatch?.score || 0) - (a.schematicMatch?.score || 0))
+      } else {
+        // Enforce strict order by date: newest video on top, followed by older according to upload date
+        filtered.sort((a, b) => new Date(b.published_at || 0).getTime() - new Date(a.published_at || 0).getTime())
       }
 
       setVideos(filtered)
@@ -332,6 +336,37 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
       setLoading(false)
     }
   }, [debouncedSearchQuery, searchMode, selectedCategory, selectedPlatform, sortBy, targetedIntelVideo])
+
+  // Live Sync Engine for real-time YouTube & Twitch uploads
+  const syncLiveFeeds = useCallback(async (isManual = false) => {
+    setIsSyncing(true)
+    try {
+      const res = await fetch('/api/videos/sync')
+      if (res.ok) {
+        const data = await res.json()
+        setLastSyncedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }))
+        if (data.newVideosCount > 0) {
+          setToast(`⚡ Live Radar: ${data.newVideosCount} new upload(s) synced to library!`)
+          fetchVideos()
+        } else if (isManual) {
+          setToast('✓ Live Radar: YouTube & Twitch feeds are already up to date.')
+        }
+      }
+    } catch (err) {
+      console.warn('Live sync error:', err)
+    } finally {
+      setIsSyncing(false)
+    }
+  }, [fetchVideos])
+
+  // Periodic 60-second live radar check
+  useEffect(() => {
+    syncLiveFeeds(false)
+    const interval = setInterval(() => {
+      syncLiveFeeds(false)
+    }, 60000)
+    return () => clearInterval(interval)
+  }, [syncLiveFeeds])
 
   // Debounce search query
   useEffect(() => {
@@ -418,8 +453,26 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
             </p>
           </div>
 
-          {/* Quick Metrics */}
+          {/* Quick Metrics & Live Radar */}
           <div className="flex flex-wrap items-center gap-3">
+            {/* Live Radar Pill */}
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0E1624] border border-palm-teal/40 text-xs font-mono shadow-md">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-palm-teal opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-palm-teal"></span>
+              </span>
+              <span className="text-off-white/80 font-bold uppercase tracking-wider text-[11px]">Live Radar</span>
+              <button
+                onClick={() => syncLiveFeeds(true)}
+                disabled={isSyncing}
+                title="Sync newest YouTube & Twitch uploads now"
+                className="ml-1 px-2 py-0.5 rounded-lg bg-deep-teal hover:bg-palm-teal/20 text-[10px] text-palm-teal hover:text-white border border-palm-teal/30 flex items-center gap-1 transition"
+              >
+                <RefreshCw className={`w-2.5 h-2.5 ${isSyncing ? 'animate-spin' : ''}`} />
+                <span>{isSyncing ? 'Syncing...' : 'Sync Live'}</span>
+              </button>
+            </div>
+
             <div className="px-3.5 py-2 rounded-xl bg-deep-teal/40 border border-deep-teal/80 text-xs font-mono">
               <span className="text-sunset-orange font-bold mr-1.5">{videos.length}</span>
               <span className="text-off-white/60">Reels Indexed</span>
@@ -616,17 +669,50 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
                 </button>
               )}
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono uppercase text-off-white/40">Sort:</span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                className="px-2.5 py-1.5 bg-[#0C121D] border border-deep-teal/80 text-xs font-mono text-off-white rounded-xl outline-none focus:border-palm-teal"
-              >
-                <option value="relevance">🔥 Relevance</option>
-                <option value="schematic">⚡ Highest Match</option>
-                <option value="newest">📅 Newest First</option>
-              </select>
+            <div className="flex items-center gap-3">
+              {/* Platform Filter Buttons */}
+              <div className="flex items-center gap-1 bg-[#0A0F1A] p-1 rounded-xl border border-deep-teal/80">
+                <button
+                  type="button"
+                  onClick={() => setSelectedPlatform(null)}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-mono transition ${
+                    selectedPlatform === null ? 'bg-deep-teal text-white font-bold shadow' : 'text-off-white/60 hover:text-white'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPlatform('youtube')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-mono transition flex items-center gap-1 ${
+                    selectedPlatform === 'youtube' ? 'bg-red-950/90 text-red-300 border border-red-700/50 font-bold shadow' : 'text-off-white/60 hover:text-white'
+                  }`}
+                >
+                  🔴 YouTube
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPlatform('twitch')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-mono transition flex items-center gap-1 ${
+                    selectedPlatform === 'twitch' ? 'bg-purple-950/90 text-purple-300 border border-purple-700/50 font-bold shadow' : 'text-off-white/60 hover:text-white'
+                  }`}
+                >
+                  🟣 Twitch
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono uppercase text-off-white/40">Sort:</span>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  className="px-2.5 py-1.5 bg-[#0C121D] border border-deep-teal/80 text-xs font-mono text-off-white rounded-xl outline-none focus:border-palm-teal cursor-pointer"
+                >
+                  <option value="newest">📅 Latest / Upload Date (Default)</option>
+                  <option value="relevance">🔥 Relevance</option>
+                  <option value="schematic">⚡ Highest Match</option>
+                </select>
+              </div>
             </div>
           </div>
 

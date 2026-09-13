@@ -171,6 +171,22 @@ export default function VideoCard({
           </>
         )}
 
+        {/* Platform & Recency Pill */}
+        <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 pointer-events-none">
+          <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider shadow-md backdrop-blur-md ${
+            video.platform === 'twitch'
+              ? 'bg-purple-950/80 text-purple-300 border border-purple-500/50'
+              : 'bg-red-950/80 text-red-300 border border-red-500/50'
+          }`}>
+            {video.platform === 'twitch' ? '🟣 Twitch' : '🔴 YouTube'}
+          </span>
+          {video.published_at && (Date.now() - new Date(video.published_at).getTime() < 72 * 3600000) && (
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-neon-flamingo/90 text-white border border-white/40 shadow-[0_0_10px_rgba(255,42,133,0.6)] animate-pulse">
+              ⚡ NEW
+            </span>
+          )}
+        </div>
+
         {/* Favorite heart toggle */}
         <button
           onClick={onToggleFavorite}
@@ -215,7 +231,10 @@ export default function VideoCard({
                 </button>
               )}
             </div>
-            <span title={exactUploadDate} className="flex-shrink-0 ml-2">{relativeUploadDate}</span>
+            <span title={exactUploadDate} className="flex-shrink-0 ml-2 text-off-white/70 flex items-center gap-1 text-[11px]">
+              <Clock className="w-3 h-3 text-sunset-orange/80" />
+              <span>{relativeUploadDate}</span>
+            </span>
           </div>
 
           {/* Title */}

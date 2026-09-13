@@ -339,5 +339,44 @@ export const CURATED_VIDEOS: CuratedVideo[] = [
       { label: "Seven Mile Bridge Overseas Highway", seconds: 110 }
     ],
     excluded: false
+  },
+  {
+    id: "twitch-gta6-speedrun-prep",
+    platform: "twitch",
+    external_id: "2871440386",
+    title: "100% Completing Every GTA Game Before GTA 6 Launch — San Andreas & Vice City Marathons",
+    description: "Live broadcast deep-diving into classic GTA mission mechanics, speedrun tricks, and preparing routes for GTA 6 Leonida launch.",
+    channel_name: "AbuYusufLive",
+    channel_url: "https://twitch.tv/abuyusuflive",
+    thumbnail_url: "https://static-cdn.jtvnw.net/cf_vods/d2vi6trrdongqn/90d62211de4e1478e209_abuyusuflive_320184413278_1789151579//thumb/thumb0-640x360.jpg",
+    published_at: "2026-09-11T18:33:04Z",
+    category: "Missions & Story",
+    secondary_categories: ["Easter Eggs & Secrets", "Online & Multiplayer"],
+    schematic_concepts: ["Speedrun Routes", "Classic Vice City Comparison", "Mission Tactics"],
+    video_timestamps: [
+      { label: "Classic Vice City Mechanics Comparison", seconds: 0 },
+      { label: "Anticipated Leonida Speedrun Routes", seconds: 45 },
+      { label: "Q&A on GTA 6 Lore & Rumors", seconds: 90 }
+    ],
+    excluded: false
+  },
+  {
+    id: "twitch-gta6-retro-countdown",
+    platform: "twitch",
+    external_id: "2870778143",
+    title: "TOO BROKE FOR GTA 6 SO WE GOIN BACK IN TIME | GTA IV Complete Story & World Tour",
+    description: "Full playthrough and physics comparison between GTA 4 Euphoria physics and GTA 6 RAGE 9 leak footage.",
+    channel_name: "atlasanarchy",
+    channel_url: "https://twitch.tv/atlasanarchy",
+    thumbnail_url: "https://static-cdn.jtvnw.net/cf_vods/d1m7jfoe9zdc1j/d9d5e3d736b301752733_atlasanarchy_321368549850_1789081299//thumb/thumb0-640x360.jpg",
+    published_at: "2026-09-10T23:01:44Z",
+    category: "Theories & Comparisons",
+    secondary_categories: ["Map & Exploration", "Vehicles"],
+    schematic_concepts: ["Euphoria vs RAGE 9 Physics", "Vice City Nostalgia", "Vehicle Crash Models"],
+    video_timestamps: [
+      { label: "Physics Comparison Breakdown", seconds: 0 },
+      { label: "Vice City Easter Egg Hunt", seconds: 60 }
+    ],
+    excluded: false
   }
 ];

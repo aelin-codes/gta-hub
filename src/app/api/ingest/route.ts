@@ -122,8 +122,8 @@ export async function GET(req: Request) {
       console.log("Active Ingestion running using YouTube API...")
 
       for (const query of SEARCH_QUERIES) {
-        // Fetch from YouTube Data API
-        const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&type=video&key=${youtubeKey}`
+        // Fetch from YouTube Data API (ordered by date for latest uploads)
+        const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&type=video&order=date&key=${youtubeKey}`
         const ytRes = await fetch(ytUrl)
         if (!ytRes.ok) {
           console.error(`YouTube API returned error for query: ${query}`)
@@ -253,6 +253,109 @@ Return ONLY valid JSON (no markdown):
           }
           processedCount++
         }
+      }
+
+      // Fetch latest live GTA 6 broadcasts and VODs from Twitch
+      try {
+        console.log("Ingesting live Twitch GTA 6 videos...")
+        const twitchGql = {
+          query: `query {
+            searchFor(userQuery: "GTA 6", platform: "web") {
+              videos {
+                items {
+                  id
+                  title
+                  publishedAt
+                  creator {
+                    displayName
+                    login
+                  }
+                  previewThumbnailURL(width: 640, height: 360)
+                }
+              }
+            }
+          }`
+        }
+        const twitchRes = await fetch('https://gql.twitch.tv/gql', {
+          method: 'POST',
+          headers: {
+            'Client-Id': 'kimne78kx3ncx6brgo4mv6wki5h1ko',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(twitchGql)
+        })
+
+        if (twitchRes.ok) {
+          const twitchJson = await twitchRes.json()
+          const twitchVideos = twitchJson?.data?.searchFor?.videos?.items || []
+
+          for (const tv of twitchVideos) {
+            if (!tv || !tv.id || !tv.title) continue
+
+            const { data: existingTwitch } = await supabase
+              .from('videos')
+              .select('id')
+              .eq('external_id', tv.id)
+              .single()
+
+            if (existingTwitch) {
+              skippedCount++
+              continue
+            }
+
+            const channelName = tv.creator?.displayName || tv.creator?.login || 'Twitch Streamer'
+            const channelUrl = `https://twitch.tv/${tv.creator?.login || channelName}`
+            const thumbUrl = tv.previewThumbnailURL || 'https://static-cdn.jtvnw.net/ttv-boxart/GTA-640x360.jpg'
+
+            const { data: insertedTwitchVideo, error: twitchInsertErr } = await supabase
+              .from('videos')
+              .insert({
+                platform: 'twitch',
+                external_id: tv.id,
+                title: tv.title,
+                description: `Live GTA 6 broadcast and gameplay stream by ${channelName} on Twitch.`,
+                channel_name: channelName,
+                channel_url: channelUrl,
+                thumbnail_url: thumbUrl,
+                published_at: tv.publishedAt || new Date().toISOString(),
+                excluded: false
+              })
+              .select('id')
+              .single()
+
+            if (twitchInsertErr || !insertedTwitchVideo) {
+              console.warn('Twitch insert note:', twitchInsertErr?.message)
+              continue
+            }
+
+            const { data: catRow } = await supabase
+              .from('categories')
+              .select('id')
+              .eq('name', 'Online & Multiplayer')
+              .maybeSingle()
+
+            if (catRow?.id) {
+              await supabase
+                .from('video_categories')
+                .insert({
+                  video_id: insertedTwitchVideo.id,
+                  category_id: catRow.id
+                })
+            }
+
+            await supabase
+              .from('video_timestamps')
+              .insert({
+                video_id: insertedTwitchVideo.id,
+                label: 'Stream Highlights & Live Gameplay',
+                seconds: 0
+              })
+
+            processedCount++
+          }
+        }
+      } catch (twitchErr) {
+        console.warn('Twitch ingest warning:', twitchErr)
       }
     } 
     // Mode B: Simulated Ingestion (keys missing)
