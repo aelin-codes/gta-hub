@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/utils/supabase/server'
+import { createAdminClient, mockServerClient } from '@/utils/supabase/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export const dynamic = 'force-dynamic'
@@ -99,14 +99,17 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const supabase = createAdminClient()
+    let supabase: any = createAdminClient()
     
     // Keep-alive health check to prevent Supabase auto-pausing
     const { error: pingError } = await supabase
       .from('categories')
       .select('count', { count: 'exact', head: true })
     
-    console.log(`Keep-alive ping completed. Categories count active. Error status:`, pingError)
+    if (pingError) {
+      console.warn('Database health check warning (falling back to mock store):', pingError.message)
+      supabase = mockServerClient
+    }
 
     const youtubeKey = process.env.YOUTUBE_API_KEY
     const geminiKey = process.env.GEMINI_API_KEY

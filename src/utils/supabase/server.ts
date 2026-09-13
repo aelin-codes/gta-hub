@@ -2,7 +2,7 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import { MOCK_ADMIN_USER, MOCK_VIDEOS, MockQueryBuilder } from './mock'
 
-const mockServerClient = {
+export const mockServerClient = {
   from(tableName: string) { return new MockQueryBuilder(tableName) },
   auth: {
     async getUser() {
