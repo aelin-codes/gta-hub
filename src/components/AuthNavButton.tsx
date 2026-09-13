@@ -50,7 +50,26 @@ export default function AuthNavButton({ locale }: { locale: string }) {
       }
     }
     loadAuth()
-  }, []) // ponytail: run once on mount; supabase is a stable mock singleton
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'gta_users' || e.key === 'gta_active_user' || e.key === 'gta_logged_email') {
+        loadAuth()
+      }
+    }
+
+    const handleMessage = (e: MessageEvent) => {
+      if (e.data?.type === 'GTA_AUTH_ROLE_UPDATED') {
+        loadAuth()
+      }
+    }
+
+    window.addEventListener('storage', handleStorageChange)
+    window.addEventListener('message', handleMessage)
+    return () => {
+      window.removeEventListener('storage', handleStorageChange)
+      window.removeEventListener('message', handleMessage)
+    }
+  }, []) // ponytail: listen for cross-tab auth and role updates
 
   const handleSignOut = async () => {
     soundFx.playClick()

@@ -92,7 +92,7 @@ export async function GET(req: Request) {
         if (geminiKey) {
           try {
             const genAI = new GoogleGenerativeAI(geminiKey)
-            const model = genAI.getGenerativeModel({ model: "text-embedding-004" })
+            const model = genAI.getGenerativeModel({ model: "gemini-embedding-001" })
             const embedRes = await model.embedContent(query)
             const embedding = embedRes.embedding.values
 

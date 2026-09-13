@@ -249,6 +249,8 @@ export class MockQueryBuilder {
           })
           if (matches) {
             SEED_USERS[i] = { ...su, ...(this.updatePayload as Record<string, unknown>) }
+            if (su.id === MOCK_TEST_USER.id) Object.assign(MOCK_TEST_USER, this.updatePayload)
+            if (su.id === MOCK_ADMIN_USER.id) Object.assign(MOCK_ADMIN_USER, this.updatePayload)
             updatedItem = SEED_USERS[i]
           }
         }

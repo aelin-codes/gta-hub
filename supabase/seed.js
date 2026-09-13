@@ -208,10 +208,70 @@ async function seedSuperuser() {
   }
 }
 
+async function seedTestUser() {
+  const email = process.env.TESTUSER_EMAIL || 'testuser@gta6hub.com';
+  const password = process.env.TESTUSER_PASSWORD || 'ViceCity2026!';
+
+  console.log(`Attempting to seed testuser: ${email}...`);
+
+  const { data: usersList, error: listError } = await supabase.auth.admin.listUsers();
+  if (listError) {
+    console.error("Failed to list users for testuser check", listError);
+    return;
+  }
+
+  let user = usersList.users.find(u => u.email === email);
+
+  if (!user) {
+    console.log("Testuser auth account does not exist. Creating...");
+    const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
+      email: email,
+      password: password,
+      email_confirm: true
+    });
+
+    if (createError) {
+      console.error("Failed to create testuser auth account:", createError);
+      return;
+    }
+    user = newUser.user;
+    console.log("Testuser auth account created successfully.");
+  } else {
+    console.log("Testuser auth account already exists.");
+  }
+
+  // Ensure user is in the public.users table with role = 'user'
+  const { data: userRow } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', user.id)
+    .single();
+
+  if (!userRow) {
+    console.log("Inserting testuser row...");
+    const { error: insertError } = await supabase
+      .from('users')
+      .insert({
+        id: user.id,
+        email: email,
+        role: 'user',
+        is_premium: false
+      });
+    if (insertError) {
+      console.error("Failed to insert testuser row:", insertError);
+    } else {
+      console.log("Testuser row inserted successfully.");
+    }
+  } else {
+    console.log("Testuser row already exists in public.users.");
+  }
+}
+
 async function main() {
   try {
     await seedCategories();
     await seedSuperuser();
+    await seedTestUser();
     console.log("Seeding process completed!");
   } catch (err) {
     console.error("Seeding error:", err);

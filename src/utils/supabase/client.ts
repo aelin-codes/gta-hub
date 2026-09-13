@@ -119,7 +119,8 @@ const mockClient = {
 export function createClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !anonKey || url.includes('osueeoocryhxawazasui') || url.includes('your-project') || url.includes('example')) {
+  const useMock = process.env.NEXT_PUBLIC_USE_MOCK === 'true' || !url || !anonKey || url.includes('your-project') || url.includes('example')
+  if (useMock) {
     return mockClient as unknown as ReturnType<typeof createBrowserClient>
   }
   return createBrowserClient(url, anonKey)

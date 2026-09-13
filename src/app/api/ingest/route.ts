@@ -5,7 +5,16 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 export const dynamic = 'force-dynamic'
 
 // Config lists
-const SEARCH_QUERIES = ["GTA 6 secrets", "GTA 6 gameplay"]
+const SEARCH_QUERIES = [
+  "GTA 6 easter eggs secrets",
+  "GTA 6 mission walkthrough Lucia Jason",
+  "GTA 6 map exploration Leonida",
+  "GTA 6 vehicles cars customization",
+  "GTA 6 trailer news gameplay",
+  "GTA 6 funny moments fails",
+  "GTA 6 weapons combat tips",
+  "GTA 6 heists money guide"
+]
 
 // Curated list of mock video data to ingest if API keys are missing/simulated
 const MOCK_VIDEOS = [
@@ -111,7 +120,7 @@ export async function GET(req: Request) {
 
       for (const query of SEARCH_QUERIES) {
         // Fetch from YouTube Data API
-        const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=2&q=${encodeURIComponent(query)}&type=video&key=${youtubeKey}`
+        const ytUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&maxResults=5&q=${encodeURIComponent(query)}&type=video&key=${youtubeKey}`
         const ytRes = await fetch(ytUrl)
         if (!ytRes.ok) {
           console.error(`YouTube API returned error for query: ${query}`)
@@ -172,10 +181,10 @@ Return ONLY valid JSON (no markdown):
           if (lowerTitle.includes('funny') || lowerTitle.includes('fail') || lowerTitle.includes('moments') || lowerTitle.includes('glitch')) matchedCats.push('Funny & Highlight Moments')
           if (matchedCats.length > 0) classification.categories = matchedCats
 
-          if (geminiKey && geminiKey.startsWith('AIzaSy')) {
+          if (geminiKey) {
             try {
               const genAI = new GoogleGenerativeAI(geminiKey)
-              const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
+              const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
               const result = await model.generateContent(
                 `${classifyPrompt}\n\nVideo Title: "${snippet.title}"\nDescription: "${snippet.description}"`
               )

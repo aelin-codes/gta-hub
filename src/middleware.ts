@@ -26,7 +26,7 @@ export async function middleware(request: NextRequest) {
   // Ensure Supabase keys are real before trying to initialize client
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  const isMockMode = !supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('osueeoocryhxawazasui') || supabaseUrl.includes('your-project') || supabaseUrl.includes('example')
+  const isMockMode = process.env.NEXT_PUBLIC_USE_MOCK === 'true' || !supabaseUrl || !supabaseAnonKey || supabaseUrl.includes('your-project') || supabaseUrl.includes('example')
 
   if (isMockMode) {
     // In standalone/mock mode, AdminClientPage handles authentication and gatekeeper on the client

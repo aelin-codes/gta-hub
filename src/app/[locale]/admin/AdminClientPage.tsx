@@ -381,6 +381,14 @@ export default function AdminClientPage({ locale }: { locale: string }) {
       
       // Update DB and persistent state
       await syncRoleToDb(targetUser.id, targetUser.email, targetRole)
+      if (typeof window !== 'undefined') {
+        try {
+          window.dispatchEvent(new StorageEvent('storage', { key: 'gta_users' }))
+          window.postMessage({ type: 'GTA_AUTH_ROLE_UPDATED', email: targetUser.email, role: targetRole }, '*')
+        } catch {
+          // Ignore if restricted
+        }
+      }
       setUsersList(prev => prev.map(u =>
         (u.id === targetUser.id || (u.email && u.email.toLowerCase() === targetUser.email.toLowerCase()))
           ? { ...u, role: targetRole }

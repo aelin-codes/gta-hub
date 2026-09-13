@@ -28,7 +28,8 @@ const mockServerClient = {
 export function createClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!url || !anonKey || url.includes('osueeoocryhxawazasui') || url.includes('your-project') || url.includes('example')) {
+  const useMock = process.env.NEXT_PUBLIC_USE_MOCK === 'true' || !url || !anonKey || url.includes('your-project') || url.includes('example')
+  if (useMock) {
     return mockServerClient as unknown as ReturnType<typeof createServerClient>
   }
   const cookieStore = cookies()
@@ -49,7 +50,8 @@ export function createClient() {
 export function createAdminClient() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
-  if (!url || !serviceKey || url.includes('osueeoocryhxawazasui') || url.includes('your-project') || url.includes('example')) {
+  const useMock = process.env.NEXT_PUBLIC_USE_MOCK === 'true' || !url || !serviceKey || url.includes('your-project') || url.includes('example')
+  if (useMock) {
     return mockServerClient as unknown as ReturnType<typeof createServerClient>
   }
   return createServerClient(url, serviceKey, {
