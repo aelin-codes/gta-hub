@@ -101,14 +101,14 @@ export default async function LocaleLayout({
           <ScrollProgressSpeedometer />
           {/* Header Navigation */}
           <Header>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <div className="max-w-[1680px] w-full mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4 lg:gap-8">
               
               {/* Logo */}
-              <Link href={`/${locale}`} className="flex items-center space-x-2">
-                <span className="text-3xl font-display tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-neon-flamingo via-sunset-orange to-palm-teal neon-glow-flamingo animate-flicker">
+              <Link href={`/${locale}`} className="flex items-center gap-2.5 shrink-0 select-none group mr-2">
+                <span className="text-2xl sm:text-3xl font-display tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-neon-flamingo via-sunset-orange to-palm-teal neon-glow-flamingo animate-flicker whitespace-nowrap">
                   GTA VI HUB
                 </span>
-                <span className="bg-palm-teal/20 text-palm-teal text-[10px] uppercase font-mono px-2 py-0.5 rounded border border-palm-teal/30">
+                <span className="hidden xl:inline-flex bg-palm-teal/20 text-palm-teal text-[10px] uppercase font-mono px-2 py-0.5 rounded border border-palm-teal/30 whitespace-nowrap shrink-0">
                   Fan Portal
                 </span>
               </Link>
@@ -117,12 +117,12 @@ export default async function LocaleLayout({
               <NavBar locale={locale} />
 
               {/* Action Buttons & Wanted Level */}
-              <div className="flex items-center space-x-3 sm:space-x-4">
+              <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto lg:ml-0">
                 <GtaWantedLevel />
                 {PAYMENTS_ENABLED && (
                   <Link 
                     href={`/${locale}/pricing`} 
-                    className="hidden sm:inline-flex items-center px-4 py-2 text-xs font-bold uppercase tracking-widest border border-neon-flamingo text-neon-flamingo hover:bg-neon-flamingo hover:text-white transition duration-300 rounded shadow-[0_0_10px_rgba(255,61,129,0.2)]"
+                    className="hidden xl:inline-flex items-center px-3.5 py-1.5 text-xs font-bold uppercase tracking-wider border border-neon-flamingo text-neon-flamingo hover:bg-neon-flamingo hover:text-white transition duration-300 rounded-xl shadow-[0_0_10px_rgba(255,61,129,0.2)] whitespace-nowrap shrink-0"
                   >
                     Go Premium
                   </Link>

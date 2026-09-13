@@ -116,7 +116,7 @@ export default function GtaWantedLevel() {
       )}
 
       {/* Wanted Level Badge on Navbar */}
-      <div className="relative inline-flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-midnight-teal/90 border border-deep-teal shadow-xl backdrop-blur-md">
+      <div className="relative inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-2xl bg-midnight-teal/90 border border-deep-teal shadow-xl backdrop-blur-md shrink-0 select-none">
         {/* Wanted Stars Row */}
         <div
           onClick={() => {
@@ -125,7 +125,7 @@ export default function GtaWantedLevel() {
               setShowPuzzle(true)
             }
           }}
-          className="flex items-center gap-1 cursor-pointer group"
+          className="flex items-center gap-0.5 sm:gap-1 cursor-pointer group"
           title="Wanted Level! Click to launch Police Radio Decryptor Puzzle"
         >
           {[1, 2, 3, 4, 5].map((s) => {
@@ -133,7 +133,7 @@ export default function GtaWantedLevel() {
             return (
               <span
                 key={s}
-                className={`text-sm sm:text-base transition-all duration-300 select-none ${
+                className={`text-xs sm:text-sm xl:text-base transition-all duration-300 select-none ${
                   active
                     ? stars === 5
                       ? 'text-neon-flamingo scale-125 filter drop-shadow-[0_0_12px_#ff2a85] animate-pulse'

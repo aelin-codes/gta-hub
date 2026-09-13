@@ -10,7 +10,7 @@ import { PAYMENTS_ENABLED } from '@/config'
 const navLinks = (locale: string, isAdmin: boolean) => [
   { href: `/${locale}`, label: 'Home' },
   { href: `/${locale}/characters`, label: 'Characters' },
-  { href: `/${locale}/wiki`, label: 'Wiki / Map' },
+  { href: `/${locale}/wiki`, label: 'Wiki & Map' },
   { href: `/${locale}/library`, label: 'Library' },
   { href: `/${locale}/articles`, label: 'Articles' },
   ...(PAYMENTS_ENABLED ? [{ href: `/${locale}/pricing`, label: 'Pricing' }] : []),
@@ -44,7 +44,7 @@ export default function NavBar({ locale }: { locale: string }) {
   return (
     <>
       {/* Desktop nav */}
-      <nav className="hidden md:flex items-center space-x-8 text-sm uppercase tracking-wider font-semibold">
+      <nav className="hidden lg:flex items-center gap-1 xl:gap-2.5 2xl:gap-3.5 text-xs xl:text-sm uppercase tracking-wider font-semibold">
         {links.map(({ href, label, className }) => {
           const isActive = pathname === href || (href !== `/${locale}` && pathname.startsWith(href))
           return (
@@ -52,10 +52,12 @@ export default function NavBar({ locale }: { locale: string }) {
               key={href}
               href={href}
               aria-current={isActive ? 'page' : undefined}
-              className={`hover:text-neon-flamingo transition duration-200 ${
+              className={`whitespace-nowrap px-2.5 xl:px-3 py-1.5 rounded-xl transition duration-200 ${
                 isActive 
-                  ? 'text-neon-flamingo border-b-2 border-neon-flamingo pb-1' 
-                  : className || 'text-off-white/80'
+                  ? 'text-neon-flamingo font-bold bg-neon-flamingo/15 border border-neon-flamingo/35 shadow-[0_0_12px_rgba(255,61,129,0.25)]' 
+                  : className 
+                    ? `${className} hover:text-palm-teal hover:bg-palm-teal/10` 
+                    : 'text-off-white/75 hover:text-white hover:bg-white/5'
               }`}
             >
               {label}
@@ -66,16 +68,16 @@ export default function NavBar({ locale }: { locale: string }) {
 
       {/* Mobile hamburger button */}
       <button
-        className="md:hidden p-2 text-off-white hover:text-neon-flamingo transition"
+        className="lg:hidden p-2 rounded-xl bg-midnight-teal border border-deep-teal text-off-white hover:text-neon-flamingo transition shrink-0"
         aria-label="Open navigation menu"
         onClick={() => setOpen(true)}
       >
-        <Menu className="w-6 h-6" />
+        <Menu className="w-5 h-5" />
       </button>
 
       {/* Mobile drawer */}
       {open && (
-        <div className="fixed inset-0 z-[100] flex md:hidden">
+        <div className="fixed inset-0 z-[100] flex lg:hidden">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
