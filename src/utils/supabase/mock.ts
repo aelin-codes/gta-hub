@@ -47,16 +47,28 @@ export const SEED_USERS = [
   }
 ]
 
+// In-memory runtime store for serverless/API execution
+export const SERVER_STORE: Record<string, any[]> = {
+  videos: [],
+  categories: [...MOCK_CATEGORIES],
+  users: [...SEED_USERS],
+  admin_audit_logs: [],
+  video_categories: [],
+  video_timestamps: []
+}
+
 // Minimal mock query builder — returns mock data for offline/dev use
 export class MockQueryBuilder {
   private filters: Array<{ col: string; val: unknown }> = []
   private isDelete: boolean = false
   private isUpdate: boolean = false
+  private isInsert: boolean = false
   private updatePayload: unknown = null
+  private insertPayload: unknown = null
 
   constructor(private tableName: string) {}
 
-  select(c?: string) { void c; return this }
+  select(c?: string, o?: unknown) { void c; void o; return this }
   eq(c: string, v: unknown) {
     this.filters.push({ col: c, val: v })
     return this
@@ -67,13 +79,24 @@ export class MockQueryBuilder {
   limit(n: number) { void n; return this }
   textSearch(c: string, q: string, o?: unknown) { void c; void q; void o; return this }
 
+  insert(payload: unknown) {
+    this.isInsert = true
+    this.insertPayload = payload
+    return this
+  }
+
   update(payload: unknown) {
     this.isUpdate = true
     this.updatePayload = payload
     return this
   }
 
-  async upsert(payload: unknown, onConflict?: unknown) { void onConflict; return { data: payload, error: null } }
+  upsert(payload: unknown, onConflict?: unknown) {
+    void onConflict
+    this.isInsert = true
+    this.insertPayload = payload
+    return this
+  }
 
   delete() {
     this.isDelete = true
@@ -92,23 +115,6 @@ export class MockQueryBuilder {
     return { data, error: res.error }
   }
 
-  async insert(payload: unknown) {
-    if (typeof window !== 'undefined') {
-      const current = JSON.parse(localStorage.getItem(`gta_${this.tableName}`) || 'null') || (
-        this.tableName === 'users' ? [...SEED_USERS] : []
-      )
-      const items = (Array.isArray(payload) ? payload : [payload]).map((item: Record<string, unknown>) => ({
-        id: item.id || 'rec-' + Math.random().toString(36).substring(2, 9),
-        created_at: new Date().toISOString(),
-        ...item
-      }))
-      const updated = [...current, ...items]
-      localStorage.setItem(`gta_${this.tableName}`, JSON.stringify(updated))
-      return { data: items[0], error: null }
-    }
-    return { data: Array.isArray(payload) ? payload[0] : payload, error: null }
-  }
-
   private execute(): { data: unknown; error: null } {
     if (this.isDelete) {
       if (typeof window !== 'undefined') {
@@ -118,7 +124,38 @@ export class MockQueryBuilder {
         })
         localStorage.setItem(`gta_${this.tableName}`, JSON.stringify(remaining))
       }
+      if (SERVER_STORE[this.tableName]) {
+        SERVER_STORE[this.tableName] = SERVER_STORE[this.tableName].filter((item: Record<string, unknown>) => {
+          return !this.filters.every((f) => item[f.col] === f.val)
+        })
+      }
       return { data: null, error: null }
+    }
+
+    if (this.isInsert) {
+      const raw = Array.isArray(this.insertPayload) ? this.insertPayload : [this.insertPayload]
+      const items = raw.map((item: Record<string, unknown>) => ({
+        id: item.id || 'rec-' + Math.random().toString(36).substring(2, 9),
+        created_at: item.created_at || new Date().toISOString(),
+        ...item
+      }))
+
+      if (typeof window !== 'undefined') {
+        const storedRaw = localStorage.getItem(`gta_${this.tableName}`)
+        const current = storedRaw ? JSON.parse(storedRaw) : (this.tableName === 'users' ? [...SEED_USERS] : [])
+        const updated = [...(Array.isArray(current) ? current : []), ...items]
+        localStorage.setItem(`gta_${this.tableName}`, JSON.stringify(updated))
+      }
+
+      if (!SERVER_STORE[this.tableName]) {
+        SERVER_STORE[this.tableName] = []
+      }
+      SERVER_STORE[this.tableName].push(...items)
+
+      return {
+        data: Array.isArray(this.insertPayload) ? items : items[0],
+        error: null
+      }
     }
 
     if (this.isUpdate) {
@@ -143,6 +180,12 @@ export class MockQueryBuilder {
             if (item[f.col] === f.val) return true
             if (f.col === 'email' && typeof item.email === 'string' && typeof f.val === 'string') {
               return item.email.toLowerCase() === f.val.toLowerCase()
+            }
+            if (f.col === 'id' && typeof item.email === 'string' && typeof f.val === 'string') {
+              const seed = SEED_USERS.find(s => s.id === f.val || s.email.toLowerCase() === (item.email as string)?.toLowerCase())
+              if (seed && (seed.id === item.id || seed.email.toLowerCase() === (item.email as string)?.toLowerCase())) {
+                return true
+              }
             }
             return false
           })
@@ -190,7 +233,7 @@ export class MockQueryBuilder {
         }
       }
 
-      // In-memory update for SEED_USERS (server/node contexts)
+      // In-memory update for SEED_USERS & SERVER_STORE (server/node contexts)
       if (this.tableName === 'users') {
         for (let i = 0; i < SEED_USERS.length; i++) {
           const su = SEED_USERS[i]
@@ -199,12 +242,28 @@ export class MockQueryBuilder {
             if (f.col === 'email' && typeof su.email === 'string' && typeof f.val === 'string') {
               return su.email.toLowerCase() === f.val.toLowerCase()
             }
+            if (f.col === 'id' && typeof f.val === 'string' && (su.id === f.val || su.email.toLowerCase() === f.val.toLowerCase())) {
+              return true
+            }
             return false
           })
           if (matches) {
             SEED_USERS[i] = { ...su, ...(this.updatePayload as Record<string, unknown>) }
             updatedItem = SEED_USERS[i]
           }
+        }
+
+        if (SERVER_STORE['users']) {
+          SERVER_STORE['users'] = SERVER_STORE['users'].map(u => {
+            const matches = this.filters.length === 0 || this.filters.every((f) => {
+              if (u[f.col] === f.val) return true
+              if (f.col === 'email' && typeof u.email === 'string' && typeof f.val === 'string') {
+                return u.email.toLowerCase() === f.val.toLowerCase()
+              }
+              return false
+            })
+            return matches ? { ...u, ...(this.updatePayload as Record<string, unknown>) } : u
+          })
         }
       }
 
@@ -225,7 +284,8 @@ export class MockQueryBuilder {
         const stored = JSON.parse(localStorage.getItem('gta_videos') || 'null')
         data = stored || MOCK_VIDEOS
       } else {
-        data = MOCK_VIDEOS
+        const serverVideos = SERVER_STORE['videos'] || []
+        data = serverVideos.length > 0 ? [...MOCK_VIDEOS, ...serverVideos] : MOCK_VIDEOS
       }
     }
     else if (this.tableName === 'categories') data = MOCK_CATEGORIES
@@ -245,21 +305,28 @@ export class MockQueryBuilder {
           data = [...SEED_USERS]
         }
       } else {
-        data = [...SEED_USERS]
+        const serverUsers = SERVER_STORE['users'] || []
+        const merged = [...SEED_USERS]
+        for (const su of serverUsers) {
+          if (!merged.some((u: any) => u.id === su.id || (u.email && u.email.toLowerCase() === su.email.toLowerCase()))) {
+            merged.push(su)
+          }
+        }
+        data = merged
       }
     }
     else if (this.tableName === 'favorites' || this.tableName === 'follows') {
       if (typeof window !== 'undefined') {
         data = JSON.parse(localStorage.getItem(`gta_${this.tableName}`) || '[]')
       } else {
-        data = []
+        data = SERVER_STORE[this.tableName] || []
       }
     }
     else {
       if (typeof window !== 'undefined') {
         data = JSON.parse(localStorage.getItem(`gta_${this.tableName}`) || '[]')
       } else {
-        data = []
+        data = SERVER_STORE[this.tableName] || []
       }
     }
 
@@ -267,7 +334,13 @@ export class MockQueryBuilder {
       return data.filter((item) =>
         typeof item === 'object' &&
         item !== null &&
-        this.filters.every((f) => (item as Record<string, unknown>)[f.col] === f.val)
+        this.filters.every((f) => {
+          if ((item as Record<string, unknown>)[f.col] === f.val) return true
+          if (f.col === 'email' && typeof (item as any).email === 'string' && typeof f.val === 'string') {
+            return (item as any).email.toLowerCase() === f.val.toLowerCase()
+          }
+          return false
+        })
       )
     }
 
