@@ -377,7 +377,7 @@ export default function AdminClientPage({ locale }: { locale: string }) {
       }
 
       soundFx.playCash()
-      setSudoSuccess(`User ${targetUser.email} is now an authorized ${targetRole.toUpperCase()}!`)
+      setSudoSuccess(`✅ ${targetUser.email} is now ${targetRole.toUpperCase()}. They must sign out and back in to activate the new role.`)
       
       // Update DB and persistent state
       await syncRoleToDb(targetUser.id, targetUser.email, targetRole)
@@ -473,7 +473,12 @@ export default function AdminClientPage({ locale }: { locale: string }) {
     setIngesting(true)
     setIngestStatus('Connecting to ingestion pipeline...')
     try {
-      const cronSecret = process.env.NEXT_PUBLIC_CRON_SECRET || 'gtavihub_cron_2026_secrets'
+      const cronSecret = process.env.NEXT_PUBLIC_CRON_SECRET
+      if (!cronSecret) {
+        setIngestStatus('Ingest Failed: NEXT_PUBLIC_CRON_SECRET not configured in environment')
+        setIngesting(false)
+        return
+      }
       const res = await fetch(`/api/ingest?secret=${cronSecret}`)
       const data = await res.json()
 

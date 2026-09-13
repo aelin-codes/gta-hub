@@ -15,6 +15,7 @@ export default function AuthNavButton({ locale }: { locale: string }) {
 
   useEffect(() => {
     async function loadAuth() {
+
       try {
         const { data: { session } } = await supabase.auth.getSession()
         if (session?.user) {
@@ -49,7 +50,7 @@ export default function AuthNavButton({ locale }: { locale: string }) {
       }
     }
     loadAuth()
-  }, [supabase])
+  }, []) // ponytail: run once on mount; supabase is a stable mock singleton
 
   const handleSignOut = async () => {
     soundFx.playClick()
