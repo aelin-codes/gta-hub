@@ -13,8 +13,6 @@ import {
   Key, 
   Mail, 
   AlertCircle, 
-  UserCheck, 
-  UserMinus, 
   Eye, 
   EyeOff, 
   ShieldAlert,
@@ -216,7 +214,7 @@ export default function AdminClientPage({ locale }: { locale: string }) {
     setLoginError('')
 
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: adminEmail,
         password: adminPassword
       })
