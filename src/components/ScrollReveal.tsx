@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-export default function ScrollReveal({ children }: { children: React.ReactNode }) {
+export default function ScrollReveal({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   const [isRevealed, setIsRevealed] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -34,9 +34,9 @@ export default function ScrollReveal({ children }: { children: React.ReactNode }
   return (
     <div
       ref={ref}
-      className={`transition-all duration-700 ease-out ${
+      className={`transition-all duration-700 ease-out hover:z-40 focus-within:z-40 relative ${
         isRevealed ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
-      }`}
+      } ${className}`}
     >
       {children}
     </div>

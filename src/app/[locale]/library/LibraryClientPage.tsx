@@ -856,8 +856,8 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
         {/* 5. ORGANIZED VIDEO GRID */}
         <div>
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
+              {[...Array(12)].map((_, i) => (
                 <VideoSkeleton key={i} />
               ))}
             </div>
@@ -882,12 +882,12 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
               </button>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 sm:gap-4">
               {videos.map((vid: Video, idx: number) => {
                 const showAd = !isPremium && ((idx + 1) % BANNER_EVERY_N_VIDEOS === 0)
                 return (
                   <div key={vid.id} className="contents">
-                    <ScrollReveal>
+                    <ScrollReveal className="h-full">
                       <div className="flex flex-col h-full space-y-2">
                         {/* Schematic Mode Intelligence Badge */}
                         {searchMode === 'schematic' && vid.schematicMatch && vid.schematicMatch.score > 0 && (

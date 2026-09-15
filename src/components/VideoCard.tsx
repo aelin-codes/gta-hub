@@ -127,12 +127,14 @@ export default function VideoCard({
       ref={cardRef}
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
+      whileHover={reducedMotion ? {} : { scale: 1.15, y: -4 }}
+      transition={{ type: 'spring', stiffness: 350, damping: 25 }}
       style={{
         rotateX: reducedMotion ? 0 : rotateX,
         rotateY: reducedMotion ? 0 : rotateY,
         transformStyle: 'preserve-3d',
       }}
-      className="relative flex flex-col bg-deep-teal rounded-xl overflow-hidden border border-deep-teal/40 hover:border-palm-teal/50 shadow-lg hover:shadow-2xl transition-all duration-300 group"
+      className="relative flex flex-col bg-[#0c1421] rounded-xl overflow-hidden border-2 border-white/10 hover:border-palm-teal shadow-md hover:shadow-[0_20px_45px_rgba(0,0,0,0.95),0_0_25px_rgba(0,229,255,0.3)] transition-colors duration-200 group z-10 hover:z-50"
     >
       
       {/* 1. Thumbnail / Embedded Player */}
@@ -164,24 +166,24 @@ export default function VideoCard({
             <button
               onClick={() => handlePlayClick()}
               aria-label="Play video"
-              className="absolute z-10 p-4 bg-neon-flamingo hover:bg-sunset-orange text-white rounded-full transition-all duration-300 hover:scale-110 shadow-lg focus:outline-none focus:ring-2 focus:ring-palm-teal focus:ring-offset-2 focus:ring-offset-deep-teal"
+              className="absolute z-10 p-3 bg-neon-flamingo hover:bg-sunset-orange text-white rounded-full transition-all duration-300 hover:scale-110 shadow-lg focus:outline-none focus:ring-2 focus:ring-palm-teal focus:ring-offset-2 focus:ring-offset-deep-teal"
             >
-              <Play className="w-6 h-6 fill-current translate-x-0.5" />
+              <Play className="w-5 h-5 fill-current translate-x-0.5" />
             </button>
           </>
         )}
 
         {/* Platform & Recency Pill */}
-        <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5 pointer-events-none">
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider shadow-md backdrop-blur-md ${
+        <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 pointer-events-none">
+          <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider shadow-md backdrop-blur-md ${
             video.platform === 'twitch'
-              ? 'bg-purple-950/80 text-purple-300 border border-purple-500/50'
-              : 'bg-red-950/80 text-red-300 border border-red-500/50'
+              ? 'bg-purple-950/90 text-purple-300 border border-purple-500/50'
+              : 'bg-red-950/90 text-red-300 border border-red-500/50'
           }`}>
             {video.platform === 'twitch' ? '🟣 Twitch' : '🔴 YouTube'}
           </span>
           {video.published_at && (Date.now() - new Date(video.published_at).getTime() < 72 * 3600000) && (
-            <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-neon-flamingo/90 text-white border border-white/40 shadow-[0_0_10px_rgba(255,42,133,0.6)] animate-pulse">
+            <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold uppercase tracking-wider bg-neon-flamingo/90 text-white border border-white/40 shadow-[0_0_10px_rgba(255,42,133,0.6)] animate-pulse">
               ⚡ NEW
             </span>
           )}
@@ -191,18 +193,18 @@ export default function VideoCard({
         <button
           onClick={onToggleFavorite}
           aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
-          className="absolute top-3 right-3 z-10 p-2 bg-midnight-teal/80 hover:bg-midnight-teal text-white rounded-full transition hover:scale-105 border border-deep-teal/60 focus:outline-none focus:ring-2 focus:ring-neon-flamingo"
+          className="absolute top-2 right-2 z-10 p-1.5 bg-midnight-teal/80 hover:bg-midnight-teal text-white rounded-full transition hover:scale-105 border border-deep-teal/60 focus:outline-none focus:ring-2 focus:ring-neon-flamingo"
         >
-          <Heart className={`w-4 h-4 ${isFavorited ? 'text-neon-flamingo fill-current' : 'text-off-white/80'}`} />
+          <Heart className={`w-3.5 h-3.5 ${isFavorited ? 'text-neon-flamingo fill-current' : 'text-off-white/80'}`} />
         </button>
       </div>
 
       {/* 2. Card Content */}
-      <div className="p-5 flex-grow flex flex-col justify-between">
+      <div className="p-2.5 sm:p-3 flex-grow flex flex-col justify-between">
         <div>
           {/* Creator Attribution */}
-          <div className="flex items-center justify-between text-xs font-mono uppercase tracking-wider text-palm-teal mb-2">
-            <div className="flex items-center space-x-2 truncate">
+          <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-mono uppercase tracking-wider text-palm-teal mb-1">
+            <div className="flex items-center space-x-1.5 truncate">
               <a 
                 href={video.channel_url} 
                 target="_blank" 
@@ -210,7 +212,7 @@ export default function VideoCard({
                 className="hover:underline flex items-center space-x-1 hover:text-sunset-orange truncate"
               >
                 <span className="truncate">{video.channel_name}</span>
-                <ExternalLink className="w-3 h-3 flex-shrink-0" />
+                <ExternalLink className="w-2.5 h-2.5 flex-shrink-0" />
               </a>
               {onToggleFollowCreator && (
                 <button
@@ -220,59 +222,82 @@ export default function VideoCard({
                     e.stopPropagation()
                     onToggleFollowCreator()
                   }}
-                  className={`px-1.5 py-0.5 rounded text-[10px] font-mono tracking-wider transition ${
+                  className={`px-1 py-0.5 rounded text-[9px] font-mono tracking-wider transition ${
                     isFollowingCreator
                       ? 'bg-palm-teal/20 text-palm-teal border border-palm-teal/40 font-bold'
                       : 'bg-deep-teal/60 hover:bg-palm-teal/20 text-off-white/70 hover:text-palm-teal border border-deep-teal/80'
                   }`}
                   title={isFollowingCreator ? `Unfollow ${video.channel_name}` : `Follow ${video.channel_name}`}
                 >
-                  {isFollowingCreator ? '✓ Following' : '+ Follow'}
+                  {isFollowingCreator ? '✓' : '+ Follow'}
                 </button>
               )}
             </div>
-            <span title={exactUploadDate} className="flex-shrink-0 ml-2 text-off-white/70 flex items-center gap-1 text-[11px]">
-              <Clock className="w-3 h-3 text-sunset-orange/80" />
+            <span title={exactUploadDate} className="flex-shrink-0 ml-1.5 text-off-white/70 flex items-center gap-1 text-[10px]">
+              <Clock className="w-2.5 h-2.5 text-sunset-orange/80" />
               <span>{relativeUploadDate}</span>
             </span>
           </div>
 
           {/* Title */}
-          <h3 className="text-md font-bold text-off-white leading-snug line-clamp-2 group-hover:text-sunset-orange transition-colors duration-200">
+          <h3 className="text-xs sm:text-sm font-bold text-off-white leading-snug line-clamp-2 group-hover:text-sunset-orange transition-colors duration-200">
             <Link href={`/${locale}/library/${video.id}`}>
               {video.title}
             </Link>
           </h3>
-
-          {/* Summary / Description */}
-          <p className="text-xs text-off-white/60 mt-2 line-clamp-2">
-            {video.description}
-          </p>
         </div>
 
-        {/* 3. Deep-Link Timestamps (Section 6) */}
-        {video.video_timestamps && video.video_timestamps.length > 0 && (
-          <div className="mt-4 pt-4 border-t border-midnight-teal/30">
-            <span className="text-[10px] uppercase font-mono tracking-wider text-off-white/40 block mb-2">
-              Deep Links / Secrets
-            </span>
-            <div className="flex flex-wrap gap-2">
-              {video.video_timestamps.map((ts, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => handlePlayClick(ts.seconds)}
-                  className="flex items-center space-x-1.5 px-2.5 py-1 text-xs bg-midnight-teal hover:bg-palm-teal/20 text-off-white hover:text-palm-teal rounded border border-deep-teal/80 hover:border-palm-teal/40 transition duration-150 focus:outline-none focus:ring-1 focus:ring-palm-teal"
-                >
-                  <Clock className="w-3 h-3" />
-                  <span className="truncate max-w-[120px]">{ts.label}</span>
-                  <span className="text-[10px] font-mono opacity-60">
-                    {Math.floor(ts.seconds / 60)}:{(ts.seconds % 60).toString().padStart(2, '0')}
+        {/* 3. Pop-up Video Details (Revealed on Hover) */}
+        <div className="max-h-0 opacity-0 group-hover:max-h-[350px] group-hover:opacity-100 group-focus-within:max-h-[350px] group-focus-within:opacity-100 transition-all duration-300 ease-out overflow-hidden">
+          {/* Summary / Description */}
+          <p className="text-[11px] text-off-white/70 mt-2 line-clamp-3 leading-relaxed">
+            {video.description}
+          </p>
+
+          {/* Deep-Link Timestamps */}
+          {video.video_timestamps && video.video_timestamps.length > 0 && (
+            <div className="mt-2.5 pt-2 border-t border-deep-teal/80">
+              <span className="text-[9px] uppercase font-mono tracking-wider text-palm-teal block mb-1">
+                Deep Links / Secrets
+              </span>
+              <div className="flex flex-wrap gap-1">
+                {video.video_timestamps.slice(0, 3).map((ts, idx) => (
+                  <button
+                    key={idx}
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      handlePlayClick(ts.seconds)
+                    }}
+                    className="flex items-center space-x-1 px-1.5 py-0.5 text-[9px] bg-midnight-teal hover:bg-palm-teal/20 text-off-white hover:text-palm-teal rounded border border-deep-teal/80 hover:border-palm-teal/40 transition duration-150 focus:outline-none"
+                  >
+                    <Clock className="w-2.5 h-2.5 text-sunset-orange" />
+                    <span className="truncate max-w-[85px]">{ts.label}</span>
+                    <span className="text-[9px] font-mono opacity-60">
+                      {Math.floor(ts.seconds / 60)}:{(ts.seconds % 60).toString().padStart(2, '0')}
+                    </span>
+                  </button>
+                ))}
+                {video.video_timestamps.length > 3 && (
+                  <span className="text-[9px] font-mono text-off-white/40 self-center">
+                    +{video.video_timestamps.length - 3} more
                   </span>
-                </button>
-              ))}
+                )}
+              </div>
             </div>
+          )}
+
+          {/* Quick Link Footer */}
+          <div className="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between text-[10px] font-mono">
+            <Link
+              href={`/${locale}/library/${video.id}`}
+              className="text-sunset-orange hover:text-neon-flamingo flex items-center gap-1 font-bold"
+            >
+              <span>Full Intel Page</span>
+              <ExternalLink className="w-2.5 h-2.5" />
+            </Link>
+            <span className="text-off-white/40">{exactUploadDate}</span>
           </div>
-        )}
+        </div>
 
       </div>
     </motion.div>

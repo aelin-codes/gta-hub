@@ -1,14 +1,14 @@
 export default function VideoSkeleton() {
   return (
-    <div className="bg-deep-teal/20 border border-deep-teal/40 rounded-3xl p-4 space-y-4 animate-pulse">
-      <div className="aspect-video bg-deep-teal/40 rounded-2xl w-full" />
-      <div className="space-y-3">
-        <div className="h-4 bg-deep-teal/40 rounded-lg w-3/4 animate-pulse" />
-        <div className="h-3 bg-deep-teal/40 rounded-lg w-1/2 animate-pulse" />
+    <div className="bg-deep-teal/40 border-2 border-white/10 rounded-xl p-2.5 sm:p-3 space-y-2.5 animate-pulse">
+      <div className="aspect-video bg-deep-teal/60 rounded-lg w-full" />
+      <div className="space-y-2 pt-0.5">
+        <div className="h-3.5 bg-deep-teal/70 rounded w-5/6" />
+        <div className="h-3 bg-deep-teal/50 rounded w-1/2" />
       </div>
-      <div className="flex justify-between items-center pt-2">
-        <div className="h-3 bg-deep-teal/40 rounded-lg w-1/4 animate-pulse" />
-        <div className="h-6 bg-deep-teal/40 rounded-lg w-1/4 animate-pulse" />
+      <div className="flex justify-between items-center pt-1">
+        <div className="h-2.5 bg-deep-teal/50 rounded w-1/3" />
+        <div className="h-2.5 bg-deep-teal/50 rounded w-1/4" />
       </div>
     </div>
   )
