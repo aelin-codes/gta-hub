@@ -3,7 +3,7 @@ import { createAdminClient, mockServerClient } from '@/utils/supabase/server'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(req: Request) {
+export async function GET() {
   try {
     let supabase: any = createAdminClient()
 
