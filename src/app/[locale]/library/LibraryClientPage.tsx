@@ -29,6 +29,7 @@ import ScrollReveal from '@/components/ScrollReveal'
 import { createClient } from '@/utils/supabase/client'
 import { PAYMENTS_ENABLED, BANNER_EVERY_N_VIDEOS, INTERSTITIAL_EVERY_N_VIDEOS } from '@/config'
 import AdBanner from '@/components/AdBanner'
+import AffiliateBanner from '@/components/AffiliateBanner'
 import { CURATED_VIDEOS } from '@/data/curatedVideos'
 import { soundFx } from '@/components/GtaSoundEffects'
 
@@ -850,6 +851,14 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* AFFILIATE REVENUE BANNERS — shown to free users only (premium sees less noise) */}
+        {!isPremium && !searchQuery && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <AffiliateBanner variant="preorder" />
+            <AffiliateBanner variant="gaming-gear" />
           </div>
         )}
 
