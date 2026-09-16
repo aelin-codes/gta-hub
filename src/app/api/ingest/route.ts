@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient, mockServerClient } from '@/utils/supabase/server'
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { auditVideoWithGemini } from '@/utils/geminiAuditor'
 
 export const dynamic = 'force-dynamic'
 
@@ -184,6 +185,12 @@ Return ONLY valid JSON (no markdown):
           if (lowerTitle.includes('funny') || lowerTitle.includes('fail') || lowerTitle.includes('moments') || lowerTitle.includes('glitch')) matchedCats.push('Funny & Highlight Moments')
           if (matchedCats.length > 0) classification.categories = matchedCats
 
+          // Strict Gemini AI Audit before proceeding
+          const audit = await auditVideoWithGemini(snippet.title, snippet.description || '')
+          if (!audit.isGta6) {
+            console.log(`[Ingest] Rejected non-GTA 6 video: "${snippet.title}" (${audit.reason})`)
+            continue
+          }
           if (geminiKey) {
             try {
               const genAI = new GoogleGenerativeAI(geminiKey)

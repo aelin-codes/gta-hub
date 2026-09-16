@@ -75,6 +75,8 @@ export default function AdminClientPage({ locale }: { locale: string }) {
   const [loading, setLoading] = useState(true)
   const [ingestStatus, setIngestStatus] = useState('')
   const [ingesting, setIngesting] = useState(false)
+  const [aiAuditing, setAiAuditing] = useState(false)
+  const [aiAuditStatus, setAiAuditStatus] = useState<string | null>(null)
 
   // Sudo Re-Authentication Modal State
   const [sudoModalOpen, setSudoModalOpen] = useState(false)
@@ -502,6 +504,26 @@ export default function AdminClientPage({ locale }: { locale: string }) {
     }
   }
 
+  // Gemini AI Video Library Audit trigger
+  const triggerGeminiVideoAudit = async () => {
+    setAiAuditing(true)
+    setAiAuditStatus('Running Gemini AI Content Audit across active library...')
+    try {
+      const res = await fetch('/api/admin/audit-videos', { method: 'POST' })
+      const data = await res.json()
+      if (res.ok) {
+        setAiAuditStatus(`✓ Audit Complete! Scanned ${data.totalScanned} videos: ${data.confirmedCount} confirmed GTA 6, ${data.excludedCount} non-GTA 6 auto-excluded.`)
+        await loadAdminData()
+      } else {
+        setAiAuditStatus(`Audit Failed: ${data.error || 'Server error'}`)
+      }
+    } catch (err) {
+      setAiAuditStatus(`Audit Failed: ${err instanceof Error ? err.message : 'Network error'}`)
+    } finally {
+      setAiAuditing(false)
+    }
+  }
+
   // -------------------------------------------------------------
   // RENDER: GATEKEEPER SCREEN (If user is not an authenticated Admin)
   // -------------------------------------------------------------
@@ -856,6 +878,36 @@ export default function AdminClientPage({ locale }: { locale: string }) {
           {/* TAB 3: VIDEOS MANAGEMENT */}
           {activeTab === 'videos' && (
             <div className="space-y-6">
+              {/* Gemini AI Video Library Audit Card */}
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-deep-teal/40 via-midnight-teal/80 to-deep-teal/40 border border-palm-teal/30 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-palm-teal animate-pulse" />
+                      <h3 className="text-sm font-bold uppercase tracking-wider text-off-white">
+                        Gemini AI Video Content Auditor
+                      </h3>
+                    </div>
+                    <p className="text-xs text-off-white/60 mt-1 max-w-xl">
+                      Trigger Gemini AI to verify all active videos in your library. Non-GTA 6 content, GTA Online clips, and clickbait will be automatically excluded.
+                    </p>
+                  </div>
+                  <button
+                    onClick={triggerGeminiVideoAudit}
+                    disabled={aiAuditing}
+                    className="flex items-center gap-2 px-4 py-2 bg-palm-teal hover:bg-palm-teal/80 text-black text-xs font-mono font-bold uppercase tracking-wider rounded-xl transition shadow-lg disabled:opacity-50 shrink-0"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${aiAuditing ? 'animate-spin' : ''}`} />
+                    <span>{aiAuditing ? 'Auditing Library...' : 'Audit Library with AI'}</span>
+                  </button>
+                </div>
+                {aiAuditStatus && (
+                  <p className="text-xs font-mono text-palm-teal bg-black/40 px-3 py-2 rounded-lg border border-palm-teal/20">
+                    {aiAuditStatus}
+                  </p>
+                )}
+              </div>
+
               <h2 className="text-lg font-bold uppercase tracking-wider text-off-white">Metadata Index Moderation</h2>
               <div className="space-y-3">
                 {videosList.map(v => (

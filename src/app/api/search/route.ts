@@ -4,6 +4,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai'
 import { unstable_cache } from 'next/cache'
 import { PAYMENTS_ENABLED } from '@/config'
 import { CURATED_VIDEOS } from '@/data/curatedVideos'
+import { isObviousNonGta6 } from '@/utils/geminiAuditor'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +16,7 @@ const getCachedVideos = unstable_cache(
       .select('*, video_timestamps(*)')
       .eq('excluded', false)
       .order('published_at', { ascending: false })
-    return data || []
+    return (data || []).filter((v: { title: string; description?: string }) => !isObviousNonGta6(v.title, v.description || ''))
   },
   ['all-videos-list'],
   { revalidate: 30 }
@@ -301,6 +302,11 @@ export async function GET(req: Request) {
     if (platform) {
       results = results.filter((v: unknown) => (v as { platform: string }).platform === platform)
     }
+
+    results = results.filter((v: unknown) => {
+      const vid = v as { title: string; description?: string }
+      return !isObviousNonGta6(vid.title, vid.description || '')
+    })
 
     return NextResponse.json({
       mode: activeMode,
