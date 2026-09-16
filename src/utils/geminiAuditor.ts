@@ -1,4 +1,4 @@
-﻿import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { createAdminClient } from '@/utils/supabase/server'
 
 // Obvious non-GTA 6 phrases to reject immediately without wasting API calls
@@ -31,24 +31,26 @@ export function isObviousNonGta6(title: string, description: string = ''): boole
 export async function auditVideoWithGemini(
   title: string,
   description: string = ''
-): Promise<{ isGta6: boolean; reason: string }> {
+): Promise<{ isGta6: boolean; reason: string; language: string }> {
   // Fast pre-filter
   if (isObviousNonGta6(title, description)) {
     return {
       isGta6: false,
-      reason: 'Matched known non-GTA 6 or clickbait pattern (GTA Online, GTA 5, San Andreas, etc.)'
+      reason: 'Matched known non-GTA 6 or clickbait pattern (GTA Online, GTA 5, San Andreas, etc.)',
+      language: 'en'
     }
   }
 
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     // If no API key configured, pass videos that cleared heuristic
-    return { isGta6: true, reason: 'Passed heuristic pre-filter (Gemini key not set)' }
+    return { isGta6: true, reason: 'Passed heuristic pre-filter (Gemini key not set)', language: 'en' }
   }
 
   const models = ['gemini-3.6-flash', 'gemini-2.5-flash']
   const prompt = `You are a strict content auditor for an official Grand Theft Auto VI (GTA 6 / GTA VI) website.
 Determine whether this video is TRULY and EXCLUSIVELY about GTA 6 (Grand Theft Auto VI, Leonida, Vice City, Lucia & Jason, official trailers, verified leaks, analyses, next-gen physics).
+Also detect the primary language of the video title and description.
 
 Mark is_gta6 = FALSE if the video is:
 - GTA 5 / GTA V gameplay, stunts, or fails
@@ -60,7 +62,7 @@ Mark is_gta6 = FALSE if the video is:
 
 Mark is_gta6 = TRUE if genuinely focused on GTA 6.
 
-Return ONLY a JSON object: {"is_gta6": boolean, "reason": "brief explanation"}
+Return ONLY a JSON object: {"is_gta6": boolean, "reason": "brief explanation", "language": "2-letter ISO 639-1 code like en, es, pt, ru, fr, de, it, ja, ko, zh, hi, ar (default 'en')"}
 
 Video Title: "${title.replace(/"/g, "'")}"
 Description: "${description.substring(0, 150).replace(/"/g, "'")}"`
@@ -74,9 +76,11 @@ Description: "${description.substring(0, 150).replace(/"/g, "'")}"`
       })
       const result = await model.generateContent(prompt)
       const parsed = JSON.parse(result.response.text())
+      const lang = typeof parsed.language === 'string' && parsed.language.length === 2 ? parsed.language.toLowerCase() : 'en'
       return {
         isGta6: parsed.is_gta6 === true,
-        reason: parsed.reason || 'Gemini classification'
+        reason: parsed.reason || 'Gemini classification',
+        language: lang
       }
     } catch {
       // Try next model if transient error
@@ -87,7 +91,8 @@ Description: "${description.substring(0, 150).replace(/"/g, "'")}"`
   // Safe fallback if API transiently unavailable: trust heuristic
   return {
     isGta6: true,
-    reason: 'Cleared heuristic pre-filter (Gemini transiently unavailable)'
+    reason: 'Cleared heuristic pre-filter (Gemini transiently unavailable)',
+    language: 'en'
   }
 }
 

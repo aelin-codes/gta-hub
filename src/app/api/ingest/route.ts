@@ -219,6 +219,7 @@ Return ONLY valid JSON (no markdown):
               thumbnail_url: snippet.thumbnails?.high?.url || snippet.thumbnails?.default?.url,
               published_at: snippet.publishedAt,
               transcript: "",
+              language: audit.language || 'en',
               excluded: classification.excluded === true
             })
             .select('id')

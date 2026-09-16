@@ -93,6 +93,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
   const [searchMode, setSearchMode] = useState<'keyword' | 'schematic'>('keyword')
   const [selectedCategory, setSelectedCategory] = useState<string>('All Intel')
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null)
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('en')
   const [sortBy, setSortBy] = useState<'newest' | 'relevance' | 'schematic'>('newest')
   const [isSyncing, setIsSyncing] = useState(false)
   const [lastSyncedTime, setLastSyncedTime] = useState<string | null>(null)
@@ -312,7 +313,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
     setLoading(true)
     try {
       const q = debouncedSearchQuery
-      const params = new URLSearchParams({ q, mode: searchMode })
+      const params = new URLSearchParams({ q, mode: searchMode, lang: selectedLanguage })
       if (targetedIntelVideo) params.set('video', targetedIntelVideo)
       if (selectedCategory && selectedCategory !== 'All Intel') {
         params.set('category', selectedCategory)
@@ -336,7 +337,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
     } finally {
       setLoading(false)
     }
-  }, [debouncedSearchQuery, searchMode, selectedCategory, selectedPlatform, sortBy, targetedIntelVideo])
+  }, [debouncedSearchQuery, searchMode, selectedCategory, selectedPlatform, selectedLanguage, sortBy, targetedIntelVideo])
 
   // Live Sync Engine for real-time YouTube & Twitch uploads
   const syncLiveFeeds = useCallback(async (isManual = false) => {
@@ -379,7 +380,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
 
   useEffect(() => {
     fetchVideos()
-  }, [selectedCategory, selectedPlatform, sortBy, debouncedSearchQuery, targetedIntelVideo, fetchVideos])
+  }, [selectedCategory, selectedPlatform, selectedLanguage, sortBy, debouncedSearchQuery, targetedIntelVideo, fetchVideos])
 
 
 
@@ -700,6 +701,27 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
                 >
                   🟣 Twitch
                 </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono uppercase text-off-white/40">Lang:</span>
+                <select
+                  value={selectedLanguage}
+                  onChange={(e) => {
+                    soundFx.playClick()
+                    setSelectedLanguage(e.target.value)
+                  }}
+                  className="px-2.5 py-1.5 bg-[#0C121D] border border-deep-teal/80 text-xs font-mono text-off-white rounded-xl outline-none focus:border-palm-teal cursor-pointer"
+                >
+                  <option value="en">🇬🇧 English (Default)</option>
+                  <option value="es">🇪🇸 Español</option>
+                  <option value="pt">🇧🇷 Português</option>
+                  <option value="ru">🇷🇺 Русский</option>
+                  <option value="fr">🇫🇷 Français</option>
+                  <option value="de">🇩🇪 Deutsch</option>
+                  <option value="it">🇮🇹 Italiano</option>
+                  <option value="all">🌐 All Languages</option>
+                </select>
               </div>
 
               <div className="flex items-center gap-2">

@@ -1,4 +1,4 @@
-﻿import { NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
 import { createClient, createAdminClient } from '@/utils/supabase/server'
 import { auditVideoWithGemini } from '@/utils/geminiAuditor'
 
@@ -61,6 +61,10 @@ export async function POST(req: Request) {
         excludedList.push({ id: v.id, title: v.title, reason: audit.reason })
       } else {
         confirmedCount++
+        await adminClient
+          .from('videos')
+          .update({ language: audit.language || 'en' })
+          .eq('id', v.id)
       }
     }
 

@@ -30,6 +30,7 @@ export async function GET(req: Request) {
     const category = searchParams.get('category') || ''
     const platform = searchParams.get('platform') || ''
     const videoId = searchParams.get('video') || ''
+    const lang = searchParams.get('lang') || 'en'
 
     // Single adminClient for all DB reads in this request
     const supabase = createClient()
@@ -307,6 +308,17 @@ export async function GET(req: Request) {
       const vid = v as { title: string; description?: string }
       return !isObviousNonGta6(vid.title, vid.description || '')
     })
+
+    // Language prioritization: show English first by default or filter by preferred language
+    if (lang === 'all') {
+      ;(results as any[]).sort((a: any, b: any) => {
+        const aEn = (a.language || 'en') === 'en' ? 1 : 0
+        const bEn = (b.language || 'en') === 'en' ? 1 : 0
+        return bEn - aEn
+      })
+    } else {
+      results = (results as any[]).filter((v: any) => (v.language || 'en').toLowerCase() === lang.toLowerCase())
+    }
 
     return NextResponse.json({
       mode: activeMode,

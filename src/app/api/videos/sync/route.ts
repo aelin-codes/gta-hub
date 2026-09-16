@@ -57,6 +57,7 @@ export async function GET() {
                     channel_url: `https://www.youtube.com/channel/${snippet.channelId}`,
                     thumbnail_url: snippet.thumbnails?.high?.url || snippet.thumbnails?.default?.url || `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`,
                     published_at: snippet.publishedAt || new Date().toISOString(),
+                    language: audit.language || 'en',
                     excluded: false
                   })
                   .select('id')
@@ -140,6 +141,7 @@ export async function GET() {
                 channel_url: `https://twitch.tv/${item.creator?.login || channelName}`,
                 thumbnail_url: item.previewThumbnailURL || 'https://static-cdn.jtvnw.net/ttv-boxart/GTA-640x360.jpg',
                 published_at: item.publishedAt || new Date().toISOString(),
+                language: audit.language || 'en',
                 excluded: false
               })
               .select('id')
