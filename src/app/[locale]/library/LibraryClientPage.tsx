@@ -714,6 +714,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
                   className="px-2.5 py-1.5 bg-[#0C121D] border border-deep-teal/80 text-xs font-mono text-off-white rounded-xl outline-none focus:border-palm-teal cursor-pointer"
                 >
                   <option value="en">🇬🇧 English (Default)</option>
+                  <option value="hi">🇮🇳 हिन्दी</option>
                   <option value="es">🇪🇸 Español</option>
                   <option value="pt">🇧🇷 Português</option>
                   <option value="ru">🇷🇺 Русский</option>

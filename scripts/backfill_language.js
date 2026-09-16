@@ -18,25 +18,6 @@ const model = genAI.getGenerativeModel({
   generationConfig: { responseMimeType: 'application/json' }
 });
 
-async function detectLanguage(title, description) {
-  const prompt = `You are a language detection engine. Determine the primary language of this video based on its title and description.
-Return ONLY valid JSON: {"language": "2-letter ISO 639-1 code like en, es, pt, ru, fr, de, it, ja, ko, zh, hi, ar"}
-
-Video Title: "${(title || '').replace(/"/g, "'")}"
-Description: "${(description || '').substring(0, 150).replace(/"/g, "'")}"`;
-
-  try {
-    const result = await model.generateContent(prompt);
-    const parsed = JSON.parse(result.response.text());
-    if (typeof parsed.language === 'string' && parsed.language.length === 2) {
-      return parsed.language.toLowerCase();
-    }
-  } catch (err) {
-    console.warn('Language detection note for:', title, err.message);
-  }
-  return 'en';
-}
-
 async function run() {
   console.log('Fetching active videos from Supabase...');
   const { data: videos, error } = await supabase
@@ -52,27 +33,50 @@ async function run() {
 
   console.log(`Found ${videos.length} active videos to classify.`);
   const counts = {};
+  const BATCH_SIZE = 10;
 
-  for (let i = 0; i < videos.length; i++) {
-    const v = videos[i];
-    const lang = await detectLanguage(v.title, v.description);
-    counts[lang] = (counts[lang] || 0) + 1;
+  for (let i = 0; i < videos.length; i += BATCH_SIZE) {
+    const batch = videos.slice(i, i + BATCH_SIZE);
+    const promptData = batch.map(v => ({
+      id: v.id,
+      title: v.title,
+      description: (v.description || '').slice(0, 100)
+    }));
 
-    const { error: updateErr } = await supabase
-      .from('videos')
-      .update({ language: lang })
-      .eq('id', v.id);
+    const prompt = `Classify the primary language of each video from its title and description.
+Return a JSON array of objects: [{"id": "...", "language": "2-letter ISO code like en, es, pt, ru, fr, de, it, ja, ko, zh, hi, ar"}]
 
-    if (updateErr) {
-      console.error(`Failed to update video ${v.id}:`, updateErr.message);
-    } else {
-      console.log(`[${i + 1}/${videos.length}] (${lang.toUpperCase()}) "${(v.title || '').slice(0, 60)}..."`);
+Videos:
+${JSON.stringify(promptData, null, 2)}`;
+
+    let classifications = [];
+    try {
+      const res = await model.generateContent(prompt);
+      classifications = JSON.parse(res.response.text().trim());
+    } catch (e) {
+      console.warn(`Batch ${i / BATCH_SIZE + 1} Gemini note:`, e.message);
+      classifications = batch.map(v => ({ id: v.id, language: 'en' }));
     }
+
+    for (const item of classifications) {
+      const lang = typeof item.language === 'string' && item.language.length === 2 ? item.language.toLowerCase() : 'en';
+      counts[lang] = (counts[lang] || 0) + 1;
+
+      await supabase
+        .from('videos')
+        .update({ language: lang })
+        .eq('id', item.id);
+    }
+
+    const processed = Math.min(i + BATCH_SIZE, videos.length);
+    console.log(`Classified ${processed}/${videos.length} videos...`);
   }
 
-  console.log('\n--- Backfill Summary ---');
-  console.log('Language Breakdown:', counts);
-  console.log('Done!');
+  console.log('\n=======================================');
+  console.log('       LANGUAGE BACKFILL COMPLETE');
+  console.log('=======================================');
+  console.log('Breakdown by language:');
+  console.table(counts);
 }
 
 run();
