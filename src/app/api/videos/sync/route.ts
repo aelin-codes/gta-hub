@@ -1,7 +1,37 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient, mockServerClient } from '@/utils/supabase/server'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 
 export const dynamic = 'force-dynamic'
+
+async function checkIsStrictGta6(title: string, description: string): Promise<boolean> {
+  const geminiKey = process.env.GEMINI_API_KEY
+  if (!geminiKey) {
+    const lower = (title + ' ' + description).toLowerCase()
+    if (lower.includes('gta online') || lower.includes('gta 5') || lower.includes('gta v') || lower.includes('san andreas') || lower.includes('fivem')) {
+      return false
+    }
+    return true
+  }
+
+  try {
+    const genAI = new GoogleGenerativeAI(geminiKey)
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' })
+    const res = await model.generateContent(`Is this video strictly and genuinely about Grand Theft Auto VI (GTA 6 / GTA VI, Leonida, Vice City, Lucia & Jason, GTA 6 trailers/leaks/news)?
+Respond with ONLY 'YES' or 'NO'.
+If it is about GTA 5, GTA Online, GTA San Andreas, FiveM, or other games, answer 'NO'.
+Title: "${title}"
+Description: "${description.substring(0, 150)}"`)
+    const answer = res.response.text().trim().toUpperCase()
+    return answer.includes('YES')
+  } catch {
+    const lower = (title + ' ' + description).toLowerCase()
+    if (lower.includes('gta online') || lower.includes('gta 5') || lower.includes('gta v') || lower.includes('san andreas') || lower.includes('fivem')) {
+      return false
+    }
+    return true
+  }
+}
 
 export async function GET() {
   try {
@@ -34,6 +64,9 @@ export async function GET() {
               const videoId = item.id.videoId
               const snippet = item.snippet
               if (!videoId || !snippet) continue
+
+              const isGta6 = await checkIsStrictGta6(snippet.title, snippet.description || '')
+              if (!isGta6) continue
 
               const { data: existing } = await supabase
                 .from('videos')
@@ -113,6 +146,9 @@ export async function GET() {
 
         for (const item of items) {
           if (!item || !item.id || !item.title) continue
+
+          const isGta6 = await checkIsStrictGta6(item.title, '')
+          if (!isGta6) continue
 
           const { data: existing } = await supabase
             .from('videos')

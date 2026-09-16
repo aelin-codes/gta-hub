@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { Play, ShieldAlert, Award, Clock, Users, Map, Crosshair, BookOpen, ArrowRight } from 'lucide-react'
+import { Play, ShieldAlert, Award, Clock, Users, Map, Crosshair, BookOpen, ArrowRight, Film } from 'lucide-react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
@@ -122,11 +122,16 @@ export default function HomeClientPage({ locale }: { locale: string }) {
         if (recent.length < 4) {
           recent = await getVideos(14)
         }
-        if (recent.length >= 4) {
-          setRecentVideos(recent as Video[])
-        } else {
-          setRecentVideos([]) // hide section
+        if (recent.length < 4) {
+          const { data: fallback } = await supabaseClient
+            .from('videos')
+            .select('*, video_timestamps(*)')
+            .eq('excluded', false)
+            .order('published_at', { ascending: false })
+            .limit(5)
+          recent = fallback || []
         }
+        setRecentVideos((recent || []).slice(0, 5) as Video[])
       } catch (err) {
         console.error('Failed to load recent videos:', err)
       }
@@ -238,7 +243,7 @@ export default function HomeClientPage({ locale }: { locale: string }) {
             </div>
             
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3.5 sm:gap-4">
-              {recentVideos.map((vid: Video) => (
+              {recentVideos.slice(0, 5).map((vid: Video) => (
                 <VideoCard
                   key={vid.id}
                   video={{
@@ -259,6 +264,54 @@ export default function HomeClientPage({ locale }: { locale: string }) {
                   onOpenVideo={() => router.push(`/${locale}/library/${vid.id}`)}
                 />
               ))}
+
+              {/* Interactive Library Redirect Card */}
+              <Link
+                href={`/${locale}/library`}
+                className="group relative flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-palm-teal/40 hover:border-palm-teal bg-[#0B121D]/80 hover:bg-[#0E1A2B] transition-all duration-300 text-center space-y-3 min-h-[220px] shadow-lg hover:shadow-[0_0_25px_rgba(0,229,255,0.2)]"
+              >
+                <div className="w-12 h-12 rounded-full bg-palm-teal/15 text-palm-teal group-hover:bg-palm-teal group-hover:text-black flex items-center justify-center transition-all duration-300 shadow-md">
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-mono font-bold uppercase tracking-widest text-palm-teal block">
+                    Access Vault
+                  </span>
+                  <h4 className="text-sm font-bold uppercase text-off-white group-hover:text-palm-teal transition-colors mt-0.5">
+                    Explore All Library Videos
+                  </h4>
+                  <p className="text-[11px] text-off-white/50 mt-1 line-clamp-2">
+                    Browse full 4K guides, Easter eggs, map locations &amp; community breakdowns
+                  </p>
+                </div>
+                <span className="inline-flex items-center gap-1.5 text-[10px] font-mono uppercase font-bold text-sunset-orange group-hover:text-neon-flamingo transition-colors pt-1">
+                  View Full Library <ArrowRight className="w-3 h-3" />
+                </span>
+              </Link>
+            </div>
+
+            {/* Direct Library Redirect Banner */}
+            <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-deep-teal/40 via-[#0E1624] to-deep-teal/40 border border-palm-teal/30 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl">
+              <div className="flex items-center gap-3.5 text-center sm:text-left">
+                <div className="w-10 h-10 rounded-xl bg-palm-teal/15 border border-palm-teal/30 flex items-center justify-center text-palm-teal shrink-0">
+                  <Film className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-off-white uppercase tracking-wider">
+                    Looking for more Grand Theft Auto VI Intel?
+                  </h4>
+                  <p className="text-xs text-off-white/60">
+                    Dive into our full surveillance archive with AI schematic search, character breakdowns, and interactive map timestamps.
+                  </p>
+                </div>
+              </div>
+              <Link
+                href={`/${locale}/library`}
+                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-neon-flamingo to-sunset-orange hover:opacity-95 text-white text-xs font-mono uppercase font-bold tracking-widest rounded-xl transition shadow-[0_0_20px_rgba(255,42,133,0.3)] flex items-center justify-center gap-2 shrink-0"
+              >
+                <span>Enter Video Library</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
             </div>
           </section>
         )}
