@@ -1,25 +1,55 @@
-﻿'use client'
+'use client'
 
 import { ExternalLink, ShoppingCart, Star } from 'lucide-react'
+import { MONETIZATION_CONFIG } from '@/config/monetization'
 
-type AffiliateVariant = 'gaming-gear' | 'preorder' | 'controller' | 'general'
+type AffiliateVariant = 'gaming-gear' | 'preorder' | 'controller' | 'general' | 'deals'
 
 interface AffiliateBannerProps {
   variant?: AffiliateVariant
   className?: string
 }
 
-// ponytail: static data, no fetch — swap out URLs when affiliate accounts are approved
-const ADS: Record<AffiliateVariant, {
-  badge: string
-  headline: string
-  subline: string
-  cta: string
-  href: string
-  stars: number
-  image: string
-}[]> = {
+const getAds = () => ({
+  'deals': [
+    {
+      badge: 'G2A PARTNER DEAL',
+      headline: 'Rockstar Games Sale — Up to 70% Off',
+      subline: 'Get GTA V, Red Dead Redemption 2 & Shark Cards at the lowest prices online.',
+      cta: 'Claim Deal on G2A',
+      href: MONETIZATION_CONFIG.affiliates.g2a,
+      stars: 5,
+      image: '💰',
+    },
+    {
+      badge: 'KINGUIN DEALS',
+      headline: 'Discounted PSN & Xbox Gift Cards',
+      subline: 'Preload your console wallet for GTA 6 with discounted digital codes.',
+      cta: 'Shop Kinguin',
+      href: MONETIZATION_CONFIG.affiliates.kinguin,
+      stars: 5,
+      image: '🎮',
+    },
+  ],
   'gaming-gear': [
+    {
+      badge: 'G2A PARTNER DEAL',
+      headline: 'Rockstar Games Sale — Up to 70% Off',
+      subline: 'Get GTA V, Red Dead Redemption 2 & Shark Cards at the lowest prices online.',
+      cta: 'Claim Deal on G2A',
+      href: MONETIZATION_CONFIG.affiliates.g2a,
+      stars: 5,
+      image: '💰',
+    },
+    {
+      badge: 'NORDVPN GAMING',
+      headline: 'Zero-Lag Gaming VPN for GTA Online',
+      subline: 'DDoS protection, ultra-fast servers & bypass region locks with NordVPN.',
+      cta: 'Get 68% Off',
+      href: MONETIZATION_CONFIG.affiliates.nordvpn,
+      stars: 5,
+      image: '🛡️',
+    },
     {
       badge: 'RAZER AFFILIATE',
       headline: 'Razer DeathAdder V3 HyperSpeed',
@@ -29,15 +59,6 @@ const ADS: Record<AffiliateVariant, {
       stars: 5,
       image: '🖱️',
     },
-    {
-      badge: 'LOGITECH AFFILIATE',
-      headline: 'Logitech G Pro X Superlight 2',
-      subline: 'Tournament-grade gaming mouse. Loved by pros for precision in open worlds.',
-      cta: 'Shop Logitech G',
-      href: 'https://www.logitechg.com/en-us/products/gaming-mice.html',
-      stars: 5,
-      image: '🎮',
-    },
   ],
   preorder: [
     {
@@ -45,17 +66,17 @@ const ADS: Record<AffiliateVariant, {
       headline: 'Grand Theft Auto VI — Nov 19, 2026',
       subline: 'Secure your copy before launch. Available PS5 & Xbox Series X. Best price guarantee.',
       cta: 'Pre-Order on Fanatical',
-      href: 'https://www.fanatical.com/',
+      href: MONETIZATION_CONFIG.affiliates.fanatical,
       stars: 5,
       image: '🎮',
     },
     {
-      badge: 'GREEN MAN GAMING',
-      headline: 'GTA VI Pre-Order — Best Price',
-      subline: 'Compare game key prices. Instant delivery on launch day.',
-      cta: 'Compare Prices',
-      href: 'https://www.greenmangaming.com/',
-      stars: 4,
+      badge: 'KINGUIN MAFIA',
+      headline: 'GTA VI Pre-Order Alert',
+      subline: 'Compare game key prices. Instant digital code delivery on launch day.',
+      cta: 'Compare on Kinguin',
+      href: MONETIZATION_CONFIG.affiliates.kinguin,
+      stars: 5,
       image: '🏷️',
     },
   ],
@@ -65,7 +86,7 @@ const ADS: Record<AffiliateVariant, {
       headline: 'DualSense Edge Wireless Controller',
       subline: 'The best PS5 controller for GTA 6. Customizable triggers, premium feel.',
       cta: 'Shop on Amazon',
-      href: 'https://www.amazon.com/s?k=dualsense+edge+controller&tag=REPLACE_WITH_YOUR_TAG',
+      href: `https://www.amazon.com/s?k=dualsense+edge+controller&tag=${MONETIZATION_CONFIG.affiliates.amazonTag}`,
       stars: 5,
       image: '🕹️',
     },
@@ -74,26 +95,27 @@ const ADS: Record<AffiliateVariant, {
       headline: 'Xbox Elite Series 2 Controller',
       subline: 'Pro controller with adjustable tension — perfect for GTA 6 open world.',
       cta: 'Shop on Amazon',
-      href: 'https://www.amazon.com/s?k=xbox+elite+series+2&tag=REPLACE_WITH_YOUR_TAG',
+      href: `https://www.amazon.com/s?k=xbox+elite+series+2&tag=${MONETIZATION_CONFIG.affiliates.amazonTag}`,
       stars: 5,
       image: '🎮',
     },
   ],
   general: [
     {
-      badge: '🎧 GAMING AUDIO',
-      headline: 'SteelSeries Arctis Nova Pro',
-      subline: 'Lossless wireless audio with Active Noise Cancellation. Hear every Vice City detail.',
-      cta: 'Shop SteelSeries',
-      href: 'https://steelseries.com/gaming-headsets',
+      badge: 'NORDVPN GAMING',
+      headline: 'DDoS Protection & Low Ping VPN',
+      subline: 'Optimized servers for GTA Online & Vice City multiplayer.',
+      cta: 'Get 68% Off NordVPN',
+      href: MONETIZATION_CONFIG.affiliates.nordvpn,
       stars: 5,
-      image: '🎧',
+      image: '⚡',
     },
   ],
-}
+})
+
 
 export default function AffiliateBanner({ variant = 'gaming-gear', className = '' }: AffiliateBannerProps) {
-  const ads = ADS[variant]
+  const ads = getAds()[variant] || getAds()['deals']
   // Rotate by day-of-month for variety without state or fetch
   const ad = ads[new Date().getDate() % ads.length]
 

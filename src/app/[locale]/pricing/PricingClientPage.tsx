@@ -1,10 +1,11 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Check, Sparkles, AlertCircle, X, MapPin } from 'lucide-react'
+import { Check, Sparkles, AlertCircle, X, MapPin, Copy, Coins, Gift, Heart } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 import { PAYMENTS_ENABLED } from '@/config'
+import { MONETIZATION_CONFIG } from '@/config/monetization'
 
 const STRIPE_CURRENCIES = {
   USD: { symbol: '$', rate: 9.99 },
@@ -94,32 +95,53 @@ export default function PricingClientPage({ locale }: { locale: string }) {
     }
   }
 
-  if (!PAYMENTS_ENABLED) {
-    return (
-      <div className="bg-midnight-teal min-h-screen flex items-center justify-center py-16 px-4">
-        <div className="max-w-md w-full text-center space-y-8">
-          <div className="bg-deep-teal/20 border border-deep-teal/60 rounded-3xl p-12 space-y-6">
-            <div className="w-16 h-16 mx-auto rounded-full bg-palm-teal/10 flex items-center justify-center">
-              <Sparkles className="w-8 h-8 text-palm-teal" />
-            </div>
-            <h1 className="text-4xl font-display uppercase tracking-widest text-off-white">
-              Coming Soon
-            </h1>
-            <p className="text-sm text-off-white/60 leading-relaxed">
-              GTA 6 Hub is currently in open access &mdash; all features are free for everyone while we build out the platform.
-              Subscription plans will be available once the site launches fully.
-            </p>
-            <Link
-              href={`/${locale}/library`}
-              className="inline-block px-8 py-3 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:opacity-90 transition shadow-lg"
-            >
-              Browse the Library
-            </Link>
-          </div>
-        </div>
-      </div>
-    )
+  const [showClaimModal, setShowClaimModal] = useState(false)
+  const [claimMethod, setClaimMethod] = useState<'crypto' | 'giftcard' | 'kofi'>('crypto')
+  const [claimEmail, setClaimEmail] = useState('')
+  const [claimCode, setClaimCode] = useState('')
+  const [claimStatus, setClaimStatus] = useState('')
+  const [submittingClaim, setSubmittingClaim] = useState(false)
+  const [copiedAddress, setCopiedAddress] = useState(false)
+
+  const handleCopy = (text: string) => {
+    navigator.clipboard.writeText(text)
+    setCopiedAddress(true)
+    setTimeout(() => setCopiedAddress(false), 2000)
   }
+
+  const handleSubmitClaim = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!claimEmail || !claimCode) {
+      alert('Please fill out all fields.')
+      return
+    }
+    setSubmittingClaim(true)
+    setClaimStatus('')
+    try {
+      const res = await fetch('/api/support/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          method: claimMethod,
+          email: claimEmail,
+          codeOrTx: claimCode,
+          plan: 'Leonida VIP'
+        })
+      })
+      const data = await res.json()
+      if (res.ok) {
+        setClaimStatus(data.message || 'Claim submitted successfully!')
+        setClaimCode('')
+      } else {
+        setClaimStatus(data.error || 'Failed to submit claim.')
+      }
+    } catch {
+      setClaimStatus('Error submitting claim. Please try again.')
+    } finally {
+      setSubmittingClaim(false)
+    }
+  }
+
 
   return (
     <div className="bg-midnight-teal min-h-screen py-16 px-4 sm:px-6 lg:px-8 relative">
@@ -277,13 +299,26 @@ export default function PricingClientPage({ locale }: { locale: string }) {
             </div>
 
             <div className="space-y-3 mt-8">
+              {PAYMENTS_ENABLED && (
+                <button
+                  onClick={handleSubscribe}
+                  disabled={loading}
+                  className="w-full py-4 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:opacity-90 transition shadow-lg flex items-center justify-center space-x-2"
+                >
+                  <span>{loading ? 'Processing...' : `Subscribe via ${country === 'IN' ? 'Razorpay' : 'Stripe'}`}</span>
+                </button>
+              )}
+
               <button
-                onClick={handleSubscribe}
-                disabled={loading}
-                className="w-full py-4 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-xs font-bold uppercase tracking-widest rounded-xl hover:opacity-90 transition shadow-lg flex items-center justify-center space-x-2"
+                onClick={() => setShowClaimModal(true)}
+                className="w-full py-3.5 bg-deep-teal/80 hover:bg-deep-teal text-palm-teal border border-palm-teal/30 hover:border-palm-teal/60 text-xs font-bold uppercase tracking-widest rounded-xl transition shadow flex items-center justify-center space-x-2"
               >
-                <span>{loading ? 'Processing...' : `Subscribe via ${country === 'IN' ? 'Razorpay' : 'Stripe'}`}</span>
+                <Coins className="w-4 h-4 text-palm-teal" />
+                <span>Pay with Crypto or $5 Gift Card</span>
               </button>
+              <span className="text-[10px] text-off-white/40 block text-center">
+                Zero KYC required. Supports Solana, USDT, Bitcoin & Steam codes.
+              </span>
             </div>
           </div>
 
@@ -311,6 +346,124 @@ export default function PricingClientPage({ locale }: { locale: string }) {
         </div>
 
       </div>
+
+      {showClaimModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-midnight-teal/95 backdrop-blur-md p-4 animate-fade-in">
+          <div className="relative max-w-lg w-full bg-deep-teal border border-palm-teal/30 rounded-2xl p-6 md:p-8 shadow-2xl">
+            <button
+              onClick={() => setShowClaimModal(false)}
+              className="absolute top-4 right-4 text-off-white/50 hover:text-white transition"
+            >
+              <X className="w-6 h-6" />
+            </button>
+            <h3 className="text-xl font-bold uppercase text-off-white flex items-center space-x-2">
+              <Sparkles className="text-palm-teal" />
+              <span>Claim VIP Access</span>
+            </h3>
+            <p className="text-xs text-off-white/60 mt-2 mb-6 leading-relaxed">
+              No credit card? No problem. Support the platform with Crypto, a $5 Digital Gift Card (Steam/Amazon), or Ko-fi.
+            </p>
+
+            <div className="flex space-x-2 mb-6">
+              <button 
+                onClick={() => setClaimMethod('crypto')}
+                className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg border ${claimMethod === 'crypto' ? 'bg-palm-teal/10 border-palm-teal text-palm-teal' : 'border-deep-teal/60 text-off-white/40 hover:bg-white/5'}`}
+              >
+                Crypto
+              </button>
+              <button 
+                onClick={() => setClaimMethod('giftcard')}
+                className={`flex-1 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg border ${claimMethod === 'giftcard' ? 'bg-palm-teal/10 border-palm-teal text-palm-teal' : 'border-deep-teal/60 text-off-white/40 hover:bg-white/5'}`}
+              >
+                Gift Card
+              </button>
+              <a 
+                href={MONETIZATION_CONFIG.kofiUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex-1 py-2 text-[10px] font-bold uppercase tracking-wider rounded-lg border border-neon-flamingo/30 text-neon-flamingo hover:bg-neon-flamingo/10 flex items-center justify-center space-x-1"
+              >
+                <Heart className="w-3 h-3" />
+                <span>Ko-fi</span>
+              </a>
+            </div>
+
+            <form onSubmit={handleSubmitClaim} className="space-y-4">
+              <div>
+                <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/50 mb-1 block">Account Email</label>
+                <input
+                  type="email"
+                  value={claimEmail}
+                  onChange={e => setClaimEmail(e.target.value)}
+                  className="w-full bg-midnight-teal border border-deep-teal/80 text-sm text-off-white px-4 py-3 rounded-xl focus:border-palm-teal focus:outline-none transition"
+                  placeholder="The email you log in with"
+                  required
+                />
+              </div>
+
+              {claimMethod === 'crypto' && (
+                <div className="space-y-3">
+                  <div className="bg-midnight-teal/50 p-3 rounded-lg border border-deep-teal text-[10px] text-off-white/70 font-mono break-all relative">
+                    <span className="text-palm-teal font-bold mb-1 block">Send $5 in SOL to:</span>
+                    {MONETIZATION_CONFIG.crypto.solana}
+                    <button 
+                      type="button"
+                      onClick={() => handleCopy(MONETIZATION_CONFIG.crypto.solana)}
+                      className="absolute top-2 right-2 p-1.5 bg-deep-teal rounded text-white hover:bg-palm-teal transition flex items-center space-x-1"
+                    >
+                      <Copy className="w-3 h-3" />
+                      <span>{copiedAddress ? 'Copied!' : 'Copy'}</span>
+                    </button>
+                  </div>
+                  <div>
+                    <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/50 mb-1 block">Transaction Hash (TxID)</label>
+                    <input
+                      type="text"
+                      value={claimCode}
+                      onChange={e => setClaimCode(e.target.value)}
+                      className="w-full bg-midnight-teal border border-deep-teal/80 text-sm text-off-white px-4 py-3 rounded-xl focus:border-palm-teal focus:outline-none transition"
+                      placeholder="Paste Tx hash here"
+                      required
+                    />
+                  </div>
+                </div>
+              )}
+
+              {claimMethod === 'giftcard' && (
+                <div>
+                  <div className="mb-3 p-3 bg-midnight-teal/50 rounded-lg border border-deep-teal text-xs text-off-white/70">
+                    <span className="text-palm-teal font-bold block mb-1 flex items-center"><Gift className="w-3 h-3 mr-1" /> How it works:</span>
+                    Purchase a $5 global digital gift card (Steam Wallet or Amazon US) and paste the code below.
+                  </div>
+                  <label className="text-[10px] font-bold uppercase tracking-widest text-off-white/50 mb-1 block">Gift Card Code</label>
+                  <input
+                    type="text"
+                    value={claimCode}
+                    onChange={e => setClaimCode(e.target.value)}
+                    className="w-full bg-midnight-teal border border-deep-teal/80 text-sm text-off-white px-4 py-3 rounded-xl focus:border-palm-teal focus:outline-none transition"
+                    placeholder="XXXX-XXXX-XXXX-XXXX"
+                    required
+                  />
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={submittingClaim}
+                className="w-full py-3 mt-2 bg-palm-teal hover:bg-[#00cce6] text-midnight-teal text-sm font-bold uppercase tracking-widest rounded-xl transition shadow flex items-center justify-center space-x-2"
+              >
+                <span>{submittingClaim ? 'Submitting...' : 'Submit Claim'}</span>
+              </button>
+              
+              {claimStatus && (
+                <div className={`p-3 text-xs text-center rounded-lg font-semibold ${claimStatus.includes('success') ? 'bg-palm-teal/20 text-palm-teal' : 'bg-sunset-orange/20 text-sunset-orange'}`}>
+                  {claimStatus}
+                </div>
+              )}
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
