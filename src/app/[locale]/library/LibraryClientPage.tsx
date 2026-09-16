@@ -204,7 +204,6 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
     setCategoryCounts(counts)
 
     loadSession()
-    if (!PAYMENTS_ENABLED) setIsPremium(true)
   }, [])
 
   const handleSearchSubmit = (e: React.FormEvent) => {

@@ -452,25 +452,21 @@ export default function DashboardClientPage({ locale }: { locale: string }) {
             <div>
               <span className="text-[10px] uppercase font-mono tracking-widest text-off-white/40 block">Plan Status</span>
               <span className="text-sm font-bold text-off-white mt-1 block">
-                {!PAYMENTS_ENABLED ? 'All Features Unlocked' : hasPremium ? 'Leonida Pro (Ad-Free)' : 'Basic Free Tier'}
+                {hasPremium ? 'Leonida Pro (Ad-Free VIP)' : 'Basic Free Tier'}
               </span>
             </div>
             
-            {!PAYMENTS_ENABLED ? (
-              <span className="bg-palm-teal/20 text-palm-teal text-[10px] font-bold uppercase px-3 py-1.5 rounded-xl border border-palm-teal/30">
-                Free Access
-              </span>
-            ) : hasPremium ? (
+            {hasPremium ? (
               <span className="bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-[10px] font-bold uppercase px-3 py-1.5 rounded-xl shadow-md flex items-center space-x-1">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Premium Active</span>
+                <span>VIP Active</span>
               </span>
             ) : (
               <Link
                 href={`/${locale}/pricing`}
                 className="px-4 py-2 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white text-xs font-bold uppercase rounded-lg hover:opacity-90 transition text-center"
               >
-                Upgrade Plan
+                Upgrade to VIP
               </Link>
             )}
           </div>
