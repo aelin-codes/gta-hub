@@ -17,6 +17,7 @@ import {
 } from 'lucide-react'
 import { CHARACTERS, type Character } from '@/data/characters'
 import { soundFx } from '@/components/GtaSoundEffects'
+import AffiliateBanner from '@/components/AffiliateBanner'
 
 export default function CharactersClientPage({ locale }: { locale: string }) {
   const [search, setSearch] = useState('')
@@ -105,6 +106,12 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
               <span className="text-sm select-none group-hover:animate-bounce">🗿</span>
             </button>
           </div>
+        </div>
+
+        {/* AFFILIATE BANNERS - Desktop Only */}
+        <div className="hidden md:flex flex-row justify-center items-center gap-4 py-2">
+          <AffiliateBanner variant="gaming-gear" className="max-w-md w-full" />
+          <AffiliateBanner variant="preorder" className="max-w-md w-full" />
         </div>
 
         {/* 2. Search & Controls */}

@@ -15,6 +15,7 @@ import GtaCheatCodes from '@/components/GtaCheatCodes'
 import GtaRetroFilter from '@/components/GtaRetroFilter'
 import FooterSecretTiki from '@/components/FooterSecretTiki'
 import AuthNavButton from '@/components/AuthNavButton'
+import KofiButton from '@/components/KofiButton'
 import Link from 'next/link'
 import '@/app/globals.css'
 import { PAYMENTS_ENABLED } from '@/config'
@@ -119,6 +120,7 @@ export default async function LocaleLayout({
               {/* Action Buttons & Wanted Level */}
               <div className="flex items-center gap-2 sm:gap-3 shrink-0 ml-auto lg:ml-0">
                 <GtaWantedLevel />
+                <KofiButton className="hidden sm:flex" />
                 {PAYMENTS_ENABLED && (
                   <Link 
                     href={`/${locale}/pricing`} 

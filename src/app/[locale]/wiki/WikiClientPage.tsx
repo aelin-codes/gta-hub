@@ -6,6 +6,7 @@ import { Map, Users, Car, Zap, Crosshair, ArrowRight, ExternalLink, ChevronRight
 import Link from 'next/link'
 import { CHARACTERS } from '@/data/characters'
 import { soundFx } from '@/components/GtaSoundEffects'
+import AffiliateBanner from '@/components/AffiliateBanner'
 
 type POIType = 'landmark' | 'mission' | 'easter-egg'
 
@@ -711,6 +712,12 @@ export default function WikiClientPage({ locale }: { locale: string }) {
               </button>
             </div>
           </div>
+        </div>
+
+        {/* AFFILIATE BANNERS - Desktop Only */}
+        <div className="hidden md:flex flex-row justify-center items-center gap-4 py-2">
+          <AffiliateBanner variant="controller" className="max-w-md w-full" />
+          <AffiliateBanner variant="general" className="max-w-md w-full" />
         </div>
 
         {/* TAB CONTENTS */}

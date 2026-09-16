@@ -9,6 +9,9 @@ import VideoCard, { type Video } from '@/components/VideoCard'
 import AgeBypassPlayer from '@/components/AgeBypassPlayer'
 import { createClient } from '@/utils/supabase/client'
 import { soundFx } from '@/components/GtaSoundEffects'
+import EmailCapture from '@/components/EmailCapture'
+import AffiliateBanner from '@/components/AffiliateBanner'
+import KofiButton from '@/components/KofiButton'
 
 const SkylineHero = dynamic(() => import('@/components/SkylineHero'), {
   ssr: false,
@@ -596,6 +599,21 @@ export default function HomeClientPage({ locale }: { locale: string }) {
                 <span className="text-base select-none group-hover:animate-bounce">🗿</span>
               </button>
             </div>
+          </div>
+        </section>
+
+        {/* 3.8 Monetization & Capture Blocks (Email + Affiliates) */}
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+          <div className="p-6 rounded-3xl bg-gradient-to-br from-[#0c131d] to-midnight-teal border border-deep-teal shadow-xl flex flex-col justify-center">
+            <h3 className="text-xl font-display uppercase tracking-widest text-off-white mb-2">Be the first on launch day</h3>
+            <p className="text-xs text-off-white/60 mb-6 max-w-md leading-relaxed">
+              Drop your email to get our definitive Day One Launch Guide (map locations, early money methods, and vehicle spawns) the minute GTA 6 drops.
+            </p>
+            <EmailCapture source="homepage_mid" />
+          </div>
+          <div className="flex flex-col justify-center space-y-4">
+            <AffiliateBanner variant="preorder" className="w-full" />
+            <AffiliateBanner variant="general" className="w-full" />
           </div>
         </section>
 
