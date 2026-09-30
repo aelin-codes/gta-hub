@@ -24,7 +24,7 @@ export async function POST(req: Request) {
         status: 'pending',
         created_at: new Date().toISOString(),
       })
-    } catch (dbErr) {
+    } catch {
       // Table may not exist yet in Supabase — log for admin review
       console.log('[SUPPORTER CLAIM RECEIVED]:', { method, email, codeOrTx, plan })
     }

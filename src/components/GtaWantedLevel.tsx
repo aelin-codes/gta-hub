@@ -181,7 +181,7 @@ export default function GtaWantedLevel() {
                 key={s}
                 className={`text-xs sm:text-sm transition-all duration-300 select-none ${
                   active
-                    ? stars === 5
+                    ? (stars === 5 || isFlashing)
                       ? 'text-neon-flamingo scale-110 filter drop-shadow-[0_0_8px_#ff2a85] animate-pulse'
                       : 'text-sunset-orange filter drop-shadow-[0_0_6px_#ff7a45]'
                     : 'text-off-white/20'

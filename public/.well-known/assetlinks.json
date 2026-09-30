@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.gtavihub.app",
+      "sha256_cert_fingerprints": [
+        "14:6D:E9:DE:0F:73:C7:CE:86:00:54:BC:10:E6:7F:3F:FB:1B:0F:DF:08:92:CE:B8:EC:4A:27:5F:F1:C9:F9:6E"
+      ]
+    }
+  }
+]

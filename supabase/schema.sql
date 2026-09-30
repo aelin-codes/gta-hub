@@ -116,13 +116,14 @@ ALTER TABLE follows ENABLE ROW LEVEL SECURITY;
 ALTER TABLE takedown_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE admin_audit_logs ENABLE ROW LEVEL SECURITY;
 
--- Helper function to check if current user is an admin or superuser
+-- Helper function: read role from JWT app_metadata to avoid RLS recursion.
+-- auth.jwt() is a built-in Supabase function; no table scan, no policy re-entry.
 CREATE OR REPLACE FUNCTION is_admin()
 RETURNS BOOLEAN SECURITY DEFINER AS $$
 BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM users
-    WHERE id = auth.uid() AND (role = 'admin' OR role = 'superuser')
+  RETURN coalesce(
+    (auth.jwt() -> 'app_metadata' ->> 'role') IN ('admin', 'superuser'),
+    false
   );
 END;
 $$ LANGUAGE plpgsql;
@@ -131,12 +132,51 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION is_superuser()
 RETURNS BOOLEAN SECURITY DEFINER AS $$
 BEGIN
-  RETURN EXISTS (
-    SELECT 1 FROM users
-    WHERE id = auth.uid() AND role = 'superuser'
+  RETURN coalesce(
+    (auth.jwt() -> 'app_metadata' ->> 'role') = 'superuser',
+    false
   );
 END;
 $$ LANGUAGE plpgsql;
+
+-- Email subscribers table (referenced by EmailCapture component)
+CREATE TABLE IF NOT EXISTS email_subscribers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE NOT NULL,
+  source TEXT DEFAULT 'unknown',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE email_subscribers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow anonymous email insert" ON email_subscribers;
+CREATE POLICY "Allow anonymous email insert"
+  ON email_subscribers FOR INSERT
+  WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow admin read email_subscribers" ON email_subscribers;
+CREATE POLICY "Allow admin read email_subscribers"
+  ON email_subscribers FOR SELECT
+  USING (is_admin());
+
+-- Supporter claims table (referenced by /api/support/claim route)
+CREATE TABLE IF NOT EXISTS supporter_claims (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+  email TEXT NOT NULL,
+  payment_method TEXT NOT NULL,
+  claim_data TEXT NOT NULL,
+  plan TEXT DEFAULT 'supporter',
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE supporter_claims ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow insert supporter_claims" ON supporter_claims;
+CREATE POLICY "Allow insert supporter_claims"
+  ON supporter_claims FOR INSERT
+  WITH CHECK (true);
+DROP POLICY IF EXISTS "Allow admin manage supporter_claims" ON supporter_claims;
+CREATE POLICY "Allow admin manage supporter_claims"
+  ON supporter_claims FOR ALL
+  USING (is_admin());
+
 
 -- 1. Policies for `videos`
 DROP POLICY IF EXISTS "Allow public read on non-excluded videos" ON videos;

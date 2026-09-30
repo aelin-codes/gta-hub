@@ -1,4 +1,4 @@
-﻿'use client'
+'use client'
 
 import { useState } from 'react'
 import { Mail, ArrowRight, Check, X } from 'lucide-react'
@@ -35,7 +35,7 @@ export default function EmailCapture({ source = 'unknown' }: { source?: string }
     return (
       <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-palm-teal/10 border border-palm-teal/40 text-palm-teal text-sm font-mono">
         <Check className="w-4 h-4 shrink-0" />
-        <span>You're in! We'll alert you on GTA 6 launch day.</span>
+        <span>You&apos;re in! We&apos;ll alert you on GTA 6 launch day.</span>
       </div>
     )
   }

@@ -121,6 +121,7 @@ export default function GtaCheatCodes() {
                   soundFx.playClick()
                   setIsOpen(false)
                 }}
+                aria-label="Close cheat console"
                 className="p-1 rounded-full text-off-white/40 hover:text-white"
               >
                 <X className="w-4 h-4" />
@@ -157,6 +158,7 @@ export default function GtaCheatCodes() {
               soundFx.playClick()
               setIsOpen(true)
             }}
+            aria-label="Open Vice City Cheat Codes"
             className="flex items-center gap-2 px-3 py-2 rounded-full bg-midnight-teal/90 border border-deep-teal hover:border-sunset-orange/50 shadow-xl backdrop-blur-md text-off-white hover:text-sunset-orange text-xs font-mono transition"
             title="Open Vice City Cheat Codes"
           >

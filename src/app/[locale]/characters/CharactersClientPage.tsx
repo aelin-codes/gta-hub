@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import Image from 'next/image'
 import {
   Search,
   X,
@@ -13,17 +14,48 @@ import {
   Quote,
   Shirt,
   MapPin,
-  ChevronRight
+  ChevronRight,
+  Palette
 } from 'lucide-react'
 import { CHARACTERS, type Character } from '@/data/characters'
 import { soundFx } from '@/components/GtaSoundEffects'
 import AffiliateBanner from '@/components/AffiliateBanner'
 
-export default function CharactersClientPage({ locale }: { locale: string }) {
+export type DossierTheme = 'sunset' | 'noir' | 'cyan' | 'everglades'
+
+const THEME_STYLES: Record<DossierTheme, { border: string; glow: string; accent: string; badge: string }> = {
+  sunset: {
+    border: 'border-neon-flamingo/60',
+    glow: 'shadow-[0_0_40px_rgba(255,42,133,0.2)]',
+    accent: 'from-neon-flamingo to-sunset-orange',
+    badge: 'bg-neon-flamingo text-white'
+  },
+  noir: {
+    border: 'border-amber-500/60',
+    glow: 'shadow-[0_0_40px_rgba(255,184,0,0.18)]',
+    accent: 'from-amber-400 to-yellow-600',
+    badge: 'bg-amber-500 text-black font-bold'
+  },
+  cyan: {
+    border: 'border-palm-teal/60',
+    glow: 'shadow-[0_0_40px_rgba(0,229,255,0.2)]',
+    accent: 'from-palm-teal to-blue-500',
+    badge: 'bg-palm-teal text-midnight-teal font-bold'
+  },
+  everglades: {
+    border: 'border-emerald-500/60',
+    glow: 'shadow-[0_0_40px_rgba(16,185,129,0.2)]',
+    accent: 'from-emerald-400 to-teal-600',
+    badge: 'bg-emerald-500 text-black font-bold'
+  }
+}
+
+export default function CharactersClientPage({}: { locale?: string }) {
   const [search, setSearch] = useState('')
   const [roleFilter, setRoleFilter] = useState<string>('all')
   const [selectedChar, setSelectedChar] = useState<Character | null>(null)
   const [modalTab, setModalTab] = useState<'overview' | 'stats' | 'relationships' | 'quotes' | 'outfits' | 'missions'>('overview')
+  const [dossierTheme, setDossierTheme] = useState<DossierTheme>('sunset')
   const [imgErrors, setImgErrors] = useState<Record<string, boolean>>({})
 
   const handleImgError = (id: string) => {
@@ -56,6 +88,7 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
   }
 
   return (
+    <>
     <div className="bg-midnight-teal min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-10">
 
@@ -167,7 +200,6 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredCharacters.map((char) => {
             const hasImgError = imgErrors[char.id]
-            const isGTA6 = char.game === 'GTA 6'
 
             return (
               <div
@@ -177,17 +209,19 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
                   setSelectedChar(char)
                   setModalTab('overview')
                 }}
-                className="group bg-deep-teal/25 hover:bg-deep-teal/45 border border-deep-teal/70 hover:border-neon-flamingo/50 rounded-3xl p-5 space-y-4 transition duration-300 cursor-pointer flex flex-col justify-between hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(255,61,129,0.15)]"
+                className="group bg-deep-teal/25 hover:bg-deep-teal/45 border border-deep-teal/70 hover:border-neon-flamingo/50 rounded-3xl p-5 space-y-4 transition duration-300 cursor-pointer flex flex-col justify-between hover:-translate-y-1 hover:shadow-[0_10px_30px_rgba(255,61,129,0.15)] btn-vice"
               >
                 <div className="space-y-4">
                   {/* Portrait & Badges */}
                   <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-midnight-teal border border-deep-teal/60 flex items-center justify-center">
                     {!hasImgError && char.imageUrl ? (
-                      <img
+                      <Image
                         src={char.imageUrl}
                         alt={char.name}
+                        fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                         onError={() => handleImgError(char.id)}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                        className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                     ) : (
                       <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0F2E33] to-[#0B1E23] p-4 text-center">
@@ -317,13 +351,13 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
             onClick={() => setSelectedChar(null)}
           />
 
-          {/* Modal Card */}
-          <div className="relative bg-midnight-teal border border-deep-teal/90 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto z-10 shadow-2xl space-y-6 p-6 sm:p-8">
+          {/* Modal Card with Dynamic Dossier Theme */}
+          <div className={`relative bg-midnight-teal/95 border ${THEME_STYLES[dossierTheme].border} ${THEME_STYLES[dossierTheme].glow} rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto z-10 space-y-6 p-6 sm:p-8 backdrop-blur-xl transition-all duration-300`}>
             {/* Close Button */}
             <button
               onClick={() => setSelectedChar(null)}
               aria-label="Close dossier"
-              className="absolute top-6 right-6 p-2 rounded-full bg-deep-teal/40 hover:bg-deep-teal text-off-white/70 hover:text-off-white transition"
+              className="absolute top-6 right-6 p-2 rounded-full bg-deep-teal/40 hover:bg-deep-teal text-off-white/70 hover:text-off-white transition btn-vice"
             >
               <X className="w-5 h-5" />
             </button>
@@ -332,15 +366,17 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
             <div className="flex flex-col sm:flex-row gap-6 items-start">
               <div className="relative w-28 h-28 sm:w-36 sm:h-36 rounded-2xl overflow-hidden bg-deep-teal border border-deep-teal/80 shrink-0 flex items-center justify-center">
                 {!imgErrors[selectedChar.id] && selectedChar.imageUrl ? (
-                  <img
+                  <Image
                     src={selectedChar.imageUrl}
                     alt={selectedChar.name}
+                    fill
+                    sizes="(max-width: 640px) 112px, 144px"
                     onError={() => handleImgError(selectedChar.id)}
-                    className="w-full h-full object-cover"
+                    className="object-cover"
                   />
                 ) : (
                   <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0F2E33] to-[#0B1E23] text-center p-2">
-                    <span className="text-3xl font-display text-transparent bg-clip-text bg-gradient-to-r from-neon-flamingo to-sunset-orange">
+                    <span className={`text-3xl font-display text-transparent bg-clip-text bg-gradient-to-r ${THEME_STYLES[dossierTheme].accent}`}>
                       {selectedChar.name.slice(0, 2).toUpperCase()}
                     </span>
                   </div>
@@ -349,7 +385,7 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
 
               <div className="space-y-2 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-[10px] font-mono uppercase font-bold px-2.5 py-0.5 rounded-md bg-neon-flamingo text-white">
+                  <span className={`text-[10px] font-mono uppercase font-bold px-2.5 py-0.5 rounded-md ${THEME_STYLES[dossierTheme].badge}`}>
                     GTA VI
                   </span>
                   <span className="text-[10px] font-mono uppercase px-2.5 py-0.5 rounded-md bg-deep-teal border border-deep-teal/80 text-palm-teal font-semibold">
@@ -366,6 +402,34 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
                   >
                     {selectedChar.profile.status}
                   </span>
+                </div>
+
+                {/* Cosmetic Dossier Theme Switcher */}
+                <div className="flex flex-wrap items-center gap-1.5 pt-1">
+                  <span className="text-[10px] font-mono uppercase text-off-white/50 flex items-center gap-1 mr-1">
+                    <Palette className="w-3 h-3 text-palm-teal" /> Dossier Theme:
+                  </span>
+                  {[
+                    { id: 'sunset' as DossierTheme, label: 'Vice Sunset' },
+                    { id: 'noir' as DossierTheme, label: 'Leonida Noir' },
+                    { id: 'cyan' as DossierTheme, label: 'Neon Cyan' },
+                    { id: 'everglades' as DossierTheme, label: 'Everglades' }
+                  ].map((thm) => (
+                    <button
+                      key={thm.id}
+                      onClick={() => {
+                        soundFx.playClick()
+                        setDossierTheme(thm.id)
+                      }}
+                      className={`px-2 py-0.5 rounded-md text-[10px] font-mono uppercase transition ${
+                        dossierTheme === thm.id
+                          ? 'bg-deep-teal border border-palm-teal text-palm-teal font-bold shadow-sm'
+                          : 'text-off-white/40 hover:text-off-white hover:bg-deep-teal/40'
+                      }`}
+                    >
+                      {thm.label}
+                    </button>
+                  ))}
                 </div>
 
                 <h2 className="text-2xl sm:text-4xl font-display uppercase tracking-wider text-off-white">
@@ -452,6 +516,26 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
                           >
                             {affil}
                           </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 5-Paragraph Noir Field Dossier */}
+                  {selectedChar.profile.dossier && (
+                    <div className="p-5 rounded-2xl bg-midnight-teal/90 border border-deep-teal/80 shadow-inner space-y-3">
+                      <div className="flex items-center justify-between border-b border-deep-teal/60 pb-2">
+                        <h4 className="text-xs font-mono uppercase text-sunset-orange tracking-widest flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-sunset-orange animate-ping" />
+                          Leonida Field Intelligence &bull; Dossier Briefing
+                        </h4>
+                        <span className="text-[10px] font-mono text-off-white/40 uppercase">Official DOC / VCPD Record</span>
+                      </div>
+                      <div className="space-y-3 text-xs sm:text-sm text-off-white/80 leading-relaxed font-sans">
+                        {selectedChar.profile.dossier.split('\n\n').map((paragraph, pIdx) => (
+                          <p key={pIdx} className="first-of-type:text-off-white first-of-type:font-medium">
+                            {paragraph}
+                          </p>
                         ))}
                       </div>
                     </div>
@@ -586,10 +670,12 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
                           <div className="flex gap-3 items-center">
                             {outfit.imageUrl && (
                               <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-midnight-teal shrink-0 border border-deep-teal">
-                                <img
+                                <Image
                                   src={outfit.imageUrl}
                                   alt={outfit.name}
-                                  className="w-full h-full object-cover"
+                                  fill
+                                  sizes="64px"
+                                  className="object-cover"
                                 />
                               </div>
                             )}
@@ -650,5 +736,12 @@ export default function CharactersClientPage({ locale }: { locale: string }) {
       )}
 
     </div>
+
+    {/* Trademark Disclaimer — gate-before-deploy requirement */}
+    <p className="text-center text-[10px] text-off-white/30 leading-relaxed px-4 py-6 border-t border-deep-teal/40 mt-4">
+      GTA 6 Hub is an unofficial fan site and is not affiliated with, endorsed by, or sponsored by Rockstar Games or Take-Two Interactive.
+      All trademarks belong to their respective owners. All videos remain the property of their original creators and are embedded via official platform players.
+    </p>
+    </>
   )
 }

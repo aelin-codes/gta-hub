@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Heart, User, ShieldCheck, Calendar, BellOff, Trash2, ShieldAlert, LogOut, LogIn, Key, Mail, Shield, RefreshCw, AlertCircle, ExternalLink } from 'lucide-react'
+import { Heart, User, ShieldCheck, Calendar, BellOff, Trash2, LogOut, LogIn, Key, Mail, Shield, RefreshCw, AlertCircle, ExternalLink } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
 import Link from 'next/link'
 import Image from 'next/image'

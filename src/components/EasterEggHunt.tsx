@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { soundFx } from './GtaSoundEffects'
-import { Award, Sparkles, X, Compass, CheckCircle2 } from 'lucide-react'
+import { Award, X, CheckCircle2 } from 'lucide-react'
 
 interface PackageClue {
   id: string
@@ -135,6 +135,7 @@ export default function EasterEggHunt() {
             soundFx.playClick()
             setShowLedger(true)
           }}
+          aria-label="Hidden Packages Checklist and Clues"
           className={`flex items-center gap-2 px-3 py-2 rounded-full border text-xs font-mono backdrop-blur-md shadow-xl transition-all hover:scale-105 ${
             isAllFound
               ? 'bg-sunset-orange/20 border-sunset-orange text-sunset-orange shadow-[0_0_20px_rgba(255,122,69,0.6)]'
@@ -170,6 +171,7 @@ export default function EasterEggHunt() {
                   soundFx.playClick()
                   setShowLedger(false)
                 }}
+                aria-label="Close Stash Ledger"
                 className="p-1 rounded-full text-off-white/40 hover:text-white"
               >
                 <X className="w-5 h-5" />

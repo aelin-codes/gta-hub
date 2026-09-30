@@ -11,8 +11,8 @@ export async function POST(req: Request) {
 
     // 1. Authorize admin user or CRON_SECRET bearer
     const authHeader = req.headers.get('authorization')
-    const cronSecret = process.env.CRON_SECRET || 'gtavihub_cron_2026_secrets'
-    const isCron = authHeader === `Bearer ${cronSecret}`
+    const cronSecret = process.env.CRON_SECRET
+    const isCron = cronSecret ? authHeader === `Bearer ${cronSecret}` : false
 
     let adminEmail = 'system_cron'
     if (!isCron) {

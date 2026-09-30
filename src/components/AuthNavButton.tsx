@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo } from 'react'
 import Link from 'next/link'
 import { User, Shield, LogOut, LogIn } from 'lucide-react'
 import { createClient } from '@/utils/supabase/client'
@@ -11,7 +11,7 @@ export default function AuthNavButton({ locale }: { locale: string }) {
   const [role, setRole] = useState<'user' | 'admin' | 'superuser'>('user')
   const [loading, setLoading] = useState(true)
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   useEffect(() => {
     async function loadAuth() {
@@ -69,7 +69,7 @@ export default function AuthNavButton({ locale }: { locale: string }) {
       window.removeEventListener('storage', handleStorageChange)
       window.removeEventListener('message', handleMessage)
     }
-  }, []) // ponytail: listen for cross-tab auth and role updates
+  }, [supabase])
 
   const handleSignOut = async () => {
     soundFx.playClick()

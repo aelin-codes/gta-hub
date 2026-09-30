@@ -33,13 +33,7 @@ export async function middleware(request: NextRequest) {
     return supabaseResponse
   }
 
-  // Also allow access if the client-set admin role cookie is present
-  const adminCookie = request.cookies.get('gta_user_role')?.value
   const path = request.nextUrl.pathname
-
-  if (path.includes('/admin') && adminCookie === 'admin') {
-    return supabaseResponse
-  }
 
   try {
     const supabase = createServerClient(

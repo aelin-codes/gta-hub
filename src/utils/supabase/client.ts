@@ -1,5 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
-import { MOCK_VIDEOS, MOCK_ADMIN_USER, MockQueryBuilder, SEED_USERS } from './mock'
+import { MOCK_VIDEOS, MockQueryBuilder, SEED_USERS } from './mock'
 
 function getStoredUsers() {
   if (typeof window === 'undefined') return [...SEED_USERS]

@@ -97,6 +97,7 @@ export default function ScrollProgressSpeedometer() {
               soundFx.playClick()
               setIsMinimized(false)
             }}
+            aria-label="Open Vice City Telemetry Speedometer"
             className="pointer-events-auto flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-midnight-teal/95 border border-deep-teal hover:border-palm-teal text-off-white/80 hover:text-white backdrop-blur-md shadow-xl transition-all duration-200 text-[10px] font-mono"
             title="Open Vice City Telemetry Speedometer"
           >
@@ -123,6 +124,7 @@ export default function ScrollProgressSpeedometer() {
                   soundFx.playClick()
                   setIsMinimized(true)
                 }}
+                aria-label="Minimize speedometer gauge"
                 className="text-off-white/40 hover:text-white p-0.5 rounded transition"
                 title="Minimize speedometer gauge"
               >
@@ -142,6 +144,7 @@ export default function ScrollProgressSpeedometer() {
               {/* Turbo Trigger Button */}
               <button
                 onClick={triggerTurbo}
+                aria-label="Trigger Cheetah Turbo Boost"
                 className="px-2 py-0.5 rounded-md bg-gradient-to-r from-neon-flamingo/80 to-sunset-orange/80 hover:from-neon-flamingo hover:to-sunset-orange text-white text-[9px] font-mono font-bold tracking-wider transition shadow flex items-center gap-0.5 active:scale-95"
                 title="Trigger Cheetah Turbo Boost (+240 MPH)"
               >

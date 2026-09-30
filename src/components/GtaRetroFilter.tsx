@@ -30,6 +30,7 @@ export default function GtaRetroFilter() {
       <div className="fixed bottom-6 right-36 sm:right-40 z-50 select-none">
         <button
           onClick={toggleCrt}
+          aria-label="Toggle 80s CRT Scanlines or Arcade Mode"
           className={`flex items-center gap-1.5 px-3 py-2 rounded-full border text-xs font-mono backdrop-blur-md shadow-xl transition duration-200 ${
             crtEnabled
               ? 'bg-neon-flamingo/20 border-neon-flamingo text-neon-flamingo shadow-[0_0_15px_rgba(255,61,129,0.5)]'

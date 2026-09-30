@@ -4,11 +4,8 @@ export const locales = ['en', 'es'];
 export const defaultLocale = 'en';
 
 export default getRequestConfig(async ({locale}) => {
-  console.log("i18n.ts: Resolving request config for locale:", locale);
-  
   let activeLocale = locale;
   if (!activeLocale || !locales.includes(activeLocale as string)) {
-    console.log("i18n.ts: Locale is missing/invalid, falling back to default:", defaultLocale);
     activeLocale = defaultLocale;
   }
 

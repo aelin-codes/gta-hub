@@ -476,18 +476,18 @@ export default function AdminClientPage({ locale }: { locale: string }) {
     }
   }
 
-  // Ingest trigger
+  // Ingest trigger — authenticated via Supabase session (admin only)
   const triggerIngestJob = async () => {
     setIngesting(true)
     setIngestStatus('Connecting to ingestion pipeline...')
     try {
-      const cronSecret = process.env.NEXT_PUBLIC_CRON_SECRET
-      if (!cronSecret) {
-        setIngestStatus('Ingest Failed: NEXT_PUBLIC_CRON_SECRET not configured in environment')
-        setIngesting(false)
-        return
-      }
-      const res = await fetch(`/api/ingest?secret=${cronSecret}`)
+      const { createClient } = await import('@/utils/supabase/client')
+      const supabase = createClient()
+      const { data: { session } } = await supabase.auth.getSession()
+      const token = session?.access_token
+      const res = await fetch('/api/ingest', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      })
       const data = await res.json()
 
       if (res.ok) {

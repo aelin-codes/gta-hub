@@ -7,27 +7,22 @@ import {
   X, 
   SlidersHorizontal, 
   Play, 
-  Clock, 
   Film, 
-  Map, 
-  Compass, 
-  Car, 
-  ShieldAlert, 
   Cpu, 
   ArrowRight,
-  UserCheck,
   Check,
   UserPlus,
   RefreshCw
 } from 'lucide-react'
 import Link from 'next/link'
+import Image from 'next/image'
 import VideoCard from '@/components/VideoCard'
 import VideoSkeleton from '@/components/VideoSkeleton'
 import Toast from '@/components/Toast'
 import AdInterstitial from '@/components/AdInterstitial'
 import ScrollReveal from '@/components/ScrollReveal'
 import { createClient } from '@/utils/supabase/client'
-import { PAYMENTS_ENABLED, BANNER_EVERY_N_VIDEOS, INTERSTITIAL_EVERY_N_VIDEOS } from '@/config'
+import { BANNER_EVERY_N_VIDEOS, INTERSTITIAL_EVERY_N_VIDEOS } from '@/config'
 import AdBanner from '@/components/AdBanner'
 import AffiliateBanner from '@/components/AffiliateBanner'
 import { CURATED_VIDEOS } from '@/data/curatedVideos'
@@ -158,7 +153,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
     }
   }, [])
 
-  const supabase = createClient()
+  const supabase = useMemo(() => createClient(), [])
 
   // Load User & Category Counts
   useEffect(() => {
@@ -204,7 +199,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
     setCategoryCounts(counts)
 
     loadSession()
-  }, [])
+  }, [supabase])
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -321,7 +316,7 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
 
       const res = await fetch(`/api/search?${params}`)
       const data = await res.json()
-      let filtered = (data.videos || []) as Video[]
+      const filtered = (data.videos || []) as Video[]
 
       if (sortBy === 'schematic') {
         filtered.sort((a, b) => (b.schematicMatch?.score || 0) - (a.schematicMatch?.score || 0))
@@ -467,11 +462,16 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
                 onClick={() => syncLiveFeeds(true)}
                 disabled={isSyncing}
                 title="Sync newest YouTube & Twitch uploads now"
-                className="ml-1 px-2 py-0.5 rounded-lg bg-deep-teal hover:bg-palm-teal/20 text-[10px] text-palm-teal hover:text-white border border-palm-teal/30 flex items-center gap-1 transition"
+                className="ml-1 px-2 py-0.5 rounded-lg bg-deep-teal hover:bg-palm-teal/20 text-[10px] text-palm-teal hover:text-white border border-palm-teal/30 flex items-center gap-1 transition btn-vice"
               >
                 <RefreshCw className={`w-2.5 h-2.5 ${isSyncing ? 'animate-spin' : ''}`} />
                 <span>{isSyncing ? 'Syncing...' : 'Sync Live'}</span>
               </button>
+              {lastSyncedTime && (
+                <span className="hidden sm:inline text-[10px] font-mono text-off-white/40 border-l border-deep-teal/60 pl-2">
+                  Synced: {lastSyncedTime}
+                </span>
+              )}
             </div>
 
             <div className="px-3.5 py-2 rounded-xl bg-deep-teal/40 border border-deep-teal/80 text-xs font-mono">
@@ -825,10 +825,13 @@ export default function LibraryClientPage({ locale }: { locale: string }) {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
               {/* Spotlight Thumbnail */}
               <div className="lg:col-span-7 relative aspect-video rounded-2xl overflow-hidden group bg-black shadow-xl">
-                <img
+                <Image
                   src={featuredVideo.thumbnail_url}
                   alt={featuredVideo.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 58vw"
+                  priority
+                  className="object-cover group-hover:scale-105 transition-transform duration-500"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/30 pointer-events-none" />
                 <Link

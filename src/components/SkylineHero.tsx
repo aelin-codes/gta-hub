@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
-import { Play, Map, Users, ArrowRight, Sparkles } from 'lucide-react'
+import Image from 'next/image'
+import { Play, Map, Users, Sparkles } from 'lucide-react'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { Canvas } from '@react-three/fiber'
@@ -15,7 +16,7 @@ if (typeof window !== 'undefined') {
 
 export default function SkylineHero() {
   const containerRef = useRef<HTMLDivElement>(null)
-  const imageRef = useRef<HTMLImageElement>(null)
+  const imageRef = useRef<HTMLDivElement>(null)
   const textContainerRef = useRef<HTMLDivElement>(null)
   
   const [reducedMotion, setReducedMotion] = useState(false)
@@ -93,12 +94,16 @@ export default function SkylineHero() {
       
       {/* 1. Official 4K GTA 6 Cover Artwork Background with Parallax */}
       <div className="absolute inset-0 z-0 overflow-hidden">
-        <img
-          ref={imageRef}
-          src="/images/gta6-cover.jpg"
-          alt="Grand Theft Auto VI — Lucia & Jason Vice City Artwork"
-          className="w-full h-full object-cover object-[center_30%] scale-105 will-change-transform filter brightness-95 contrast-105"
-        />
+        <div ref={imageRef} className="absolute inset-0 w-full h-full will-change-transform">
+          <Image
+            src="/images/gta6-cover.jpg"
+            alt="Grand Theft Auto VI — Lucia & Jason Vice City Artwork"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover object-[center_30%] scale-105 filter brightness-95 contrast-105"
+          />
+        </div>
 
         {/* Cinematic Atmospheric Gradients */}
         <div className="absolute inset-0 bg-gradient-to-t from-[#07090E] via-[#07090E]/40 to-black/60 pointer-events-none" />

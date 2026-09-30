@@ -91,12 +91,46 @@ const MOCK_VIDEOS = [
 
 export async function GET(req: Request) {
   try {
-    // 1. Authorization check for Cron header or CRON_SECRET parameter
-    const { searchParams } = new URL(req.url)
-    const secret = searchParams.get('secret')
-    
-    // We enforce security check for webhook/cron triggers
-    if (process.env.CRON_SECRET && secret !== process.env.CRON_SECRET) {
+    // 1. Authorization: Accept cron secret OR valid admin session Bearer token
+    const authHeader = req.headers.get('authorization') || ''
+    const bearerToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : ''
+    const cronSecret = process.env.CRON_SECRET
+
+    let authorized = false
+
+    // (a) Cron secret match
+    if (cronSecret && bearerToken === cronSecret) {
+      authorized = true
+    }
+
+    // (b) Valid Supabase admin session
+    if (!authorized && bearerToken) {
+      try {
+        const adminClient = createAdminClient()
+        const { data: { user } } = await (adminClient.auth as any).admin
+          ? (adminClient as any).auth.admin.getUserById(bearerToken).catch(() => ({ data: { user: null } }))
+          : Promise.resolve({ data: { user: null } })
+        // Fall back to session verification via anon client
+        const { createClient: createSessionClient } = await import('@/utils/supabase/server')
+        const sessionClient = createSessionClient()
+        const { data: { user: sessionUser } } = await sessionClient.auth.getUser()
+        if (sessionUser) {
+          const { data: profile } = await adminClient
+            .from('users')
+            .select('role')
+            .eq('id', sessionUser.id)
+            .maybeSingle()
+          if (profile?.role === 'admin' || profile?.role === 'superuser') {
+            authorized = true
+          }
+        }
+        void user // unused branch kept for clarity
+      } catch {
+        // Session verification failed — not authorized
+      }
+    }
+
+    if (!authorized) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
@@ -392,7 +426,7 @@ Return ONLY valid JSON (no markdown):
             description: v.description,
             channel_name: v.channel_name,
             channel_url: v.channel_url,
-            thumbnail_url: `https://img.youtube.com/vi/mock/maxresdefault.jpg`, // Placeholder
+            thumbnail_url: `https://img.youtube.com/vi/mock/maxresdefault.jpg`,
             published_at: v.published_at,
             transcript: v.transcript
           })

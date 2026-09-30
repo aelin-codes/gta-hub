@@ -11,7 +11,6 @@ import { createClient } from '@/utils/supabase/client'
 import { soundFx } from '@/components/GtaSoundEffects'
 import EmailCapture from '@/components/EmailCapture'
 import AffiliateBanner from '@/components/AffiliateBanner'
-import KofiButton from '@/components/KofiButton'
 
 const SkylineHero = dynamic(() => import('@/components/SkylineHero'), {
   ssr: false,

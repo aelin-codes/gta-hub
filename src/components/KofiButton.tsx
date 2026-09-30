@@ -1,8 +1,7 @@
-﻿import { Heart } from 'lucide-react'
+import { Heart } from 'lucide-react'
+import { MONETIZATION_CONFIG } from '@/config/monetization'
 
-// ponytail: static link — replace REPLACE_WITH_YOUR_KOFI_USERNAME with your Ko-fi handle
-// Sign up free at https://ko-fi.com — connect PayPal, no PAN card required
-const KOFI_URL = 'https://ko-fi.com/REPLACE_WITH_YOUR_KOFI_USERNAME'
+const KOFI_URL = MONETIZATION_CONFIG.kofiUrl || 'https://ko-fi.com'
 
 interface KofiButtonProps {
   variant?: 'compact' | 'full'

@@ -64,12 +64,12 @@ export async function generateMetadata({
   const video = await getVideo(id)
   if (!video) {
     return {
-      title: 'Video Not Found | GTA 6 Hub',
+      title: 'Video Not Found',
       description: 'The requested GTA 6 walkthrough or guide could not be found.',
     }
   }
 
-  const title = `${video.title} | GTA 6 Guide`
+  const title = `${video.title} — GTA 6 Guide`
   const description = video.description
     ? video.description.slice(0, 155) + '...'
     : `Watch this GTA 6 walkthrough: ${video.title} by ${video.channel_name}.`

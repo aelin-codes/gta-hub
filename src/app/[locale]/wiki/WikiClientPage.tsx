@@ -1,6 +1,7 @@
 'use client'
 
 import { useRef, useState, type PointerEvent, type WheelEvent } from 'react'
+import Image from 'next/image'
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion'
 import { Map, Users, Car, Zap, Crosshair, ArrowRight, ExternalLink, ChevronRight, Film, Play } from 'lucide-react'
 import Link from 'next/link'
@@ -790,11 +791,14 @@ export default function WikiClientPage({ locale }: { locale: string }) {
                           transition: isDragging ? 'none' : 'transform 0.15s ease-out',
                         }}
                       >
-                        {/* Map Background image - 100% local reliable high-res asset */}
-                        <img
+                        {/* Map Background image - Next.js optimized high-res asset */}
+                        <Image
                           src={mapStyle === 'topographic' ? '/images/leonida-map.jpg' : '/images/gta6-satellite-map.jpg'}
                           alt="Leonida Tactical Cartography Map"
-                          className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
+                          fill
+                          priority
+                          sizes="(max-width: 1280px) 100vw, 1200px"
+                          className="object-cover object-center pointer-events-none"
                         />
                         {/* Blueprint tactical grid overlay */}
                         <div className="absolute inset-0 bg-[radial-gradient(#1fa9a0_1px,transparent_1px)] [background-size:28px_28px] opacity-15 pointer-events-none" />
@@ -990,10 +994,12 @@ export default function WikiClientPage({ locale }: { locale: string }) {
                         <div className="space-y-3">
                           <div className="relative aspect-square w-full rounded-2xl overflow-hidden bg-midnight-teal border border-deep-teal/60 flex items-center justify-center">
                             {char.imageUrl ? (
-                              <img
+                              <Image
                                 src={char.imageUrl}
                                 alt={char.name}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                fill
+                                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                                className="object-cover group-hover:scale-105 transition-transform duration-500"
                               />
                             ) : (
                               <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#0F2E33] to-[#0B1E23]">

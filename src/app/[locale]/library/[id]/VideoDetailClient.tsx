@@ -159,10 +159,6 @@ export default function VideoDetailClient({ video, locale }: { video: Video; loc
     }
   }
 
-  const embedUrl = video.platform === 'youtube'
-    ? `https://www.youtube.com/embed/${video.external_id}?autoplay=1&start=${activeTimestamp || 0}`
-    : `https://player.twitch.tv/?video=${video.external_id}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}&autoplay=true&time=${activeTimestamp ? `${activeTimestamp}s` : '0s'}`
-
   return (
     <div className="bg-midnight-teal min-h-screen py-10 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto space-y-8">

@@ -12,12 +12,12 @@ export async function generateMetadata({
   const article = ARTICLES.find((a) => a.slug === slug)
   if (!article) {
     return {
-      title: 'Article Not Found | GTA 6 Hub',
+      title: 'Article Not Found',
       description: 'The requested GTA 6 fan article could not be found.',
     }
   }
 
-  const title = `${article.title} | GTA 6 Hub`
+  const title = article.title
   const description = article.summary
   const canonicalUrl = `https://gta6hub.com/${locale}/articles/${slug}`
   const ogImage = article.image

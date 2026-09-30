@@ -16,6 +16,8 @@ import GtaRetroFilter from '@/components/GtaRetroFilter'
 import FooterSecretTiki from '@/components/FooterSecretTiki'
 import AuthNavButton from '@/components/AuthNavButton'
 import KofiButton from '@/components/KofiButton'
+import SmoothScroll from '@/components/SmoothScroll'
+import LicensePlatePreloader from '@/components/LicensePlatePreloader'
 import Link from 'next/link'
 import '@/app/globals.css'
 import { PAYMENTS_ENABLED } from '@/config'
@@ -74,6 +76,12 @@ export const metadata = {
       'max-snippet': -1,
     },
   },
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'GTA VI Hub',
+  },
 }
 
 export default async function LocaleLayout({
@@ -95,8 +103,10 @@ export default async function LocaleLayout({
 
   return (
     <html lang={locale} className={`${inter.variable} ${bebasNeue.variable}`}>
-      <body className="font-sans bg-midnight-teal text-off-white flex flex-col min-h-screen selection:bg-neon-flamingo selection:text-white">
+      <body className="font-sans bg-midnight-teal bg-noise text-off-white flex flex-col min-h-screen selection:bg-neon-flamingo selection:text-white">
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <SmoothScroll />
+          <LicensePlatePreloader />
           <ThirdPartyScripts />
           
           <ScrollProgressSpeedometer />
@@ -164,6 +174,9 @@ export default async function LocaleLayout({
                 </Link>
                 <Link href={`/${locale}/refunds`} className="hover:text-sunset-orange transition">
                   Refund Policy
+                </Link>
+                <Link href={`/${locale}/legal`} className="hover:text-sunset-orange transition">
+                  Legal Notices
                 </Link>
               </div>
             </div>

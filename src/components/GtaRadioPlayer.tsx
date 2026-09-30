@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef, useCallback } from 'react'
-import { Radio, Volume2, VolumeX, Play, Pause, ChevronDown, Music, Sparkles } from 'lucide-react'
+import { Radio, Volume2, VolumeX, Play, Pause, ChevronDown, Music } from 'lucide-react'
 import { soundFx } from './GtaSoundEffects'
 
 interface Station {
@@ -150,7 +150,7 @@ export default function GtaRadioPlayer() {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentStationIdx, setCurrentStationIdx] = useState(0)
   const [minimized, setMinimized] = useState(true)
-  const [volume, setVolume] = useState(0.25)
+  const volume = 0.25
   const [isMuted, setIsMuted] = useState(false)
   const [isTuning, setIsTuning] = useState(false)
   const [eqLevels, setEqLevels] = useState<number[]>([30, 60, 45, 80, 55, 90, 40, 70, 50, 65])
@@ -409,6 +409,7 @@ export default function GtaRadioPlayer() {
             soundFx.playClick()
             setMinimized(false)
           }}
+          aria-label="Open Vice City Radio Tuner"
           className={`flex items-center gap-2 px-3.5 py-2.5 rounded-full bg-midnight-teal/95 border shadow-2xl backdrop-blur-md transition-all duration-300 hover:scale-105 ${
             isPlaying
               ? 'border-neon-flamingo shadow-[0_0_25px_rgba(255,61,129,0.5)]'

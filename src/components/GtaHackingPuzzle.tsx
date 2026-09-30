@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { ShieldAlert, Zap, Radio, CheckCircle2, Lock, X, RefreshCw } from 'lucide-react'
 import { soundFx } from './GtaSoundEffects'
 
@@ -15,9 +15,6 @@ export default function GtaHackingPuzzle({
   onReduceStar,
   onClose,
 }: HackingPuzzleProps) {
-  // Stage corresponds to current stars: 5 stars => Stage 1, 4 stars => Stage 2, etc.
-  const stage = 6 - currentStars // 1 to 5
-
   // Stage 1: Frequency slider
   const [freq, setFreq] = useState(380.0)
   const targetFreq = 412.5
@@ -27,7 +24,6 @@ export default function GtaHackingPuzzle({
   const [userSequence, setUserSequence] = useState<string[]>([])
 
   // Stage 3: Wire connection
-  const [selectedWire, setSelectedWire] = useState<string | null>(null)
   const [connectedWires, setConnectedWires] = useState<Record<string, string>>({})
 
   // Stage 4: Camera node tap

@@ -116,9 +116,6 @@ export default function VideoCard({
     }
   }
 
-  const embedUrl = video.platform === 'youtube'
-    ? `https://www.youtube.com/embed/${video.external_id}?autoplay=1&start=${activeTimestamp || 0}`
-    : `https://player.twitch.tv/?video=${video.external_id}&parent=${typeof window !== 'undefined' ? window.location.hostname : 'localhost'}&autoplay=true&time=${activeTimestamp ? `${activeTimestamp}s` : '0s'}`
   const exactUploadDate = formatExactDate(video.published_at)
   const relativeUploadDate = formatRelativeDate(video.published_at)
 

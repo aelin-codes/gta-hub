@@ -22,7 +22,16 @@ export async function POST(req: Request) {
     const stripeKey = process.env.STRIPE_SECRET_KEY
     const razorpayKey = process.env.RAZORPAY_KEY_ID
 
-    const origin = req.headers.get('origin') || 'http://localhost:3001'
+    // Whitelist allowed origins — never trust the raw Origin header for redirect construction
+    const allowedOrigins = [
+      process.env.NEXT_PUBLIC_SITE_URL,
+      'https://gta-vi-hub.vercel.app',
+      'https://gta6hub.com',
+    ].filter(Boolean) as string[]
+    const requestOrigin = req.headers.get('origin') || ''
+    const origin = allowedOrigins.find((o) => requestOrigin.startsWith(o))
+      ?? process.env.NEXT_PUBLIC_SITE_URL
+      ?? 'http://localhost:3000'
 
     if (processor === 'stripe') {
       if (!stripeKey) {
