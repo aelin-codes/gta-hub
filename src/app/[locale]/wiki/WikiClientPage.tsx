@@ -233,6 +233,84 @@ const POIS: POI[] = [
     opticVideoId: 'gta6-5-tiny-things-missed',
     opticVideoTitle: '5 Tiny Details — Underwater Cargo Wreck & Diving Spots',
   },
+  {
+    name: 'Leonida State Penitentiary',
+    x: 71,
+    y: 43,
+    type: 'mission',
+    region: 'Vice-Dale',
+    description:
+      'High-security state correctional institution where Lucia begins her story. Heavy watchtowers, perimeter electric fencing, and armed transport gates.',
+    coordinates: 'SP-1090-PEN',
+    icon: '⛓️',
+    opticVideoId: 'gta6-official-trailer-1',
+    opticVideoTitle: 'Trailer 1 (4K) — Lucia Stefanie Prison Dialogue',
+  },
+  {
+    name: 'Thrillbilly Mud Club Arena',
+    x: 48,
+    y: 33,
+    type: 'easter-egg',
+    region: 'Grassrivers',
+    description:
+      'Rural swamp motorsport sanctuary. Nightly monster truck derbies, airboat stunts, country brawls, and mud obstacle courses.',
+    coordinates: 'TB-4040-MC',
+    icon: '🚜',
+    opticVideoId: 'gta6-official-trailer-1',
+    opticVideoTitle: 'Trailer 1 (4K) — Thrillbilly Mud Club Mudfest',
+  },
+  {
+    name: 'Leonida Keys Sunken Submarine Wreck',
+    x: 62,
+    y: 92,
+    type: 'easter-egg',
+    region: 'Leonida Keys',
+    description:
+      'Cold-war era submarine wreck resting on the southern continental shelf. Requires scuba gear; contains high-value waterproof cash crates.',
+    coordinates: 'LK-8821-SUB',
+    icon: '⚓',
+    opticVideoId: 'gta6-map-hidden-secrets',
+    opticVideoTitle: 'Map Secrets — Hidden Submarine Ocean Wreck & Vaults',
+  },
+  {
+    name: 'Waning Sands Offshore Oil Rig',
+    x: 35,
+    y: 50,
+    type: 'mission',
+    region: 'Ocean Reefs',
+    description:
+      'Decommissioned offshore petroleum platform occupied by armed private smugglers. Accessible via boat or helicopter.',
+    coordinates: 'WS-0419-RIG',
+    icon: '🏗️',
+    opticVideoId: 'gta6-extended-look',
+    opticVideoTitle: 'Extended Look — Offshore Industrial Platform Missions',
+  },
+  {
+    name: 'Mount Kalaga Satellite Array',
+    x: 77,
+    y: 19,
+    type: 'landmark',
+    region: 'Mount Kalaga',
+    description:
+      'High-altitude government radio observatory. Perimeter restricted airspace, microwave antennas, and parabolic listening dishes.',
+    coordinates: 'MK-9110-SAT',
+    icon: '📡',
+    opticVideoId: 'gta6-map-leonida-analysis',
+    opticVideoTitle: 'Map Analysis — Northern Satellite Tracking Array',
+  },
+  {
+    name: 'Federal Armored Cash Depot',
+    x: 79,
+    y: 59,
+    type: 'mission',
+    region: 'Vice City',
+    description:
+      'Heavily fortified currency processing center for Vice City commercial banks. Target of high-tier endgame heist protocols.',
+    coordinates: 'VC-5520-FD',
+    icon: '💰',
+    opticVideoId: 'gta6-nightclubs-and-physics',
+    opticVideoTitle: 'Heist Systems — Bank Depository & Armored Convoy Assaults',
+  },
 ]
 
 const VEHICLES = [
@@ -741,7 +819,7 @@ export default function WikiClientPage({ locale }: { locale: string }) {
                       onPointerDown={handlePointerDown}
                       onPointerMove={handlePointerMove}
                       onPointerUp={handlePointerUp}
-                      className="relative aspect-[4/3] sm:aspect-[16/10] w-full rounded-3xl overflow-hidden border border-deep-teal bg-black shadow-2xl cursor-grab active:cursor-grabbing select-none"
+                      className="relative aspect-[4/3] sm:aspect-[16/10] w-full rounded-3xl overflow-hidden border border-deep-teal bg-black shadow-2xl cursor-grab active:cursor-grabbing select-none touch-none"
                     >
                       {/* Zoom & Style controls */}
                       <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">

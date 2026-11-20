@@ -18,6 +18,9 @@ import AuthNavButton from '@/components/AuthNavButton'
 import KofiButton from '@/components/KofiButton'
 import SmoothScroll from '@/components/SmoothScroll'
 import LicensePlatePreloader from '@/components/LicensePlatePreloader'
+import CommandPalette from '@/components/CommandPalette'
+import MobileBottomNav from '@/components/MobileBottomNav'
+import PageTransition from '@/components/PageTransition'
 import Link from 'next/link'
 import '@/app/globals.css'
 import { PAYMENTS_ENABLED } from '@/config'
@@ -146,12 +149,12 @@ export default async function LocaleLayout({
           </Header>
 
           {/* Main Content */}
-          <main className="flex-grow flex flex-col">
-            {children}
+          <main className="flex-grow flex flex-col pb-16 lg:pb-0">
+            <PageTransition>{children}</PageTransition>
           </main>
 
           {/* Footer Section */}
-          <footer className="bg-deep-teal border-t border-midnight-teal py-12 px-4 sm:px-6 lg:px-8 mt-auto">
+          <footer className="bg-deep-teal border-t border-midnight-teal py-12 px-4 sm:px-6 lg:px-8 mt-auto pb-24 lg:pb-12">
             <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between text-center md:text-left">
               <div className="mb-6 md:mb-0">
                 <span className="text-2xl font-display tracking-widest text-off-white">
@@ -162,7 +165,13 @@ export default async function LocaleLayout({
                 </p>
               </div>
               
-              <div className="flex flex-wrap justify-center space-x-6 text-xs uppercase tracking-wider mb-6 md:mb-0">
+              <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-xs uppercase tracking-wider mb-6 md:mb-0">
+                <Link href={`/${locale}/cheats`} className="text-sunset-orange hover:text-white transition font-bold">
+                  Cheats
+                </Link>
+                <Link href={`/${locale}/database`} className="text-palm-teal hover:text-white transition font-bold">
+                  Armory & Garage
+                </Link>
                 <Link href={`/${locale}/takedown`} className="hover:text-sunset-orange transition">
                   Takedown Request
                 </Link>
@@ -190,6 +199,8 @@ export default async function LocaleLayout({
               <FooterSecretTiki />
             </div>
           </footer>
+          <MobileBottomNav locale={locale} />
+          <CommandPalette locale={locale} />
           <CookieConsentBanner />
           <GtaRadioPlayer />
           <GtaCheatCodes />

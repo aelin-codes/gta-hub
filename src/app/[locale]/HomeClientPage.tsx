@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import { Play, ShieldAlert, Award, Clock, Users, Map, Crosshair, BookOpen, ArrowRight, Film } from 'lucide-react'
+import { ShieldAlert, Award, Clock, Users, Map, Crosshair, BookOpen, ArrowRight, Film, Flame, Car } from 'lucide-react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
@@ -327,27 +327,34 @@ export default function HomeClientPage({ locale }: { locale: string }) {
             <p className="text-off-white/70 leading-relaxed mb-6">
               Grand Theft Auto VI heads to the state of Leonida, home to the neon-soaked streets of Vice City and beyond. Experience the biggest evolution in open-world history: dual protagonists Lucia and Jason, an enterable commercial economy, and a living, breathing simulated Florida ecosystem.
             </p>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2.5 sm:gap-3">
+              <Link 
+                href={`/${locale}/cheats`} 
+                className="flex items-center justify-center space-x-2 px-5 py-3 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white font-bold uppercase tracking-wider rounded-xl hover:opacity-95 transition shadow-lg text-xs sm:text-sm font-mono shadow-[0_0_15px_rgba(255,42,133,0.3)]"
+              >
+                <Flame className="w-4 h-4" />
+                <span>Cheats Vault</span>
+              </Link>
+              <Link 
+                href={`/${locale}/database`} 
+                className="flex items-center justify-center space-x-2 px-5 py-3 bg-palm-teal text-black font-bold uppercase tracking-wider rounded-xl hover:opacity-90 transition shadow-lg text-xs sm:text-sm font-mono shadow-[0_0_15px_rgba(0,229,255,0.25)]"
+              >
+                <Car className="w-4 h-4" />
+                <span>Armory &amp; Garage</span>
+              </Link>
               <Link 
                 href={`/${locale}/characters`} 
-                className="flex items-center justify-center space-x-2 px-6 py-3.5 bg-gradient-to-r from-neon-flamingo to-sunset-orange text-white font-bold uppercase tracking-wider rounded-xl hover:opacity-95 transition shadow-lg text-xs sm:text-sm font-mono"
+                className="flex items-center justify-center space-x-2 px-4 py-3 bg-deep-teal hover:bg-palm-teal/20 text-off-white border border-deep-teal hover:border-palm-teal/40 font-bold uppercase tracking-wider rounded-xl transition text-xs sm:text-sm font-mono"
               >
                 <Users className="w-4 h-4" />
-                <span>Character Vault</span>
+                <span>Characters</span>
               </Link>
               <Link 
                 href={`/${locale}/wiki`} 
-                className="flex items-center justify-center space-x-2 px-6 py-3.5 bg-deep-teal hover:bg-palm-teal/20 text-off-white border border-deep-teal hover:border-palm-teal/40 font-bold uppercase tracking-wider rounded-xl transition text-xs sm:text-sm font-mono"
+                className="flex items-center justify-center space-x-2 px-4 py-3 bg-deep-teal hover:bg-palm-teal/20 text-off-white border border-deep-teal hover:border-palm-teal/40 font-bold uppercase tracking-wider rounded-xl transition text-xs sm:text-sm font-mono"
               >
                 <Map className="w-4 h-4" />
-                <span>Interactive Wiki</span>
-              </Link>
-              <Link 
-                href={`/${locale}/library`} 
-                className="flex items-center justify-center space-x-2 px-5 py-3.5 bg-deep-teal/60 hover:bg-white/10 text-off-white/80 border border-deep-teal font-bold uppercase tracking-wider rounded-xl transition text-xs sm:text-sm font-mono"
-              >
-                <Play className="w-4 h-4 fill-current" />
-                <span>Video Guides</span>
+                <span>Atlas</span>
               </Link>
             </div>
           </div>
@@ -377,8 +384,52 @@ export default function HomeClientPage({ locale }: { locale: string }) {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Card 1: Characters */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Card 1: Cheats */}
+            <Link
+              href={`/${locale}/cheats`}
+              className="group bg-deep-teal/25 hover:bg-deep-teal/45 border border-deep-teal/70 hover:border-sunset-orange/50 rounded-3xl p-6 space-y-4 transition duration-300 flex flex-col justify-between hover:-translate-y-1 shadow-lg"
+            >
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-sunset-orange/10 border border-sunset-orange/30 text-sunset-orange flex items-center justify-center">
+                  <Flame className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-display uppercase tracking-wider text-off-white group-hover:text-sunset-orange transition">
+                  Cheats Vault
+                </h3>
+                <p className="text-xs text-off-white/60 leading-relaxed">
+                  Instant cell phone dial codes for GTA 6. Spawn supercars, max health/armor, control tropical weather, and lower wanted stars.
+                </p>
+              </div>
+              <div className="flex items-center justify-between text-xs font-mono uppercase text-sunset-orange pt-2 border-t border-deep-teal/40">
+                <span>View All Codes</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+
+            {/* Card 2: Vehicles & Armory Database */}
+            <Link
+              href={`/${locale}/database`}
+              className="group bg-deep-teal/25 hover:bg-deep-teal/45 border border-deep-teal/70 hover:border-palm-teal/50 rounded-3xl p-6 space-y-4 transition duration-300 flex flex-col justify-between hover:-translate-y-1 shadow-lg"
+            >
+              <div className="space-y-3">
+                <div className="w-12 h-12 rounded-2xl bg-palm-teal/10 border border-palm-teal/30 text-palm-teal flex items-center justify-center">
+                  <Car className="w-6 h-6" />
+                </div>
+                <h3 className="text-xl font-display uppercase tracking-wider text-off-white group-hover:text-palm-teal transition">
+                  Armory &amp; Garage
+                </h3>
+                <p className="text-xs text-off-white/60 leading-relaxed">
+                  Compare top speeds, handling, lethality, and real-world analogs across confirmed supercars, swamp airboats, and tactical firearms.
+                </p>
+              </div>
+              <div className="flex items-center justify-between text-xs font-mono uppercase text-palm-teal pt-2 border-t border-deep-teal/40">
+                <span>Open Database</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+
+            {/* Card 3: Characters */}
             <Link
               href={`/${locale}/characters`}
               className="group bg-deep-teal/25 hover:bg-deep-teal/45 border border-deep-teal/70 hover:border-neon-flamingo/50 rounded-3xl p-6 space-y-4 transition duration-300 flex flex-col justify-between hover:-translate-y-1 shadow-lg"
@@ -391,7 +442,7 @@ export default function HomeClientPage({ locale }: { locale: string }) {
                   Character Vault
                 </h3>
                 <p className="text-xs text-off-white/60 leading-relaxed">
-                  56 profiles cataloged. Lucia Caminos, Jason Duval, and 40 years of Vice City legends with full combat stats, quotes, and wardrobe variants.
+                  56 profiles cataloged. Lucia Caminos, Jason Duval, and Vice City syndicates with 5-paragraph noir dossiers, stats, and quotes.
                 </p>
               </div>
               <div className="flex items-center justify-between text-xs font-mono uppercase text-neon-flamingo pt-2 border-t border-deep-teal/40">
@@ -400,7 +451,7 @@ export default function HomeClientPage({ locale }: { locale: string }) {
               </div>
             </Link>
 
-            {/* Card 2: Interactive Map */}
+            {/* Card 4: Interactive Map */}
             <Link
               href={`/${locale}/wiki`}
               className="group bg-deep-teal/25 hover:bg-deep-teal/45 border border-deep-teal/70 hover:border-palm-teal/50 rounded-3xl p-6 space-y-4 transition duration-300 flex flex-col justify-between hover:-translate-y-1 shadow-lg"
@@ -413,7 +464,7 @@ export default function HomeClientPage({ locale }: { locale: string }) {
                   Leonida Atlas
                 </h3>
                 <p className="text-xs text-off-white/60 leading-relaxed">
-                  Interactive tactical map with 20+ GPS coordinates spanning Vice Beach, Port Gellhorn, Starfish Island, and alligator sawgrass swamps.
+                  Interactive tactical map with 25+ GPS coordinates spanning Vice Beach, Port Gellhorn, Starfish Island, penitentiary, and swamps.
                 </p>
               </div>
               <div className="flex items-center justify-between text-xs font-mono uppercase text-palm-teal pt-2 border-t border-deep-teal/40">
@@ -422,29 +473,29 @@ export default function HomeClientPage({ locale }: { locale: string }) {
               </div>
             </Link>
 
-            {/* Card 3: Weapons & Armory */}
+            {/* Card 5: Video Library */}
             <Link
-              href={`/${locale}/wiki`}
+              href={`/${locale}/library`}
               className="group bg-deep-teal/25 hover:bg-deep-teal/45 border border-deep-teal/70 hover:border-sunset-orange/50 rounded-3xl p-6 space-y-4 transition duration-300 flex flex-col justify-between hover:-translate-y-1 shadow-lg"
             >
               <div className="space-y-3">
                 <div className="w-12 h-12 rounded-2xl bg-sunset-orange/10 border border-sunset-orange/30 text-sunset-orange flex items-center justify-center">
-                  <Crosshair className="w-6 h-6" />
+                  <Film className="w-6 h-6" />
                 </div>
                 <h3 className="text-xl font-display uppercase tracking-wider text-off-white group-hover:text-sunset-orange transition">
-                  Vehicles & Armory
+                  Surveillance Archive
                 </h3>
                 <p className="text-xs text-off-white/60 leading-relaxed">
-                  18 confirmed sports cars, supercars, airboats, and aircraft, alongside tactical firearm specs and car trunk inventory logistics.
+                  Categorized 4K trailer breakdowns, heist walk-throughs, Easter egg coordinates, and deep-linked video timestamps.
                 </p>
               </div>
               <div className="flex items-center justify-between text-xs font-mono uppercase text-sunset-orange pt-2 border-t border-deep-teal/40">
-                <span>Inspect Gear</span>
+                <span>Explore Vault</span>
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
               </div>
             </Link>
 
-            {/* Card 4: Editorial Articles */}
+            {/* Card 6: Editorial Articles */}
             <Link
               href={`/${locale}/articles`}
               className="group bg-deep-teal/25 hover:bg-deep-teal/45 border border-deep-teal/70 hover:border-palm-teal/50 rounded-3xl p-6 space-y-4 transition duration-300 flex flex-col justify-between hover:-translate-y-1 shadow-lg"
@@ -457,7 +508,7 @@ export default function HomeClientPage({ locale }: { locale: string }) {
                   Lore Deep Dives
                 </h3>
                 <p className="text-xs text-off-white/60 leading-relaxed">
-                  In-depth leak investigations: 1986 vs 2026 Vice City comparison, RAGE 9 weather simulation, wildlife food chains, and heist tactics.
+                  In-depth investigative reports: 1986 vs 2026 Vice City comparison, RAGE 9 weather simulation, wildlife systems, and heist mechanics.
                 </p>
               </div>
               <div className="flex items-center justify-between text-xs font-mono uppercase text-palm-teal pt-2 border-t border-deep-teal/40">
