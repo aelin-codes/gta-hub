@@ -275,7 +275,7 @@ export default function DatabaseClientPage({}: { locale?: string }) {
                 return (
                   <div
                     key={vehicle.id}
-                    className="bg-[#101724]/50 hover:bg-[#101724]/80 border border-deep-teal hover:border-palm-teal/50 rounded-3xl p-6 transition-all duration-300 flex flex-col justify-between space-y-5 shadow-lg group hover:-translate-y-1"
+                    className="performance-card bg-[#101724]/50 hover:bg-[#101724]/80 border border-deep-teal hover:border-palm-teal/50 rounded-3xl p-6 transition-all duration-300 flex flex-col justify-between space-y-5 shadow-lg group hover:-translate-y-1"
                   >
                     <div className="space-y-4">
                       {/* Card Header */}
@@ -439,7 +439,7 @@ export default function DatabaseClientPage({}: { locale?: string }) {
                 return (
                   <div
                     key={weapon.id}
-                    className="bg-[#101724]/50 hover:bg-[#101724]/80 border border-deep-teal hover:border-palm-teal/50 rounded-3xl p-6 transition-all duration-300 flex flex-col justify-between space-y-5 shadow-lg group hover:-translate-y-1"
+                    className="performance-card bg-[#101724]/50 hover:bg-[#101724]/80 border border-deep-teal hover:border-palm-teal/50 rounded-3xl p-6 transition-all duration-300 flex flex-col justify-between space-y-5 shadow-lg group hover:-translate-y-1"
                   >
                     <div className="space-y-4">
                       {/* Header */}

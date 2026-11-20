@@ -30,13 +30,23 @@
 body {
   color: var(--foreground);
   background-color: #07090E;
+  font-size: var(--font-size-base);
+  overflow-x: hidden;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -2;
   background-image: 
     radial-gradient(ellipse 90% 60% at 50% -25%, rgba(255, 42, 133, 0.14), transparent),
     radial-gradient(ellipse 70% 50% at 90% 50%, rgba(0, 229, 255, 0.09), transparent),
     radial-gradient(ellipse 60% 50% at 10% 80%, rgba(255, 117, 57, 0.08), transparent);
-  background-attachment: fixed;
-  font-size: var(--font-size-base);
-  overflow-x: hidden;
+  pointer-events: none;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
 }
 
 h1 {
@@ -195,6 +205,12 @@ h3 {
   ring: 2px solid #00E5FF;
   ring-offset: 2px;
   ring-offset-color: #07090E;
+}
+
+/* Hardware-accelerated offscreen element virtualization */
+.performance-card {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 320px;
 }
 
 

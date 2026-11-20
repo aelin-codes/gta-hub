@@ -105,32 +105,16 @@ export default function HomeClientPage({ locale }: { locale: string }) {
     const supabaseClient = createClient()
     
     async function loadRecentVideos() {
-      const getVideos = async (days: number) => {
-        const dateStr = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
+      try {
         const { data } = await supabaseClient
           .from('videos')
           .select('*, video_timestamps(*)')
-          .gte('published_at', dateStr)
           .eq('excluded', false)
           .order('published_at', { ascending: false })
-        return data || []
-      }
-
-      try {
-        let recent = await getVideos(7)
-        if (recent.length < 4) {
-          recent = await getVideos(14)
+          .limit(5)
+        if (data && data.length > 0) {
+          setRecentVideos(data as Video[])
         }
-        if (recent.length < 4) {
-          const { data: fallback } = await supabaseClient
-            .from('videos')
-            .select('*, video_timestamps(*)')
-            .eq('excluded', false)
-            .order('published_at', { ascending: false })
-            .limit(5)
-          recent = fallback || []
-        }
-        setRecentVideos((recent || []).slice(0, 5) as Video[])
       } catch (err) {
         console.error('Failed to load recent videos:', err)
       }

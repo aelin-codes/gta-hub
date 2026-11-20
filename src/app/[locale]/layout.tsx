@@ -1,39 +1,51 @@
 import { Inter, Bebas_Neue } from 'next/font/google'
 import { notFound } from 'next/navigation'
 import { NextIntlClientProvider } from 'next-intl'
+import dynamic from 'next/dynamic'
 
 export const revalidate = 60;
-import { CookieConsentBanner, ThirdPartyScripts } from '@/components/CookieConsent'
 import { locales } from '@/i18n'
 import NavBar from '@/components/NavBar'
 import Header from '@/components/Header'
-import ScrollProgressSpeedometer from '@/components/ScrollProgressSpeedometer'
 import GtaWantedLevel from '@/components/GtaWantedLevel'
-import GtaRadioPlayer from '@/components/GtaRadioPlayer'
-import EasterEggHunt from '@/components/EasterEggHunt'
-import GtaCheatCodes from '@/components/GtaCheatCodes'
-import GtaRetroFilter from '@/components/GtaRetroFilter'
 import FooterSecretTiki from '@/components/FooterSecretTiki'
 import AuthNavButton from '@/components/AuthNavButton'
 import KofiButton from '@/components/KofiButton'
-import SmoothScroll from '@/components/SmoothScroll'
-import LicensePlatePreloader from '@/components/LicensePlatePreloader'
-import CommandPalette from '@/components/CommandPalette'
 import MobileBottomNav from '@/components/MobileBottomNav'
 import PageTransition from '@/components/PageTransition'
 import Link from 'next/link'
 import '@/app/globals.css'
 import { PAYMENTS_ENABLED } from '@/config'
 
+// Lazy-loaded non-critical gadgets and overlays to minimize initial bundle size and First Input Delay
+const ScrollProgressSpeedometer = dynamic(() => import('@/components/ScrollProgressSpeedometer'), { ssr: false })
+const GtaRadioPlayer = dynamic(() => import('@/components/GtaRadioPlayer'), { ssr: false })
+const EasterEggHunt = dynamic(() => import('@/components/EasterEggHunt'), { ssr: false })
+const GtaCheatCodes = dynamic(() => import('@/components/GtaCheatCodes'), { ssr: false })
+const GtaRetroFilter = dynamic(() => import('@/components/GtaRetroFilter'), { ssr: false })
+const CommandPalette = dynamic(() => import('@/components/CommandPalette'), { ssr: false })
+const LicensePlatePreloader = dynamic(() => import('@/components/LicensePlatePreloader'), { ssr: false })
+const SmoothScroll = dynamic(() => import('@/components/SmoothScroll'), { ssr: false })
+const CookieConsentBanner = dynamic(
+  () => import('@/components/CookieConsent').then((m) => m.CookieConsentBanner),
+  { ssr: false }
+)
+const ThirdPartyScripts = dynamic(
+  () => import('@/components/CookieConsent').then((m) => m.ThirdPartyScripts),
+  { ssr: false }
+)
+
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-sans',
+  display: 'swap',
 })
 
 const bebasNeue = Bebas_Neue({
   weight: '400',
   subsets: ['latin'],
   variable: '--font-display',
+  display: 'swap',
 })
 
 export const metadata = {

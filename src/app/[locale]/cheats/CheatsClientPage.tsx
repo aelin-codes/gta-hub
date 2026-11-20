@@ -251,7 +251,7 @@ export default function CheatsClientPage({}: { locale?: string }) {
               return (
                 <div
                   key={cheat.id}
-                  className="group relative bg-[#101724]/50 hover:bg-[#101724]/80 border border-deep-teal hover:border-palm-teal/50 rounded-2xl p-5 transition-all duration-300 flex flex-col justify-between space-y-4 shadow-lg hover:shadow-[0_0_25px_rgba(0,229,255,0.1)]"
+                  className="performance-card group relative bg-[#101724]/50 hover:bg-[#101724]/80 border border-deep-teal hover:border-palm-teal/50 rounded-2xl p-5 transition-all duration-300 flex flex-col justify-between space-y-4 shadow-lg hover:shadow-[0_0_25px_rgba(0,229,255,0.1)]"
                 >
                   <div className="space-y-3">
                     {/* Card Header: Category & Favorite Button */}

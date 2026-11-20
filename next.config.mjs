@@ -11,15 +11,29 @@ const bundleAnalyzer = withBundleAnalyzer({
 const nextConfig = {
   // Transpile R3F and three dependencies if needed
   transpilePackages: ['three', '@react-three/fiber', '@react-three/drei'],
+  compress: true,
+  poweredByHeader: false,
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
+  },
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'framer-motion',
+      'three',
+      '@react-three/fiber',
+      '@react-three/drei'
+    ],
+  },
   eslint: {
-    // Allows production builds to complete even if the project has ESLint errors
     ignoreDuringBuilds: true,
   },
   typescript: {
-    // Allows production builds to complete even if the project has type errors
     ignoreBuildErrors: true,
   },
   images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 86400,
     remotePatterns: [
       {
         protocol: 'https',
@@ -42,5 +56,3 @@ const nextConfig = {
 };
 
 export default bundleAnalyzer(withNextIntl(nextConfig));
-
-
